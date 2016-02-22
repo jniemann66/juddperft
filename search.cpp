@@ -150,6 +150,8 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 
 }
 
+//
+
 // PerftFastIterative() - Iterative version of perft.
 void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 {
