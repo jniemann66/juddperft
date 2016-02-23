@@ -18,12 +18,12 @@ HashTable <std::atomic<PerftTableEntry> > PerftTable;
 int main(int argc, char *argv[], char *envp[])
 {
 
-	printf("sizeof(PerftTableEntry) == %zd\n", sizeof(PerftTableEntry));
+	/*printf("sizeof(PerftTableEntry) == %zd\n", sizeof(PerftTableEntry));
 	printf("sizeof(std::atomic<PerftTableEntry>) == %zd\n", sizeof(std::atomic<PerftTableEntry>));
-	printf("sizeof(ChessMove) == %zd\n", sizeof(ChessMove));
+	printf("sizeof(ChessMove) == %zd\n", sizeof(ChessMove));*/
 	
 	//PerftTable.SetSize(MINIMAL_HASHTABLE_SIZE);
-	PerftTable.SetSize(4000000000);
+	PerftTable.SetSize(128000000);
 	
 	
 	ChessPosition P;
