@@ -985,23 +985,24 @@ inline unsigned long GetSquareIndex(BitBoard b)
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
+	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x02dd7ecd2a2721e3i64; // 28916999.
+	const BitBoard db64 = 0x03f79d71b4cb0a89i64;
 
-	const unsigned int tbl[64] =
-	{
-		0,  1,  2, 51, 39,  3, 59, 52,
-		48, 40, 32,  4, 60, 26, 43, 53,
-		49, 37, 30, 41, 35, 33,  5, 14,
-		61, 23, 27,  7, 44, 10, 54, 16,
-		63, 50, 38, 58, 47, 31, 25, 42,
-		36, 29, 34, 13, 22,  6,  9, 15,
-		62, 57, 46, 24, 28, 12, 21,  8,
-		56, 45, 11, 20, 55, 19, 18, 17,
+	const int tbl[64] = {
+		0, 47,  1, 56, 48, 27,  2, 60,
+		57, 49, 41, 37, 28, 16,  3, 61,
+		54, 58, 35, 52, 50, 42, 21, 44,
+		38, 32, 29, 23, 17, 11,  4, 62,
+		46, 55, 26, 59, 40, 36, 15, 53,
+		34, 51, 20, 43, 31, 22, 10, 45,
+		25, 39, 14, 33, 19, 30,  9, 24,
+		13, 18,  8, 12,  7,  6,  5, 63
 	};
 
 	// BitScanForward:
-	n = tbl[((b&-b)*db64) >> 58];
+	n = tbl[((b ^ (b - 1)) * db64) >> 58];
+
 #endif
 	return n;
 }
@@ -1021,26 +1022,25 @@ inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 #else
 	
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
-	// To-do: Fix Bitscan reverse (last) - it's still broken.
 	// see (https://chessprogramming.wikispaces.com/BitScan)
+	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x02dd7ecd2a2721e3i64; // 28916999.
-
-	const unsigned int tbl[64] =
-	{
-		0,  1,  2, 51, 39,  3, 59, 52,
-		48, 40, 32,  4, 60, 26, 43, 53,
-		49, 37, 30, 41, 35, 33,  5, 14,
-		61, 23, 27,  7, 44, 10, 54, 16,
-		63, 50, 38, 58, 47, 31, 25, 42,
-		36, 29, 34, 13, 22,  6,  9, 15,
-		62, 57, 46, 24, 28, 12, 21,  8,
-		56, 45, 11, 20, 55, 19, 18, 17,
+	const BitBoard db64 = 0x03f79d71b4cb0a89i64;
+	
+	const int tbl[64] = {
+		0, 47,  1, 56, 48, 27,  2, 60,
+		57, 49, 41, 37, 28, 16,  3, 61,
+		54, 58, 35, 52, 50, 42, 21, 44,
+		38, 32, 29, 23, 17, 11,  4, 62,
+		46, 55, 26, 59, 40, 36, 15, 53,
+		34, 51, 20, 43, 31, 22, 10, 45,
+		25, 39, 14, 33, 19, 30,  9, 24,
+		13, 18,  8, 12,  7,  6,  5, 63
 	};
-	
+
 	// BitScanForward:
-	b = tbl[((B&-B)*db64) >> 58];
-	
+	b = tbl[((B ^ (B - 1)) * db64) >> 58];
+
 	// BitScanReverse:
 	BitBoard A = B;
 	A |= A >> 1;
@@ -1050,9 +1050,7 @@ inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	A |= A >> 16;
 	A |= A >> 32;
 	a= tbl[(A * db64) >> 58];
-	//	Last =/* B &*/ (1i64 << a); // 13/02/2016: Broken !!
-	a = 63;// Broken: Default to last square (63) to-do: FIX !!!
-
+	
 #endif
 
 	Last = B & (1i64 << a); 

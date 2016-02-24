@@ -1,4 +1,4 @@
-Received command: perft 4
-Received command: perftfast 6
+Received command: memory 4000000000
+Received command: memory 1000000000
 Received command: perftfast 7
 Received command: quit

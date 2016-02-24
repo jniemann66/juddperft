@@ -29,6 +29,7 @@ int main(int argc, char *argv[], char *envp[])
 	ChessPosition P;
 	//DumpChessPosition(P);
 	P.SetupStartPosition();
+		
 	
 	//DumpPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25",5,193690690);	// Position 2: 'Kiwipete' position
 	//DumpPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0",7, 178633661);								// Position 3
