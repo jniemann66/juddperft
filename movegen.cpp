@@ -254,43 +254,6 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
 #endif // _USE_HASH
 
-
-
-//	BitBoard BlackEnPassant=EnPassant & D;
-//	BitBoard WhiteEnPassant=EnPassant & (~D);
-//	
-//
-//
-//	if (M.BlackToMove)
-//	{
-//		if (WhiteEnPassant != 0)
-//		{
-//			ChessPosition::A &= ~WhiteEnPassant;
-//			ChessPosition::B &= ~WhiteEnPassant;
-//			ChessPosition::C &= ~WhiteEnPassant;
-//			ChessPosition::D &= ~WhiteEnPassant;
-//#ifdef _USE_HASH
-//			nEPSquare = GetSquareIndex(WhiteEnPassant);
-//			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
-//#endif // _USE_HASH
-//		}
-//	}
-//	else
-//	{
-//		if (BlackEnPassant != 0)
-//		{
-//			ChessPosition::A &= ~BlackEnPassant;
-//			ChessPosition::B &= ~BlackEnPassant;
-//			ChessPosition::C &= ~BlackEnPassant;
-//			ChessPosition::D &= ~BlackEnPassant;
-//#ifdef _USE_HASH
-//			nEPSquare = GetSquareIndex(BlackEnPassant);
-//			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BENPASSANT][nEPSquare]; // Remove EP from nEPSquare
-//#endif // _USE_HASH
-//
-//		}
-//	}
-
 	// APPLY CASTLING MOVES:
 	// we use magic XOR-tricks to do the job ! :
 
