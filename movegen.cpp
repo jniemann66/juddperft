@@ -459,10 +459,19 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	{
 		int capturedpiece;
 		// find out which piece has been captured:
-		capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
+
+		// Branchy:
+		/*capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
 		capturedpiece |=(ChessPosition::C & (1i64<<nToSquare))?4:0;
 		capturedpiece |=(ChessPosition::B & (1i64<<nToSquare))?2:0;
-		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;
+		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;*/
+		
+		// Branchless ??
+		capturedpiece =	(ChessPosition::D & (1i64 << nToSquare)) >> (nToSquare - 3);
+		capturedpiece |=(ChessPosition::C & (1i64 << nToSquare)) >> (nToSquare - 2);
+		capturedpiece |=(ChessPosition::B & (1i64 << nToSquare)) >> (nToSquare - 1);
+		capturedpiece |=(ChessPosition::A & (1i64 << nToSquare)) >> nToSquare;
+
 
 #ifdef _USE_HASH
 		// Update Hash
@@ -804,8 +813,6 @@ void GenerateMoves(const ChessPosition& P, ChessMove* pM)
 void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
-	// To-do: identify Checks !
-	// To-Do Prioritze checks & captures.
 	BitBoard Occupied;		/* all squares occupied by something */
 	BitBoard WhiteOccupied; /* all squares occupied by W */
 	BitBoard BlackOccupied; /* all squares occupied by B */
@@ -840,7 +847,7 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	// (just scan all 64 squares: 0-63):
 #endif
 
-	for (int q=b; q<=a; q++)
+	for (unsigned int q=b; q<=a; q++)
 	{
 		CurrentSquare = 1i64 << q;
 		if ((WhiteOccupied & CurrentSquare) == 0)
@@ -1220,8 +1227,6 @@ inline BitBoard IsWhiteInCheck(const ChessPosition& Z)
 void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
-	// To-do: identify Checks !
-	// To-Do Prioritze checks & captures.
 	BitBoard Occupied;		/* all squares occupied by something */
 	BitBoard WhiteOccupied; /* all squares occupied by W */
 	BitBoard BlackOccupied; /* all squares occupied by B */
@@ -1257,7 +1262,7 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 	// (just scan all 64 squares: 0-63)
 #endif
 	
-	for (int q = b; q <= a; q++)
+	for (unsigned int q = b; q <= a; q++)
 	{
 		assert(q >= 0);
 		assert(q <= 63);
