@@ -3,7 +3,6 @@
 #include "winboard.h"
 #include "movegen.h"
 #include "fen.h"
-#include "evaluate.h"
 #include "search.h"
 #include "engine.h"
 #include "hashtable.h"

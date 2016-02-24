@@ -960,7 +960,7 @@ inline BitBoard MoveKnight8Occluded(BitBoard g, BitBoard p)
 
 inline int PopCount(const BitBoard & B)
 {
-#ifdef _USE_POPCNT_INSTRUCTION
+#if defined( _USE_POPCNT_INSTRUCTION) && defined(_WIN64)
 	return static_cast<int>(__popcnt64(B));
 #else
 	// This routine comes from: 

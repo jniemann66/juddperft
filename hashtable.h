@@ -2,8 +2,6 @@
 #define _HASHTABLE_H 1
 
 #include "movegen.h"
-#include "evaluate.h"
-
 #include <atomic>
 
 // HTs are "shrunk" to this size when not in use:

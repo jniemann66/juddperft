@@ -4,7 +4,6 @@
 #include <windows.h>
 
 #include "movegen.h"
-#include "evaluate.h"
 #include "hashtable.h"
 
 #define PV_SIZE 64

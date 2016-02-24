@@ -873,7 +873,7 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	// Important: a and b must be initialised first !
 	_BitScanReverse64(&a, WhiteOccupied);
 	_BitScanForward64(&b, WhiteOccupied);
-#elif
+#else
 	// (just scan all 64 squares: 0-63):
 #endif
 
@@ -1290,7 +1290,7 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 	// Important: a and b must be initialised first !
 	_BitScanReverse64(&a, BlackOccupied);
 	_BitScanForward64(&b, BlackOccupied);
-#elif
+#else
 	// (just scan all 64 squares: 0-63)
 #endif
 	
