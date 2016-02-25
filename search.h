@@ -22,7 +22,7 @@ struct PerftInfo{
 
 void Perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded		
 void PerftFast2(const ChessPosition P, int depth, __int64 * p_numNodes);	// Wrapper for PerftFast()- takes pointer instead of reference
-void PerftFast(const ChessPosition & P, int depth, __int64 & nNodes);		// Simple, Hash-Table-using perft
+void PerftFast(const ChessPosition & P, int depth,  __int64 & nNodes);		// Simple, Hash-Table-using perft
 void PerftFastIterative(const ChessPosition & P, int depth, __int64 & nNodes);
 void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Multi-Threaded driver for Perft()
 void PerftFastMT(ChessPosition P, int depth, __int64 & nNodes);				// Multi-Threaded driver for PerftFast()

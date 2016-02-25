@@ -1126,7 +1126,7 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		pM->ToSquare = GetSquareIndex(to);
 		assert((1i64 << pM->ToSquare) == to);
 		pM->Flags = flags;
-		pM->BlackToMove = 0;
+	//	pM->BlackToMove = 0;
 		pM->Piece = piece;
 
 		// Bitboard containing EnPassants and kings:
