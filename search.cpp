@@ -110,6 +110,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 
 #ifdef _USE_HASH
 	// Consult the HashTable:
+	
 	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 	__int64 orig_nNodes = nNodes;
 	
@@ -138,11 +139,12 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 	}
 
 #ifdef _USE_HASH
+
 	PerftTableEntry NewRecord;
 	NewRecord.Hash = HK;
 	NewRecord.depth = depth;
 	NewRecord.count = nNodes - orig_nNodes; // Record RELATIVE increase in nodes
-	
+
 	do {
 		// if (RetrievedRecord has changed) {} // do something (if we care)
 	} while (!pAtomicRecord->compare_exchange_strong(RetrievedRecord, NewRecord)); // loop until successfully written;

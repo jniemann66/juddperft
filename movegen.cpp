@@ -460,17 +460,17 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		int capturedpiece;
 		// find out which piece has been captured:
 
-		// Branchy:
-		/*capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
+		// Branchy version (reliable, and no slower):
+		capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
 		capturedpiece |=(ChessPosition::C & (1i64<<nToSquare))?4:0;
 		capturedpiece |=(ChessPosition::B & (1i64<<nToSquare))?2:0;
-		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;*/
+		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;
 		
-		// Branchless ??
-		capturedpiece =	(ChessPosition::D & (1i64 << nToSquare)) >> (nToSquare - 3);
+		// Branchless - buggy ??
+		/*capturedpiece =	(ChessPosition::D & (1i64 << nToSquare)) >> (nToSquare - 3);
 		capturedpiece |=(ChessPosition::C & (1i64 << nToSquare)) >> (nToSquare - 2);
 		capturedpiece |=(ChessPosition::B & (1i64 << nToSquare)) >> (nToSquare - 1);
-		capturedpiece |=(ChessPosition::A & (1i64 << nToSquare)) >> nToSquare;
+		capturedpiece |=(ChessPosition::A & (1i64 << nToSquare)) >> nToSquare;*/
 
 
 #ifdef _USE_HASH
