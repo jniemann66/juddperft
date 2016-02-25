@@ -28,7 +28,7 @@
 #define SMALL_BUFFER_SIZE 64
 #endif
 
-#define MOVELIST_SIZE 96
+#define MOVELIST_SIZE 128
 
 #define CHECKMATE 9999
 #define STALEMATE -1
@@ -244,11 +244,15 @@ extern inline BitBoard GenBlackAttacks(const ChessPosition& Z);
 BitBoard IsWhiteInCheck(const ChessPosition & Z);
 void AddWhiteMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
 
+void AddWhitePromotionsToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+
 // Black Move-Generation Functions:
 void GenBlackMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
 BitBoard IsBlackInCheck(const ChessPosition & Z);
 void AddBlackMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+
+void AddBlackPromotionsToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
 
 // Dump I/O functions:
 void DumpBitBoard(BitBoard b);

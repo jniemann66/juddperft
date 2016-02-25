@@ -110,7 +110,6 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 
 #ifdef _USE_HASH
 	// Consult the HashTable:
-	
 	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 	__int64 orig_nNodes = nNodes;
 	
@@ -139,7 +138,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 	}
 
 #ifdef _USE_HASH
-
+	
 	PerftTableEntry NewRecord;
 	NewRecord.Hash = HK;
 	NewRecord.depth = depth;
@@ -148,11 +147,10 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 	do {
 		// if (RetrievedRecord has changed) {} // do something (if we care)
 	} while (!pAtomicRecord->compare_exchange_strong(RetrievedRecord, NewRecord)); // loop until successfully written;
+
 #endif
 
 }
-
-//
 
 // PerftFastIterative() - Iterative version of perft.
 void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
@@ -176,43 +174,41 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 	std::vector<ChessMove*> pMovePtr(depth + 1,nullptr);
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
-	//
-
-	//
-//#ifdef _USE_HASH
-//	HashKey HK[16];
-//	__int64 orig_nNodes[16];
-//	std::atomic<PerftTableEntry> *pAtomicRecord[16];
-//	PerftTableEntry RetrievedRecord[16];
-//	PerftTableEntry NewRecord[16];	
-//#endif
-//	
+	
+#ifdef _USE_HASH
+	std::vector<HashKey> HK(depth+1);
+	std::vector<__int64> orig_nNodes(depth+1);
+	std::vector<std::atomic<PerftTableEntry>*> pAtomicRecord(depth + 1);
+	std::vector<PerftTableEntry> RetrievedRecord(depth+1);
+	std::vector<PerftTableEntry> NewRecord(depth + 1);
+#endif
+	
 	int currentdepth = depth;
 	
 	for (;;) {
-//#ifdef _USE_HASH
-//		// Consult the HashTable:
-//		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];
-//		orig_nNodes[currentdepth] = nNodes;
-//
-//		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);		// get address of atomic record
-//		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();		// Load a non-atomic copy of the record
-//
-//		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {
-//			if (RetrievedRecord[currentdepth].depth == currentdepth) {
-//				nNodes += RetrievedRecord[currentdepth].count;
-//				if (currentdepth == depth)
-//					break; // finished
-//				else {
-//					++currentdepth; // step out
-//					continue;
-//				}
-//			}
-//		}
-//#endif
+
+#ifdef _USE_HASH
+		// Consult the HashTable:
+		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];	
+		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);		// get address of atomic record
+		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();		// Load a non-atomic copy of the record
+
+		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {
+			if (RetrievedRecord[currentdepth].depth == currentdepth) {
+				nNodes += RetrievedRecord[currentdepth].count;
+				if (currentdepth == depth)
+					break; // finished
+				else {
+					++currentdepth; // step out
+					continue;
+				}
+			}
+		}
+#endif
 
 		// conditionally generate move list:
 		if (pMovePtr[currentdepth] == nullptr) {
+			orig_nNodes[currentdepth] = nNodes;
 			GenerateMoves(Q[currentdepth], MoveList[currentdepth]);
 			pMovePtr[currentdepth] = MoveList[currentdepth];
 		}
@@ -221,14 +217,13 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 			// Leaf Node
 			nNodes += MoveList[currentdepth]->MoveCount;	// Accumulate
 
-//#ifdef _USE_HASH
-//			// writehash
-//			NewRecord[currentdepth].Hash = HK[currentdepth];
-//			NewRecord[currentdepth].depth = currentdepth;
-//			NewRecord[currentdepth].count = nNodes - orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
-//			do {} while (!pAtomicRecord[currentdepth]->compare_exchange_strong(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
-//#endif
-
+#ifdef _USE_HASH
+			// writehash
+			NewRecord[currentdepth].Hash = HK[currentdepth];
+			NewRecord[currentdepth].depth = currentdepth;
+			NewRecord[currentdepth].count = MoveList[currentdepth]->MoveCount;//nNodes - orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
+			do {} while (!pAtomicRecord[currentdepth]->compare_exchange_strong(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
+#endif
 			++currentdepth; // step out
 			continue;
 		}
@@ -241,21 +236,19 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 			--currentdepth; // step into
 			continue;
 		}
-		else { // NoMoreMoves
-//#ifdef _USE_HASH
-//			   // writehash
-//			NewRecord[currentdepth].Hash = HK[currentdepth];
-//			NewRecord[currentdepth].depth = currentdepth;
-//			NewRecord[currentdepth].count = nNodes - orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
-//			do {} while (!pAtomicRecord[currentdepth]->compare_exchange_strong(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
-//
-//#endif
 
+#ifdef _USE_HASH
+			//Writehash - (2016-02-26 broken in multithreading)
+			//NewRecord[currentdepth].Hash = HK[currentdepth];
+			//NewRecord[currentdepth].depth = currentdepth;
+			//NewRecord[currentdepth].count = nNodes-orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
+			//do {
+			//} while (!pAtomicRecord[currentdepth]->compare_exchange_strong(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
+#endif
 			if (currentdepth == depth)
 				break; // finished
 			else 
 				++currentdepth; // step out
-		}
 	}
 }
 
