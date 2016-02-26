@@ -258,18 +258,19 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 
 void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
-	unsigned int nThreads=0;
 
 	// Query the system to determine concurrency:
 	std::thread t;
-	
+
 	// determine number of threads. Note:
 	// MAX_THREADS is compile-time hard limit. 
 	// TheEngine.nNumCores is how many cores user wants. 
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-	
-	nThreads = min(t.hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+
+	unsigned int nThreads = min(t.hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+	std::vector<std::thread> worker_thread(nThreads);
+	std::vector<PerftInfo> PerftInfoPARTIAL(nThreads);
 	
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q;
@@ -299,8 +300,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	else
 	{
 		pM = MoveList;
-		std::thread worker_thread[MAX_THREADS];		// to-do: make elements dynamic
-		PerftInfo PerftInfoPARTIAL[MAX_THREADS];	// (Each worker thread gets their own one of these). to-do: make elements dynamic
+		
 		unsigned int s;
 		while (pM->NoMoreMoves == 0)
 		{
@@ -362,7 +362,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 		return;
 	}
 
-	unsigned int nThreads = 0;
+	pM = MoveList;
 
 	// Query the system to determine concurrency:
 	std::thread t;
@@ -372,12 +372,11 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	// TheEngine.nNumCores is how many cores user wants. 
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-
-	nThreads = min(t.hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
 	
-	pM = MoveList;
-	std::thread worker_thread[MAX_THREADS];		// to-do: make elements dynamic ?	
-	__int64 nNodesPARTIAL[MAX_THREADS];			// (Each worker thread gets their own one of these). to-do: make elements dynamic
+	unsigned int nThreads = min(t.hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+	std::vector<std::thread> worker_thread(nThreads);
+	std::vector<__int64> nNodesPARTIAL(nThreads);
+
 	unsigned int s;
 	while (pM->NoMoreMoves == 0)
 	{
