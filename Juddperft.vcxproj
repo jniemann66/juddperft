@@ -152,6 +152,7 @@
     <ClInclude Include="hashtable.h" />
     <ClInclude Include="movegen.h" />
     <ClInclude Include="search.h" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="timemanage.h" />
     <ClInclude Include="winboard.h" />
   </ItemGroup>

@@ -6,7 +6,7 @@
 
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000
-//#define _SQUEEZE_PERFT_COUNT_60BITS 1 // squeeze depth and count into single 64-bit integer (4:60 bits respectively) to make hash entries smaller.
+#define _SQUEEZE_PERFT_COUNT_60BITS 1 // squeeze depth and count into single 64-bit integer (4:60 bits respectively) to make hash entries smaller.
 
 typedef unsigned __int64 HashKey;
 typedef unsigned __int64 ZobristKey;
