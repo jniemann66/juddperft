@@ -22,6 +22,14 @@ public:
 	ZobristKey zkBlackCanCastle;
 	ZobristKey zkBlackCanCastleLong;
 	ZobristKey zkPerftDepth[24];
+	
+	// pre-fabricated combinations of keys for castling:
+	ZobristKey zkDoBlackCastle;
+	ZobristKey zkDoBlackCastleLong;
+	ZobristKey zkDoWhiteCastle;
+	ZobristKey zkDoWhiteCastleLong;
+	//
+
 	bool Generate();
 };
 

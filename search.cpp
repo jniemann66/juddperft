@@ -6,8 +6,6 @@
 #include <thread>
 #include <cassert>
 #include <vector>
- 
- // #define _QSEARCH_OFF 1
 
 // Globals
 extern Engine TheEngine;
@@ -124,7 +122,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 	__int64 orig_nNodes = nNodes;
 	
-	std::atomic<PerftTableEntry> *pAtomicRecord = PerftTable.GetAddress(HK);		// get address of atomic record
+	std::atomic<PerftTableEntry> *pAtomicRecord = PerftTable.GetAddress(HK);								// get address of atomic record
 	PerftTableEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
 	if (RetrievedRecord.Hash == HK) {
 		if (RetrievedRecord.depth == depth) {
@@ -160,7 +158,6 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 	} while (!pAtomicRecord->compare_exchange_weak(RetrievedRecord, NewRecord)); // loop until successfully written;
 
 #endif
-
 }
 
 // PerftFastIterative() - Iterative version of perft.
@@ -201,7 +198,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 #ifdef _USE_HASH
 		// Consult the HashTable:
 		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];	
-		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);		// get address of atomic record
+		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);								// get address of atomic record
 		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();		// Load a non-atomic copy of the record
 
 		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {
@@ -249,21 +246,14 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 		}
 
 #ifdef _USE_HASH
-
-		// ---------------------------------------------------
-		// Do this to trap bugs with incremental Hash updates:
-	/*	ChessPosition Q2;
-		Q2 = Q[currentdepth];
-		Q2.CalculateHash();*/
-		//// ---------------------------------------------------
-
-		////	Writehash - (2016-02-26 broken in multithreading)
-		//	NewRecord[currentdepth].Hash = HK[currentdepth];
-		//	NewRecord[currentdepth].depth = currentdepth;
-		//	NewRecord[currentdepth].count = nNodes-orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
-		//	do {
-		//		
-		//	} while (!pAtomicRecord[currentdepth]->compare_exchange_weak(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
+			
+		//	Writehash - (2016-02-26 broken in multithreading)
+			//NewRecord[currentdepth].Hash = HK[currentdepth];
+			//NewRecord[currentdepth].depth = currentdepth;
+			//NewRecord[currentdepth].count = nNodes-orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
+			//do {
+			//	
+			//} while (!pAtomicRecord[currentdepth]->compare_exchange_weak(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
 #endif
 			if (currentdepth == depth)
 				break; // finished
@@ -364,7 +354,6 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
  // dumb multi-threading driver - waits for EVERY thread to finish before starting another batch, therefore inefficient 
  //(CPUs left with nothing to do while waiting for last thread to finish)
-
 void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
@@ -425,9 +414,11 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	}
 }
 
-// Thread Pool versions to follow - under development:
-// 27/02/2016: getting occasional hash errors - atomicity broken ??
+////////////////////////////////////////////////////////
+// Thread Pool versions to follow  (under development)
+////////////////////////////////////////////////////////
 
+// 27/02/2016: still broken: (hash errors - atomicity broken ?? )
 
 //// PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
 //// It works by splitting all of the legal moves into batches of (nThread) Threads at a time
@@ -508,10 +499,10 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 //	} // Ends else{}
 //}
 
-
-//// PerftFastMT() - this version uses a Thread Pool - ensures cpu cores are always doing work.
+// PerftFastMT() - Thread Pool version - ensures cpu cores are always doing work.
 //void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 //{
+//	nNodes = 0i64;
 //	ChessMove MoveList[MOVELIST_SIZE];
 //	ChessPosition Q;
 //	ChessMove* pM;
@@ -534,9 +525,9 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 //
 //	ThreadPool pool(nThreads);
 //	std::vector<std::future<__int64>> results;
-//	
+//
 //	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
-//		results.emplace_back(pool.enqueue([&]{
+//		results.emplace_back(pool.enqueue([&] {
 //			// Set up position
 //			Q = P;
 //			Q.PerformMove(*pM).SwitchSides();
@@ -545,7 +536,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 //			// Invoke PerftFast()
 //			return PerftFast3(Q, depth - 1);
 //		}));
-//		
+//
 //	}
 //
 //	for (auto && result : results) {

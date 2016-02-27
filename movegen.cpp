@@ -288,11 +288,12 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0x0f00000000000000i64;
 			ChessPosition::D ^= 0x0f00000000000000i64;
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][57]; // Place King on g8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][56]; // Remove Rook from h8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][58]; // Place Rook on f8
-			ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// (unconditionally) flip black castling
+			HK ^= ZobristKeys.zkDoBlackCastle;
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][57]; // Place King on g8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][56]; // Remove Rook from h8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][58]; // Place Rook on f8
+			//ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// (unconditionally) flip black castling
 			if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 			ChessPosition::BlackDidCastle = 1;
@@ -307,12 +308,13 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0xb800000000000000i64;
 			ChessPosition::D ^= 0xb800000000000000i64;
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][61]; // Place King on c8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][63]; // Remove Rook from a8
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][60]; // Place Rook on d8
+			HK ^= ZobristKeys.zkDoBlackCastleLong;
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][61]; // Place King on c8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][63]; // Remove Rook from a8
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][60]; // Place Rook on d8
+			//ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// (unconditionally) flip black castling long
 			if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-			ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// (unconditionally) flip black castling long
 #endif
 			ChessPosition::BlackDidCastleLong = 1;
 			ChessPosition::BlackCanCastle = 0;
@@ -347,11 +349,15 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0x000000000000000fi64;
 			ChessPosition::D &= 0xfffffffffffffff0i64;	// clear colour of e1,f1,g1,h1 (make white)
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][1]; // Place King on g1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][0]; // Remove Rook from h1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][2]; // Place Rook on f1
-			ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// (unconditionally) flip white castling
+			HK^=ZobristKeys.zkDoWhiteCastle;
+			//BitBoard XX = HK^ZobristKeys.zkDoWhiteCastle;
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][1]; // Place King on g1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][0]; // Remove Rook from h1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][2]; // Place Rook on f1
+			//ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// (unconditionally) flip white castling
+			//assert(XX == HK);
+
 			if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
 #endif
 			ChessPosition::WhiteDidCastle = 1;
@@ -362,17 +368,23 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		
 		if(M.CastleLong)
 		{
+			
 			ChessPosition::A ^= 0x0000000000000028i64;
 			ChessPosition::B ^= 0x0000000000000028i64;
 			ChessPosition::C ^= 0x00000000000000b8i64;
 			ChessPosition::D &= 0xffffffffffffff07i64;	// clear colour of a1,b1,c1,d1,e1 (make white)
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][5]; // Place King on c1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][7]; // Remove Rook from a1
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][4]; // Place Rook on d1
+			HK^=ZobristKeys.zkDoWhiteCastleLong;
+			//BitBoard XX = HK^ZobristKeys.zkDoWhiteCastleLong;
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][5]; // Place King on c1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][7]; // Remove Rook from a1
+			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][4]; // Place Rook on d1
+			//ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// (unconditionally) flip white castling long
+			//assert(XX == HK);
+			
 			if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
-			ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// (unconditionally) flip white castling long
+			
 #endif
 			ChessPosition::WhiteDidCastleLong = 1;
 			ChessPosition::WhiteCanCastle = 0;
@@ -404,7 +416,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	// LOOK FOR FORFEITED CASTLING RIGHTS DUE to ROOK MOVES:
 	if(M.Piece == BROOK)
 	{	
-		if((1i64<<nFromSquare) & BLACKKRPOS)
+	//	if((1i64<<nFromSquare) & BLACKKRPOS)
+		if(nFromSquare==56)
 		{
 			// Black moved K-side Rook and forfeits right to castle K-side
 			if(ChessPosition::BlackCanCastle){
@@ -415,7 +428,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 				ChessPosition::BlackCanCastle=0;
 			}
 		}
-		else if ((1i64<<nFromSquare) & BLACKQRPOS)
+		//else if ((1i64<<nFromSquare) & BLACKQRPOS)
+		else if (nFromSquare==63)
 		{
 			// Black moved the QS Rook and forfeits right to castle Q-side
 			if (ChessPosition::BlackCanCastleLong) {
@@ -430,7 +444,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	
 	if(M.Piece == WROOK)
 	{
-		if((1i64<<nFromSquare) & WHITEKRPOS)
+		//if((1i64<<nFromSquare) & WHITEKRPOS)
+		if (nFromSquare==0)
 		{
 			// White moved K-side Rook and forfeits right to castle K-side
 			if (ChessPosition::WhiteCanCastle) {
@@ -441,7 +456,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 				ChessPosition::WhiteCanCastle=0;
 			}
 		}
-		else if((1i64<<nFromSquare) & WHITEQRPOS)
+	//	else if((1i64<<nFromSquare) & WHITEQRPOS)
+		else if (nFromSquare==7)
 		{
 			// White moved the QSide Rook and forfeits right to castle Q-side
 			if (ChessPosition::WhiteCanCastleLong) {
@@ -1164,8 +1180,6 @@ inline void AddWhitePromotionsToListIfLegal2(const ChessPosition& P, ChessMove*&
 			pM->IllegalMove = 1;
 	}
 }
-
-
 
 inline BitBoard GenBlackAttacks(const ChessPosition& Z)
 {	
