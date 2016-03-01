@@ -3,6 +3,7 @@
 
 #include "movegen.h"
 #include <atomic>
+#include <string>
 
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000
@@ -37,7 +38,7 @@ public:
 template<class T> class HashTable
 {
 public:
-	HashTable();
+	HashTable(char* pName = "Hash Table");
 	~HashTable();
 	bool SetSize(unsigned __int64 nBytes);
 	bool DeAllocate();
@@ -54,10 +55,11 @@ private:
 	unsigned __int64 m_nRequestedSize;
 	unsigned __int64 m_nWrites;
 	unsigned __int64 m_nCollisions;
+	std::string m_Name;
 };
 
 template<class T>
-inline HashTable<T>::HashTable()
+inline HashTable<T>::HashTable(char* pName) : m_Name(pName)
 {
 	m_pTable = nullptr;
 	m_nCollisions = 0i64;
@@ -70,7 +72,7 @@ template<class T>
 inline HashTable<T>::~HashTable()
 {
 	if (m_pTable != nullptr) {
-		printf_s("deallocating hash table\n");
+		printf_s("deallocating %s\n",m_Name.c_str());
 		delete[] m_pTable;
 		m_pTable = nullptr;
 	}
@@ -83,9 +85,11 @@ inline bool HashTable<T>::SetSize(unsigned __int64 nBytes)
 
 	unsigned __int64 nNewNumEntries = 1i64;
 	// Make nNewSize a power of 2:
-	while (nNewNumEntries < (nBytes / sizeof(T))) {
+	while (nNewNumEntries*sizeof(T) < nBytes) {
 		nNewNumEntries <<= 1;
 	}
+
+	nNewNumEntries >>= 1;
 
 	if (nNewNumEntries == m_nEntries) {
 		// No change in size
@@ -100,11 +104,11 @@ inline bool HashTable<T>::SetSize(unsigned __int64 nBytes)
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
 	if (m_pTable == nullptr) {
-		printf_s("Failed to allocate %I64d bytes for HashTable !\n", nBytes);
+		printf_s("Failed to allocate %I64d bytes for %s !\n", nBytes,m_Name.c_str());
 		return false;
 	}
 	else {
-		printf_s("Allocated %I64d bytes for HashTable\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_nEntries, sizeof(T));
+		printf_s("Allocated %I64d bytes for %s\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
 		m_nCollisions = 0i64;
 		m_nWrites = 0i64;
 		return true;
@@ -116,7 +120,7 @@ inline bool HashTable<T>::DeAllocate()
 {
 	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
 	{
-		printf_s("deallocating hash table\n");
+		printf_s("deallocating %s\n",m_Name.c_str());
 		delete[] m_pTable;
 		m_pTable = nullptr;
 		return true;
@@ -189,6 +193,12 @@ struct PerftTableEntry
 	}; 
 #endif 
 	// Note: std::atomic<> version of this appears to add 8 bytes
+};
+
+struct LeafEntry
+{
+	HashKey Hash;
+	unsigned char count;
 };
 
 #endif // _HASHTABLE_H

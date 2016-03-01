@@ -6,6 +6,7 @@
 #include "search.h"
 #include "engine.h"
 #include "hashtable.h"
+#include "Juddperft.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -15,9 +16,12 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <vector>
+#include <numeric>
 
 ofstream logfile("perft.txt");
 extern HashTable<std::atomic<PerftTableEntry> > PerftTable;
+extern HashTable <std::atomic<LeafEntry>> LeafTable;
 
 WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
 {
@@ -247,7 +251,34 @@ void parse_input_showposition(const char* s, Engine* pE)
 }
 void parse_input_showhash(const char* s,Engine* pE)
 {
+	printf_s("Leaf Node Table Size: %I64d bytes\n", LeafTable.GetSize());
+	__int64 numEntries = LeafTable.GetNumEntries();
+	__int64 nPopulatedLeafEntries = 0i64;
+	std::atomic<LeafEntry> *pLeafTableBaseAddress= LeafTable.GetAddress(0i64);
+	LeafEntry LE;
+	for (__int64 w = 0; w < numEntries; w++) {
+		LE = (pLeafTableBaseAddress + w)->load();
+		if (LE.count != 0)
+			nPopulatedLeafEntries++;
+	}
+	printf_s("%I64d entries occupied out of %I64d (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
+	//
 	printf_s("Perft Table Size: %I64d bytes\n", PerftTable.GetSize());
+	numEntries = PerftTable.GetNumEntries();
+	std::vector<__int64> depthTally(16,0);
+	std::atomic<PerftTableEntry> *pBaseAddress = PerftTable.GetAddress(0i64);
+	std::atomic<PerftTableEntry> *pAtomicRecord;
+	
+	for (__int64 x = 0; x < numEntries; x++) {
+		pAtomicRecord = pBaseAddress + x;
+		PerftTableEntry RetrievedRecord = pAtomicRecord->load();
+		++depthTally[RetrievedRecord.depth];
+	}
+
+	for (unsigned int d = 0; d < 16; d++) {
+		printf_s("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
+	}
+	printf_s("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0i64));
 }
 
 void parse_input_perft(const char* s,Engine* pE)
@@ -347,9 +378,11 @@ void parse_input_lookuphash(const char* s, Engine* pE)
 }
 
 void parse_input_memory(const char* s, Engine* pE) {
+	unsigned __int64 BytesRequested = _atoi64(s);
 	if (s == NULL)
 		return; 
-	PerftTable.SetSize(atoi(s)); 
+
+	SetMemory(BytesRequested);
 }
 void parse_input_cores(const char* s, Engine* pE) {
 	

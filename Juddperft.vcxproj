@@ -187,7 +187,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <ExceptionHandling>Sync</ExceptionHandling>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
-      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -222,6 +222,7 @@
     <ClInclude Include="engine.h" />
     <ClInclude Include="fen.h" />
     <ClInclude Include="hashtable.h" />
+    <ClInclude Include="Juddperft.h" />
     <ClInclude Include="movegen.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="timemanage.h" />

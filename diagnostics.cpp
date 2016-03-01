@@ -18,20 +18,12 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, unsigne
 	ChessPosition P;
 	ReadFen(&P, pzFENstring);
 	START_TIMER();
-	PerftInfo T;
-	T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0i64;
-	PerftMT(P, depth, 1, &T);
-	printf_s("Perft %d: %I64d (Correct Answer= %I64d)\nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
-		depth,
-		T.nMoves,
-		correctAnswer,
-		T.nCapture,
-		T.nCastle,
-		T.nCastleLong,
-		T.nEPCapture,
-		T.nPromotion
-		);
-	if (T.nMoves != correctAnswer)
+	
+	__int64 n=0i64;
+	PerftFastMTp(P, depth, n);
+	printf_s("Perft %d: %I64d (Correct Answer= %I64d)\n", depth, n, correctAnswer);
+		
+	if (n != correctAnswer)
 		printf_s("-== FAIL !!! ==-\n");
 	STOP_TIMER();
 	printf_s("\n\n");

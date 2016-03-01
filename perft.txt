@@ -1,13 +1,5 @@
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
-Received command: perftfast 6
+Received command: memory 7000000000
+Received command: perftfast 8
+Received command: perftfast 9
+Received command: showhash
 Received command: quit
