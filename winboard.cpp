@@ -123,7 +123,6 @@ bool WaitForInput(Engine* pE)
 				{
 					if(_stricmp(command,"quit")==NULL)
 					{
-						// todo QUIT 
 						pE->StopSignal = true;
 						return false;
 					}
@@ -288,7 +287,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 		START_TIMER();
 		__int64 nNumPositions = 0i64;
 		
-		PerftFastMT(pE->CurrentPosition, q, nNumPositions);
+		PerftFastMTp(pE->CurrentPosition, q, nNumPositions);
 		printf_s("Perft %d: %I64d \n",
 			q,nNumPositions
 			);

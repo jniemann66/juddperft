@@ -1,11 +1,14 @@
 #include "search.h"
 #include "movegen.h"
 #include "engine.h"
-#include "ThreadPool.h"
 
 #include <thread>
 #include <cassert>
 #include <vector>
+#include <queue>
+#include <numeric>
+#include <condition_variable>
+
 
 // Globals
 extern Engine TheEngine;
@@ -352,73 +355,155 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 }
 
- // dumb multi-threading driver - waits for EVERY thread to finish before starting another batch, therefore inefficient 
+ // dumb multi-threading driver for PerftFast() - waits for EVERY thread to finish before starting another batch, therefore inefficient 
  //(CPUs left with nothing to do while waiting for last thread to finish)
-void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
+//void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
+//{
+//	ChessMove MoveList[MOVELIST_SIZE];
+//	ChessPosition Q;
+//	ChessMove* pM;
+//	GenerateMoves(P, MoveList);
+//
+//	if (depth == 1) {
+//		for (pM = MoveList; pM->NoMoreMoves == 0; pM++) {
+//			nNodes++;
+//		}
+//		return;
+//	}
+//
+//	pM = MoveList;
+//
+//	// determine number of threads. Note:
+//	// MAX_THREADS is compile-time hard limit. 
+//	// TheEngine.nNumCores is how many cores user wants. 
+//	// concurrency is what system is capable of.
+//	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
+//	
+//	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+//	std::vector<std::thread> worker_thread(nThreads);
+//	std::vector<__int64> nNodesPARTIAL(nThreads);
+//
+//	unsigned int s;
+//	while (pM->NoMoreMoves == 0)
+//	{
+//		// Launch the threads ... watch those CPU cores go up in smoke :-) 
+//		for (s = 0; s < nThreads; s++)
+//		{
+//			// reset counters
+//			nNodesPARTIAL[s] = 0i64;
+//
+//			// Set up position
+//			Q = P;
+//			Q.PerformMove(*pM).SwitchSides();
+//
+//			// Start Thread
+//			worker_thread[s] = std::thread(PerftFast2, Q, depth - 1, &nNodesPARTIAL[s]);
+//
+//			// Go to next Move ...
+//			pM++;
+//			if (pM->NoMoreMoves) {
+//				s++;
+//				break;
+//			}
+//		}
+//
+//		// Wait for threads to finish and add the results
+//		for (unsigned int f = 0; f < s; f++)
+//		{
+//			worker_thread[f].join();
+//			nNodes += nNodesPARTIAL[f];
+//			printf_s("."); // show progress: print a dot every time thread finishes
+//		}
+//	}
+//}
+
+////////////////////////////////////////////////////////
+// Thread Pool versions to follow  (under development)
+////////////////////////////////////////////////////////
+
+// PerftFastMTp() - Multi-threaded perft() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
+// 01/03/2016: (working ok)
+
+void PerftFastMTp(ChessPosition P, int depth, __int64& nNodes)
 {
+	nNodes = 0i64;
 	ChessMove MoveList[MOVELIST_SIZE];
-	ChessPosition Q;
-	ChessMove* pM;
+
 	GenerateMoves(P, MoveList);
 
-	if (depth == 1) {
-		for (pM = MoveList; pM->NoMoreMoves == 0; pM++) {
-			nNodes++;
-		}
+	if (depth == 0) {
+		nNodes = 1;
 		return;
 	}
 
-	pM = MoveList;
+	if (depth == 1) {
+		nNodes = MoveList->MoveCount;
+		return;
+	}
 
 	// determine number of threads. Note:
 	// MAX_THREADS is compile-time hard limit. 
 	// TheEngine.nNumCores is how many cores user wants. 
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-	
+
 	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
-	std::vector<std::thread> worker_thread(nThreads);
-	std::vector<__int64> nNodesPARTIAL(nThreads);
 
-	unsigned int s;
-	while (pM->NoMoreMoves == 0)
-	{
-		// Launch the threads ... watch those CPU cores go up in smoke :-) 
-		for (s = 0; s < nThreads; s++)
-		{
-			// reset counters
-			nNodesPARTIAL[s] = 0i64;
+	std::vector<std::thread> threads;
+	std::vector<__int64> subTotal(nThreads, 0i64);
+	std::queue<ChessMove> MoveQueue;
+	std::mutex q_mutex;
+	std::condition_variable cv;
+	bool bStart = false;
 
-			// Set up position
-			Q = P;
-			Q.PerformMove(*pM).SwitchSides();
+	// Set up a simple Thread Pool:
+	for (int t = 0; t < nThreads; t++) {
+		threads.emplace_back([&, depth, P] {
+			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
 
-			// Start Thread
-			worker_thread[s] = std::thread(PerftFast2, Q, depth - 1, &nNodesPARTIAL[s]);
+			std::unique_lock<std::mutex> lock(q_mutex);
+			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
-			// Go to next Move ...
-			pM++;
-			if (pM->NoMoreMoves) {
-				s++;
-				break;
+			// upon wake-up:
+			__int64 s = 0i64; // local accumulator for thread
+			for (;;) // thread's event loop
+			{
+				if (!MoveQueue.empty()) {
+					ChessPosition Q = P;							// Set up position
+					ChessMove M = MoveQueue.front();
+					MoveQueue.pop();								// remove ChessMove from queue:
+					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
+					Q.PerformMove(M).SwitchSides();					// make move
+					s += PerftFast3(Q, depth - 1);					// Invoke PerftFast()
+					printf_s(".");									// show progress
+					lock.lock();									// lock the queue again
+				}
+
+				if (MoveQueue.empty())
+					break;
 			}
-		}
-
-		// Wait for threads to finish and add the results
-		for (unsigned int f = 0; f < s; f++)
-		{
-			worker_thread[f].join();
-			nNodes += nNodesPARTIAL[f];
-			printf_s("."); // show progress: print a dot every time thread finishes
-		}
+			subTotal.push_back(s);
+		});
 	}
+
+	// Put Moves into Queue for Thread pool to process:
+	for (int i = 0; i < MoveList->MoveCount; ++i) {
+		MoveQueue.push(MoveList[i]);
+	}
+
+	// start the ball rolling:
+	bStart = true;
+	cv.notify_all();
+
+	//Join Threads:
+	for (auto & th : threads) {
+		th.join();
+	}
+
+	// add up total:
+	nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0i64);
 }
 
-////////////////////////////////////////////////////////
-// Thread Pool versions to follow  (under development)
-////////////////////////////////////////////////////////
-
-// 27/02/2016: still broken: (hash errors - atomicity broken ?? )
 
 //// PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
 //// It works by splitting all of the legal moves into batches of (nThread) Threads at a time
@@ -499,48 +584,4 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 //	} // Ends else{}
 //}
 
-// PerftFastMT() - Thread Pool version - ensures cpu cores are always doing work.
-//void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
-//{
-//	nNodes = 0i64;
-//	ChessMove MoveList[MOVELIST_SIZE];
-//	ChessPosition Q;
-//	ChessMove* pM;
-//	GenerateMoves(P, MoveList);
-//
-//	if (depth == 1) {
-//		nNodes = MoveList->MoveCount;
-//		return;
-//	}
-//
-//	pM = MoveList;
-//
-//	// determine number of threads. Note:
-//	// MAX_THREADS is compile-time hard limit. 
-//	// TheEngine.nNumCores is how many cores user wants. 
-//	// concurrency is what system is capable of.
-//	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-//
-//	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
-//
-//	ThreadPool pool(nThreads);
-//	std::vector<std::future<__int64>> results;
-//
-//	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
-//		results.emplace_back(pool.enqueue([&] {
-//			// Set up position
-//			Q = P;
-//			Q.PerformMove(*pM).SwitchSides();
-//			// Go to next Move ...
-//			pM++;
-//			// Invoke PerftFast()
-//			return PerftFast3(Q, depth - 1);
-//		}));
-//
-//	}
-//
-//	for (auto && result : results) {
-//		nNodes += result.get();
-//		printf_s(".");
-//	}
-//}
+

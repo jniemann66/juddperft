@@ -1,3 +1,13 @@
-Received command: memory 9000000000
-Received command: perftfast 8
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
+Received command: perftfast 6
 Received command: quit

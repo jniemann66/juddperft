@@ -31,6 +31,8 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);
 // Multi-Threaded driver for Perft()
 void PerftFastMT(ChessPosition P, int depth, __int64 & nNodes);				// Multi-Threaded driver for PerftFast()
 
+void PerftFastMTp(ChessPosition P, int depth, __int64 & nNodes);
+
 #endif
 
 #ifndef NULL
