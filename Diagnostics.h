@@ -16,6 +16,7 @@ const char PerftValidatorPath[] = "c:\\bin\\PerftValidate.exe";
 // PerftValidateWithExternal() - validates perft calculation against external engine
 int PerftValidateWithExternal(const char* const pzFENString, int depth, __int64 value);
 void FindPerftBug(const ChessPosition* pP, int depth);
+void RunTestSuite();
 void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, unsigned __int64 correctAnswer);
 
 #endif // INCLUDE_DIAGNOSTICS

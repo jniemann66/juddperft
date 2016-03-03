@@ -829,22 +829,17 @@ void GenerateMoves(const ChessPosition& P, ChessMove* pM)
 void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
-	BitBoard Occupied;		/* all squares occupied by something */
-	BitBoard WhiteOccupied; /* all squares occupied by W */
-	BitBoard BlackOccupied; /* all squares occupied by B */
-	BitBoard King,BlackKing;
-	BitBoard WhiteFree;		/* all squares where W is free to move */
-	
-	Occupied = P.A | P.B | P.C;
-	BlackOccupied = Occupied & P.D;								/* Note : Also includes Black EP squares !*/
-	WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	/* Note : excludes White EP squares ! */
+	BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
+	BitBoard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
+	BitBoard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
+	BitBoard WhiteFree;				// all squares where W is free to move
+	WhiteFree = (P.A & P.B & ~P.C)	// any EP square 
+		|	~(Occupied)				// any vacant square
+		|	(~P.A & P.D)			// Black Bishop, Rook or Queen
+		|	(~P.B & P.D);			// Black Pawn or Knight
 	
 	assert(WhiteOccupied != 0);
-	
-	King=P.A & P.B & P.C;	
-	BlackKing=(King & P.D);
-	WhiteFree= ~WhiteOccupied & ~BlackKing; 
-	//
+
 	BitBoard Square;
 	BitBoard CurrentSquare;
 	BitBoard A,B,C;
@@ -1089,15 +1084,15 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->NoMoreMoves=1;
 }
 
-inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags /*=0*/)
+
+inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags)
 {
-	bool bresult = false;
 	if (to != 0i64)
 	{
 		ChessPosition Q = P;
 		// lets start by building the move structure:
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = GetSquareIndex(to);
+		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
 		assert((1i64 << pM->ToSquare) == to);
 		pM->Flags = flags;
 		pM->Piece = piece;
@@ -1107,10 +1102,15 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 
 		// Test for capture. Note: 
 		// Only considered a capture if dest is not an enpassant or king.
-		pM->Capture = (to & Q.D & ~QAB) ? 1 : 0;
-		if (pM->Capture)
-			bresult = false;
-		pM->EnPassantCapture = ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) ? 1 : 0;
+
+		if (to & Q.D) {
+			if (to & ~QAB) {
+				pM->Capture = 1;
+			}
+			else if ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) {
+				pM->EnPassantCapture = 1;
+			}
+		}
 
 		// Now, lets 'try out' the move:
 		Q.PrepareChessMove(*pM);
@@ -1131,6 +1131,64 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 	}
 }
 
+// under development:
+// takes tosquare as a square index, instead of a bitboard
+inline void AddWhiteMoveToListIfLegal3(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, BitBoard Mask,__int32 piece, __int32 flags /*=0*/)
+{
+	BitBoard to = 1i64 << tosquare;
+	
+	//BitBoard WhiteFree = (P.A & P.B & ~P.C)			// any EP square 
+	//	| ~(P.A & P.B & P.C)						// any vacant square
+	//	| (~P.A & P.D)								// Black Bishop, Rook or Queen
+	//	| (~P.B & P.D);								// Black Pawn or Knight
+
+	if (to & Mask)
+	{
+		ChessPosition Q = P;
+		// lets start by building the move structure:
+		pM->FromSquare = fromsquare;
+		pM->ToSquare = tosquare;
+		assert((1i64 << pM->ToSquare) == to);
+		pM->Flags = flags;
+		pM->Piece = piece;
+
+		// Bitboard containing EnPassants and kings:
+		BitBoard QAB = (Q.A & Q.B);
+
+		// Test for capture. Note: 
+		// Only considered a capture if dest is not an enpassant or king.
+		if (to & Q.D) {
+			if (to & ~QAB) {
+				pM->Capture = 1;
+			}
+			else if ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) {
+				pM->EnPassantCapture = 1;
+			}
+		}
+		/*pM->Capture = (to & Q.D & ~QAB) ? 1 : 0;
+		pM->EnPassantCapture = ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) ? 1 : 0;*/
+
+		// Now, lets 'try out' the move:
+		Q.PrepareChessMove(*pM);
+		if (!IsWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
+		{
+#ifdef _FLAG_CHECKS_IN_MOVE_GENERATION		
+			if (IsBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
+				pM->Check = 1;
+#endif
+			pM++;			// Advancing the pointer means that the 
+							// move is now added to the list.
+							// (pointer is ready for next move)
+			pM->Flags = 0;
+
+		}
+		else
+			pM->IllegalMove = 1;
+	}
+}
+
+
+
 inline void AddWhitePromotionsToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags /*=0*/)
 {
 	if (to != 0i64)
@@ -1138,7 +1196,7 @@ inline void AddWhitePromotionsToListIfLegal2(const ChessPosition& P, ChessMove*&
 		ChessPosition Q = P;
 		// lets start by building the move structure:
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = GetSquareIndex(to);
+		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
 		assert((1i64 << pM->ToSquare) == to);
 		pM->Flags = flags;
 		//	pM->BlackToMove = 0;
@@ -1252,23 +1310,17 @@ inline BitBoard IsWhiteInCheck(const ChessPosition& Z)
 void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
-	BitBoard Occupied;		/* all squares occupied by something */
-	BitBoard WhiteOccupied; /* all squares occupied by W */
-	BitBoard BlackOccupied; /* all squares occupied by B */
-	BitBoard King, WhiteKing;
-	BitBoard BlackFree;		/* all squares where B is free to move */
-
-	Occupied = P.A | P.B | P.C;
-	WhiteOccupied = Occupied & ~P.D;					/* Note : Also includes White EP squares !*/
-	BlackOccupied = P.D & ~(P.A & P.B & ~P.C & P.D);	/* Note : excludes Black EP squares ! */
+	BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
+	BitBoard BlackOccupied = P.D & ~(P.A & P.B & ~P.C);					// all squares occupied by B, excluding EP Squares
+	BitBoard WhiteOccupied = (Occupied & ~P.D);							// all squares occupied by W, including white EP Squares
+	BitBoard BlackFree;				// all squares where B is free to move
+	BlackFree = (P.A & P.B & ~P.C)	// any EP square 
+		| ~(Occupied)				// any vacant square
+		| (~P.A & ~P.D)				// White Bishop, Rook or Queen
+		| (~P.B & ~P.D);			// White Pawn or Knight
 	
 	assert(BlackOccupied != 0);
-
-	King=P.A & P.B & P.C;
-	WhiteKing=(King & ~P.D); 
-	//BlackKingInCheck=King & P.D & GenWhiteAttacks(P);
-	BlackFree= ~BlackOccupied & ~WhiteKing;
-	//
+		
 	BitBoard Square;
 	BitBoard CurrentSquare;
 	BitBoard A,B,C;
@@ -1527,7 +1579,7 @@ inline void AddBlackMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		pM->To = to;*/
 		//BitBoard from = 1i64 << fromsquare;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = GetSquareIndex(to);
+		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
@@ -1538,9 +1590,16 @@ inline void AddBlackMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 
 		// Test for capture. Note: 
 		// Only considered a capture if dest is not an enpassant or king.
-		pM->Capture = (to & WhiteOccupied & ~QAB) ? 1 : 0;
-		pM->EnPassantCapture = ((pM->Piece == BPAWN) && (to & WhiteOccupied & QAB & ~Q.C)) ? 1 : 0;
 
+		if (to &  WhiteOccupied) {
+			if (to & ~QAB) {
+				pM->Capture = 1;
+			}
+			else if ((pM->Piece == BPAWN) && (to & WhiteOccupied & QAB & ~Q.C)) {
+				pM->EnPassantCapture = 1;
+			}
+		}
+		
 		// Now, lets 'try out' the move:
 		Q.PrepareChessMove(*pM);
 		if (!IsBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
@@ -1566,7 +1625,7 @@ inline void AddBlackPromotionsToListIfLegal2(const ChessPosition& P, ChessMove*&
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = GetSquareIndex(to);
+		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
@@ -1675,9 +1734,9 @@ inline BitBoard IsBlackInCheck(const ChessPosition& Z)
 // set IsBlack to true to test if Black is in check
 // set IsBlack to false to test if White is in check.
 
-bool IsInCheck(const ChessPosition& P, bool bIsBlack)
+inline bool IsInCheck(const ChessPosition& P, bool bIsBlack)
 {
-	return bIsBlack ? IsBlackInCheck(P) : IsWhiteInCheck(P);
+	return bIsBlack ? IsBlackInCheck(P)!=0i64 : IsWhiteInCheck(P)!=0i64;
 }
 
 // Text Dump functions //////////////////
