@@ -95,25 +95,6 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 #endif
 	return pI->nMoves;
 }
-// PerftFast2() - Wrapper function for PerftFast(); takes a pointer instead of a reference for nNodes 
-// (std::thread doesn't like the version with the reference)
-void PerftFast2(const ChessPosition P, int depth, __int64* p_numNodes)
-{
-	__int64 n = *p_numNodes;
-	PerftFast(P, depth, n);
-//	PerftFastIterative(P, depth, n);
-	*p_numNodes = n;
-}
-
-// PerftFast3() - Wrapper function for PerftFast(); answer as return value
-__int64 PerftFast3(const ChessPosition P, int depth)
-{
-	__int64 n = 0;
-	PerftFast(P, depth, n);
-	//	PerftFastIterative(P, depth, n);
-	return n;
-}
-
 
 // PerftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
 void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
@@ -439,7 +420,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 // PerftFastMTp() - Multi-threaded perft() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
 // 01/03/2016: (working ok)
 
-void PerftFastMTp(ChessPosition P, int depth, __int64& nNodes)
+void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 {
 	nNodes = 0i64;
 	ChessMove MoveList[MOVELIST_SIZE];
@@ -489,7 +470,7 @@ void PerftFastMTp(ChessPosition P, int depth, __int64& nNodes)
 					MoveQueue.pop();								// remove ChessMove from queue:
 					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
 					Q.PerformMove(M).SwitchSides();					// make move
-					s += PerftFast3(Q, depth - 1);					// Invoke PerftFast()
+					PerftFast(Q, depth - 1, s);						// Invoke PerftFast()		
 					printf_s(".");									// show progress
 					lock.lock();									// lock the queue again
 				}

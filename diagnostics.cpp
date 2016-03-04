@@ -21,7 +21,7 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, unsigne
 	START_TIMER();
 	
 	__int64 n=0i64;
-	PerftFastMTp(P, depth, n);
+	PerftFastMT(P, depth, n);
 	printf_s("Perft %d: %I64d (Correct Answer= %I64d)\n", depth, n, correctAnswer);
 		
 	if (n != correctAnswer)
