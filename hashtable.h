@@ -201,5 +201,13 @@ struct LeafEntry
 	unsigned char count;
 };
 
+//struct LeafEntry
+//{
+//	HashKey Hash;
+//	bool hasDepth[3];
+//	unsigned __int32 count[3];
+//};
+
+
 #endif // _HASHTABLE_H
 

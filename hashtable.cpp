@@ -34,6 +34,7 @@ bool ZobristKeySet::Generate()
 		ZobristKeySet::zkPerftDepth[m] = dist(rd);
 	}	
 
+	// generate pre-fabricated castling keys:
 	ZobristKeySet::zkDoBlackCastle=
 		ZobristKeySet::zkPieceOnSquare[BKING][59]^ // Remove King from e8
 		ZobristKeySet::zkPieceOnSquare[BKING][57]^ // Place King on g8

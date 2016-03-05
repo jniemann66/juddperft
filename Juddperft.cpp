@@ -35,7 +35,7 @@ int main(int argc, char *argv[], char *envp[])
 			return EXIT_FAILURE;	// not going to end well ...
 	}
 
-	//RunTestSuite();
+	// RunTestSuite();
 
 	/*printf("sizeof(PerftTableEntry) == %zd\n", sizeof(PerftTableEntry));
 	printf("sizeof(std::atomic<PerftTableEntry>) == %zd\n", sizeof(std::atomic<PerftTableEntry>));

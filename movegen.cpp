@@ -651,7 +651,6 @@ void ChessPosition::SwitchSides()
 #ifdef _USE_HASH
 	ChessPosition::HK ^= ZobristKeys.zkBlackToMove;
 #endif
-	//return *this;
 	return;
 }
 
@@ -1007,70 +1006,61 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		if (B != 0)
 		{
 			// Piece can do diagonal moves (it's either a B or Q)
-			piece=(C == 0)? WBISHOP : WQUEEN;	
+			piece=(C == 0)? WBISHOP : WQUEEN;
+
 			Square=CurrentSquare;
 			do{ /* Diagonal UpRight */
 				Square=MoveUpRightSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if (Square & SolidBlackPiece) 
-					break;
-			} while (Square != 0);
-					
+			} while (Square & ~SolidBlackPiece);
+			
 			Square=CurrentSquare;
 			do{ /* Diagonal DownRight */
 				Square=MoveDownRightSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
+
 			Square=CurrentSquare;
 			do{ /* Diagonal DownLeft */
 				Square=MoveDownLeftSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
+			
 			Square=CurrentSquare;
 			do{ /* Diagonal UpLeft */
 				Square=MoveUpLeftSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
 		}
 
 		if (C != 0)
 		{
 			// Piece can do straight moves (it's either a R or Q)
-			piece=( B == 0)? WROOK : WQUEEN;	
+			piece=( B == 0)? WROOK : WQUEEN;
+
 			Square=CurrentSquare;
 			do{ /* Up */
 				Square=MoveUpSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
+
 			Square=CurrentSquare;
 			do{ /* Right */
 				Square=MoveRightSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
+
 			Square=CurrentSquare;
 			do{ /*Down */
 				Square=MoveDownSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
+
 			Square=CurrentSquare;
 			do{ /*Left*/
 				Square=MoveLeftSingleOccluded(Square,WhiteFree);
 				AddWhiteMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidBlackPiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidBlackPiece);
 		}
 	} // ends loop over q;
 
@@ -1097,6 +1087,97 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		pM->Flags = flags;
 		pM->Piece = piece;
 
+		// Test Move:
+
+		BitBoard O = ~((1i64 << fromsquare) | to);
+
+		if (pM->Castle)
+		{
+			Q.A ^= 0x000000000000000ai64;
+			Q.B ^= 0x000000000000000ai64;
+			Q.C ^= 0x000000000000000fi64;
+			//			Q.D &= 0xfffffffffffffff0i64;	// clear colour of e1,f1,g1,h1 (make white)
+		}
+		else if (pM->CastleLong)
+		{
+			Q.A ^= 0x0000000000000028i64;
+			Q.B ^= 0x0000000000000028i64;
+			Q.C ^= 0x00000000000000b8i64;
+			//			Q.D &= 0xffffffffffffff07i64;	// clear colour of a1,b1,c1,d1,e1 (make white)
+		}
+		else {
+
+			// clear old and new square:  
+			Q.A &= O;
+			Q.B &= O;
+			Q.C &= O;
+			Q.D &= O;
+
+			// Populate new square:
+			if (piece & 1)
+				Q.A |= to;
+			if (piece & 2)
+				Q.B |= to;
+			if (piece & 4)
+				Q.C |= to;
+			if (piece & 8)
+				Q.D |= to;
+
+			// Populate new square (Branchless method):
+		/*	Q.A |= to & -(static_cast<__int64>(piece) & 1);
+			Q.B |= to & -((static_cast<__int64>(piece) & 2) >> 1);
+			Q.C |= to & -((static_cast<__int64>(piece) & 4) >> 2);
+			Q.D |= to & -((static_cast<__int64>(piece) & 8) >> 3);*/
+
+			// Test for capture:
+			BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
+			if (to & P.D) {
+
+				if (to & ~PAB) // Only considered a capture if dest is not an enpassant or king.
+					pM->Capture = 1;
+
+				else if ((piece == WPAWN) && (to & P.D & PAB & ~P.C)) {
+					pM->EnPassantCapture = 1;
+					// remove the actual pawn (as well as the ep square)
+					to >>= 8;
+					Q.A &= ~to;
+					Q.B &= ~to;
+					Q.C &= ~to;
+					Q.D &= ~to;
+				}
+			}
+		}
+			
+		if (!IsWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
+		{
+#ifdef _FLAG_CHECKS_IN_MOVE_GENERATION		
+			if (IsBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
+				pM->Check = 1;
+#endif
+			pM++;			// Advancing the pointer means that the 
+							// move is now added to the list.
+							// (pointer is ready for next move)
+			pM->Flags = 0;
+
+		}
+		else
+			pM->IllegalMove = 1;
+	}
+}
+
+inline void AddSlidingMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, __int32 piece, unsigned __int32& flags)
+{
+	flags=0;
+	if (to != 0i64)
+	{
+		ChessPosition Q = P;
+		// lets start by building the move structure:
+		pM->FromSquare = fromsquare;
+		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
+		assert((1i64 << pM->ToSquare) == to);
+		pM->Flags = 0;
+		pM->Piece = piece;
+
 		// Bitboard containing EnPassants and kings:
 		BitBoard QAB = (Q.A & Q.B);
 
@@ -1106,10 +1187,11 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		if (to & Q.D) {
 			if (to & ~QAB) {
 				pM->Capture = 1;
+				
 			}
-			else if ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) {
-				pM->EnPassantCapture = 1;
-			}
+			/*	else if ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) {
+					pM->EnPassantCapture = 1;
+				}*/
 		}
 
 		// Now, lets 'try out' the move:
@@ -1129,7 +1211,14 @@ inline void AddWhiteMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		else
 			pM->IllegalMove = 1;
 	}
+	else
+	{
+		pM->IllegalMove = 1;
+	}
+	
+	flags = pM->Flags;
 }
+
 
 // under development:
 // takes tosquare as a square index, instead of a bitboard
@@ -1165,8 +1254,6 @@ inline void AddWhiteMoveToListIfLegal3(const ChessPosition& P, ChessMove*& pM, u
 				pM->EnPassantCapture = 1;
 			}
 		}
-		/*pM->Capture = (to & Q.D & ~QAB) ? 1 : 0;
-		pM->EnPassantCapture = ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) ? 1 : 0;*/
 
 		// Now, lets 'try out' the move:
 		Q.PrepareChessMove(*pM);
@@ -1187,34 +1274,49 @@ inline void AddWhiteMoveToListIfLegal3(const ChessPosition& P, ChessMove*& pM, u
 	}
 }
 
-
-
 inline void AddWhitePromotionsToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags /*=0*/)
 {
 	if (to != 0i64)
 	{
 		ChessPosition Q = P;
-		// lets start by building the move structure:
 		pM->FromSquare = fromsquare;
 		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
 		assert((1i64 << pM->ToSquare) == to);
 		pM->Flags = flags;
-		//	pM->BlackToMove = 0;
 		pM->Piece = piece;
 
-		// Bitboard containing EnPassants and kings:
-		BitBoard QAB = (Q.A & Q.B);
+		BitBoard O = ~((1i64 << fromsquare) | to);
+		
+		// clear old and new square:  
+		Q.A &= O;
+		Q.B &= O;
+		Q.C &= O;
+		Q.D &= O;
 
-		// Test for capture. Note: 
-		// Only considered a capture if dest is not an enpassant or king.
-		pM->Capture = (to & Q.D & ~QAB) ? 1 : 0;
-	//	pM->EnPassantCapture = ((pM->Piece == WPAWN) && (to & Q.D & QAB & ~Q.C)) ? 1 : 0;
+		// Populate new square:
+		if (piece & 1)
+			Q.A |= to;
+		if (piece & 2)
+			Q.B |= to;
+		if (piece & 4)
+			Q.C |= to;
+		if (piece & 8)
+			Q.D |= to;
 
-		// Now, lets 'try out' the move:
-		Q.PrepareChessMove(*pM);
+		// Populate new square (Branchless method):
+	/*	Q.A |= to & -(static_cast<__int64>(piece) & 1);
+		Q.B |= to & -((static_cast<__int64>(piece) & 2) >> 1);
+		Q.C |= to & -((static_cast<__int64>(piece) & 4) >> 2);
+		Q.D |= to & -((static_cast<__int64>(piece) & 8) >> 3);*/
+
+		// Test for capture:
+		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
+		pM->Capture = (to & P.D & ~PAB) ? 1 : 0;
+
 		if (!IsWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
 		{
-#ifdef _FLAG_CHECKS_IN_MOVE_GENERATION		
+#ifdef _FLAG_CHECKS_IN_MOVE_GENERATION	
+			// To-do: Promote to new piece (can potentially check opponent)
 			if (IsBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
 				pM->Check = 1;
 #endif
@@ -1494,68 +1596,60 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 		{
 			// Piece can do diagonal moves (it's either a B or Q)
 			piece=(C == 0)? BBISHOP : BQUEEN;
+
 			Square=CurrentSquare;
 			do{ /* Diagonal UpRight */
 				Square=MoveUpRightSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+				AddBlackMoveToListIfLegal2(P, pM, q, Square, piece);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /* Diagonal DownRight */
 				Square=MoveDownRightSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /* Diagonal DownLeft */
 				Square=MoveDownLeftSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /* Diagonal UpLeft */
 				Square=MoveUpLeftSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
 		}
 
 		if (C != 0)
 		{
 			// Piece can do straight moves (it's either a R or Q)
-			piece=( B == 0)? BROOK : BQUEEN;	
+			piece=( B == 0)? BROOK : BQUEEN;
+
 			Square=CurrentSquare;
 			do{ /* Up */
 				Square=MoveUpSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /* Right */
 				Square=MoveRightSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /*Down */
 				Square=MoveDownSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
+
 			Square=CurrentSquare;
 			do{ /*Left*/
 				Square=MoveLeftSingleOccluded(Square,BlackFree);
 				AddBlackMoveToListIfLegal2(P,pM,q,Square,piece);
-				if(Square & SolidWhitePiece)
-					break;
-			} while (Square != 0);
+			} while (Square & ~SolidWhitePiece);
 		}
 	} // ends loop over q;
 
@@ -1583,25 +1677,71 @@ inline void AddBlackMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, u
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
+		
+		// Test Move:
 
-		// Bitboard containing EnPassants and kings:
-		BitBoard QAB = (Q.A & Q.B);
-		BitBoard WhiteOccupied = (Q.A | Q.B | Q.C)&~Q.D;
+		BitBoard O = ~((1i64 << fromsquare) | to); 
+				
+		if (pM->Castle)
+		{
+			Q.A ^= 0x0a00000000000000i64;
+			Q.B ^= 0x0a00000000000000i64;
+			Q.C ^= 0x0f00000000000000i64;
+			Q.D ^= 0x0f00000000000000i64;
 
-		// Test for capture. Note: 
-		// Only considered a capture if dest is not an enpassant or king.
+		}
+		else if (pM->CastleLong)
+		{
+			Q.A ^= 0x2800000000000000i64;
+			Q.B ^= 0x2800000000000000i64;
+			Q.C ^= 0xb800000000000000i64;
+			Q.D ^= 0xb800000000000000i64;
+		}
+		else {
 
-		if (to &  WhiteOccupied) {
-			if (to & ~QAB) {
-				pM->Capture = 1;
-			}
-			else if ((pM->Piece == BPAWN) && (to & WhiteOccupied & QAB & ~Q.C)) {
-				pM->EnPassantCapture = 1;
+			// clear old and new square  
+			Q.A &= O;
+			Q.B &= O;
+			Q.C &= O;
+			Q.D &= O;
+
+			// Populate new square:
+			if (piece & 1)
+				Q.A |= to;
+			if (piece & 2)
+				Q.B |= to;
+			if (piece & 4)
+				Q.C |= to;
+			if (piece & 8)
+				Q.D |= to;
+
+			// Populate new square (Branchless method):
+		/*	Q.A |= to & -( static_cast<__int64>(piece) & 1);
+			Q.B |= to & -((static_cast<__int64>(piece) & 2) >> 1);
+			Q.C |= to & -((static_cast<__int64>(piece) & 4) >> 2);
+			Q.D |= to & -((static_cast<__int64>(piece) & 8) >> 3);*/
+		
+			// Test for capture:
+			BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
+			BitBoard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+			if (to &  WhiteOccupied) {
+
+				if (to & ~PAB) // Only considered a capture if dest is not an enpassant or king.
+					pM->Capture = 1;
+
+				else if ((piece == BPAWN) && (to & WhiteOccupied & PAB & ~P.C)) {
+					pM->EnPassantCapture = 1;
+					// remove the actual pawn (as well as the ep square)
+					to <<= 8;
+					Q.A &= ~to; // clear the pawn's square
+					Q.B &= ~to;
+					Q.C &= ~to;
+					Q.D &= ~to;
+				}
 			}
 		}
-		
-		// Now, lets 'try out' the move:
-		Q.PrepareChessMove(*pM);
+	
+
 		if (!IsBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
 		{
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
@@ -1629,21 +1769,40 @@ inline void AddBlackPromotionsToListIfLegal2(const ChessPosition& P, ChessMove*&
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
+		
+		BitBoard O = ~((1i64 << fromsquare) | to);
 
-		// Bitboard containing EnPassants and kings:
-		BitBoard QAB = (Q.A & Q.B);
-		BitBoard WhiteOccupied = (Q.A | Q.B | Q.C)&~Q.D;
+		// clear old and new square  
+		Q.A &= O;
+		Q.B &= O;
+		Q.C &= O;
+		Q.D &= O;
 
-		// Test for capture. Note: 
-		// Only considered a capture if dest is not an enpassant or king.
-		pM->Capture = (to & WhiteOccupied & ~QAB) ? 1 : 0;
-//		pM->EnPassantCapture = ((pM->Piece == BPAWN) && (to & WhiteOccupied & QAB & ~Q.C)) ? 1 : 0;
+		// Populate new square:
+		if (piece & 1)
+			Q.A |= to;
+		if (piece & 2)
+			Q.B |= to;
+		if (piece & 4)
+			Q.C |= to;
+		if (piece & 8)
+			Q.D |= to;
 
-		// Now, lets 'try out' the move:
-		Q.PrepareChessMove(*pM);
+		// Populate new square (Branchless method):
+	/*	Q.A |= to & -(static_cast<__int64>(piece) & 1);
+		Q.B |= to & -((static_cast<__int64>(piece) & 2) >> 1);
+		Q.C |= to & -((static_cast<__int64>(piece) & 4) >> 2);
+		Q.D |= to & -((static_cast<__int64>(piece) & 8) >> 3);*/
+
+		// Test for capture:
+		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
+		BitBoard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+		pM->Capture = (to & WhiteOccupied & ~PAB) ? 1 : 0;
+
 		if (!IsBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
 		{
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
+			// To-do: Promote to new piece (can potentially check opponent)
 			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
@@ -1989,6 +2148,6 @@ void DumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
 			break;
 		}
 		++pM;
-	}while (++i<256);
+	}while (++i<MOVELIST_SIZE);
 }
 

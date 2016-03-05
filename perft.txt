@@ -1,2 +1,1 @@
-Received command: perftfast 7
-Received command: quit
+Received command: perftfast 8
