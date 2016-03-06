@@ -339,16 +339,16 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessMove MoveList[MOVELIST_SIZE];
 	GenerateMoves(pE->CurrentPosition, MoveList);
 	ChessMove* pM = MoveList;
+	PerftInfo GT;
+	GT.nMoves = GT.nCapture = GT.nEPCapture = GT.nCastle = GT.nCastleLong = GT.nPromotion = 0i64;
 	PerftInfo T;
 	ChessPosition Q;
-	
+	START_TIMER();
 	while(pM->NoMoreMoves==0)
 	{ 
 		Q = pE->CurrentPosition;
 		Q.PerformMove(*pM);
 		Q.SwitchSides();
-
-		START_TIMER();
 	
 		DumpMove(*pM);
 	
@@ -363,11 +363,28 @@ void parse_input_divide(const char* s, Engine* pE)
 			T.nEPCapture,
 			T.nPromotion
 			);
-		STOP_TIMER();
-		printf_s("\n\n");
+		
+		printf_s("\n");
 
+		GT.nMoves += T.nMoves;
+		GT.nCapture += T.nCapture;
+		GT.nCastle += T.nCastle;
+		GT.nCastleLong += T.nCastleLong;
+		GT.nEPCapture += T.nEPCapture;
+		GT.nPromotion += T.nPromotion;
+		
 		pM++;
 	}
+	STOP_TIMER();
+	printf_s("Summary:\nPerft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+		depth,
+		GT.nMoves,
+		GT.nCapture,
+		GT.nCastle,
+		GT.nCastleLong,
+		GT.nEPCapture,
+		GT.nPromotion
+		);
 }
 
 void parse_input_dividefast(const char* s, Engine* pE) 
@@ -397,9 +414,8 @@ void parse_input_dividefast(const char* s, Engine* pE)
 			);
 		GrandTotal += nNumPositions;
 		pM++;
-		printf_s("\n\n");
 	}
-	printf_s("Perft %d: %I64d\n\n",depth, GrandTotal);
+	printf_s("\nPerft %d: %I64d\n",depth, GrandTotal);
 	STOP_TIMER();
 }
 

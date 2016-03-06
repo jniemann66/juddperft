@@ -188,6 +188,8 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
