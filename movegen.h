@@ -241,17 +241,15 @@ bool IsInCheck(const ChessPosition& P, bool bIsBlack);
 void GenWhiteMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenBlackAttacks(const ChessPosition& Z);
 BitBoard IsWhiteInCheck(const ChessPosition & Z);
-void AddWhiteMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
-void AddWhiteMoveToListIfLegal3(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, unsigned char tosquare, BitBoard Mask, __int32 piece, __int32 flags);
-void AddWhitePromotionsToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
 
 // Black Move-Generation Functions:
 void GenBlackMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
 BitBoard IsBlackInCheck(const ChessPosition & Z);
-void AddBlackMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
-
-void AddBlackPromotionsToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
 
 // Dump I/O functions:
 void DumpBitBoard(BitBoard b);
