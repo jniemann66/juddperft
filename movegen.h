@@ -211,7 +211,6 @@ public:
 	ChessPosition& CalculateMaterial();
 	ChessPosition& PerformMove(ChessMove M);
 	void SwitchSides();
-	void PrepareChessMove(const ChessMove & M);
 	void Clear(void);
 	//	ChessPosition& operator=(const ChessPosition& P);
 private:
@@ -243,7 +242,6 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenBlackAttacks(const ChessPosition& Z);
 BitBoard IsWhiteInCheck(const ChessPosition & Z);
 void AddWhiteMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
-void AddSlidingMoveToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, unsigned __int32 & flags);
 void AddWhiteMoveToListIfLegal3(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, unsigned char tosquare, BitBoard Mask, __int32 piece, __int32 flags);
 void AddWhitePromotionsToListIfLegal2(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
 

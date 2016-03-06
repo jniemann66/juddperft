@@ -88,6 +88,7 @@ void parse_input_showhash(const char* s,Engine* pE);
 void parse_input_perft(const char* s,Engine* pE);
 void parse_input_perftfast(const char * s, Engine * pE);
 void parse_input_divide(const char* s, Engine* pE);
+void parse_input_dividefast(const char * s, Engine * pE);
 void parse_input_writehash(const char* s, Engine* pE);
 void parse_input_lookuphash(const char* s, Engine* pE);
 

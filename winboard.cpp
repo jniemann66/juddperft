@@ -80,6 +80,7 @@ WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
 	{"perft",parse_input_perft,true},
 	{"perftfast",parse_input_perftfast,true},
 	{"divide",parse_input_divide,true},
+	{ "dividefast",parse_input_dividefast,true },
 	{"writehash",parse_input_writehash,false},
 	{"lookuphash",parse_input_lookuphash,false}
 };
@@ -369,6 +370,39 @@ void parse_input_divide(const char* s, Engine* pE)
 	}
 }
 
+void parse_input_dividefast(const char* s, Engine* pE) 
+{
+	if (s == NULL)
+		return;
+
+	int depth;
+	depth = max(2, atoi(s));
+
+	ChessMove MoveList[MOVELIST_SIZE];
+	GenerateMoves(pE->CurrentPosition, MoveList);
+	ChessMove* pM = MoveList;
+	ChessPosition Q;
+	__int64 GrandTotal = 0i64;
+	START_TIMER();
+	while (pM->NoMoreMoves == 0)
+	{
+		Q = pE->CurrentPosition;
+		Q.PerformMove(*pM).SwitchSides();
+		
+		DumpMove(*pM);
+		__int64 nNumPositions = 0i64;
+		PerftFastMT(Q, depth-1, nNumPositions);
+		printf_s("Perft %d: %I64d \n",
+			depth-1, nNumPositions
+			);
+		GrandTotal += nNumPositions;
+		pM++;
+		printf_s("\n\n");
+	}
+	printf_s("Perft %d: %I64d\n\n",depth, GrandTotal);
+	STOP_TIMER();
+}
+
 void parse_input_writehash(const char* s, Engine* pE){}
 
 void parse_input_lookuphash(const char* s, Engine* pE)
@@ -393,7 +427,6 @@ void parse_input_cores(const char* s, Engine* pE) {
 }
 void parse_input_egtpath(const char* s, Engine* pE) {}
 void parse_input_option(const char* s, Engine* pE) {}
-
 
 // ---------------- Output Functions -------------------------------
 void  send_output_feature(Engine* pE)
