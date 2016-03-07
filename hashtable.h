@@ -111,6 +111,7 @@ inline bool HashTable<T>::SetSize(unsigned __int64 nBytes)
 		printf_s("Allocated %I64d bytes for %s\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
 		m_nCollisions = 0i64;
 		m_nWrites = 0i64;
+		HashTable<T>::Clear();
 		return true;
 	}
 }
@@ -200,14 +201,6 @@ struct LeafEntry
 	HashKey Hash;
 	unsigned char count;
 };
-
-//struct LeafEntry
-//{
-//	HashKey Hash;
-//	bool hasDepth[3];
-//	unsigned __int32 count[3];
-//};
-
 
 #endif // _HASHTABLE_H
 

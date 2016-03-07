@@ -13,8 +13,12 @@
 // Globals
 extern Engine TheEngine;
 extern ZobristKeySet ZobristKeys;
+
+#ifdef _USE_HASH
 extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
 extern HashTable <std::atomic<LeafEntry>> LeafTable;
+#endif
+
 unsigned __int64 nodecount;
 //
 
@@ -89,7 +93,6 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			Q = P; // unmake move
 		}
 	}
-
 #ifdef _USE_HASH
 //
 #endif
@@ -107,17 +110,14 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
-
-		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth]; 
-
+		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 		std::atomic<LeafEntry> *pAtomicRecord = LeafTable.GetAddress(HK);		// get address of atomic record
 		LeafEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
-
 		if (RetrievedRecord.Hash == HK) {
 			nNodes += RetrievedRecord.count;
 			return;
 		}
-#endif
+#endif // _USE_HASH
 
 		GenerateMoves(P, MoveList);
 		int movecount = MoveList[0].MoveCount;
@@ -130,20 +130,21 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 		do {
 			// if (RetrievedRecord has changed) {} // do something (if we care)
 		} while (!pAtomicRecord->compare_exchange_weak(RetrievedRecord, NewRecord)); // loop until successfully written;
-
 #endif
 	}
 
-	else { /* Branch Node */
+	else { /* Branch Node */ 
+
 #ifdef _USE_HASH
 		// Consult the HashTable:
 		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
-
-		std::atomic<PerftTableEntry> *pAtomicRecord = PerftTable.GetAddress(HK);								// get address of atomic record
-		PerftTableEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
-		if (RetrievedRecord.Hash == HK) {	
-			if (RetrievedRecord.depth == depth) {
-				nNodes += RetrievedRecord.count;
+		std::atomic<PerftTableEntry> *pAtomicRecord2;
+		PerftTableEntry RetrievedRecord2;
+		pAtomicRecord2 = PerftTable.GetAddress(HK);								// get address of atomic record
+		RetrievedRecord2 = pAtomicRecord2->load();						// Load a non-atomic copy of the record
+		if (RetrievedRecord2.Hash == HK) {	
+			if (RetrievedRecord2.depth == depth) {
+				nNodes += RetrievedRecord2.count;
 				return;
 			}
 		}
@@ -156,18 +157,17 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 			Q.PerformMove(MoveList[i]).SwitchSides();			// make move
 			PerftFast(Q, depth - 1, nNodes);
 		}
+
 #ifdef _USE_HASH
-
-		PerftTableEntry NewRecord;
-		NewRecord.Hash = HK;
-		NewRecord.depth = depth;
-		NewRecord.count = nNodes - orig_nNodes; // Record RELATIVE increase in nodes
-
+		PerftTableEntry NewRecord2;
+		NewRecord2.Hash = HK;
+		NewRecord2.depth = depth;
+		NewRecord2.count = nNodes - orig_nNodes; // Record RELATIVE increase in nodes
 		do {
 			// if (RetrievedRecord has changed) {} // do something (if we care)
-		} while (!pAtomicRecord->compare_exchange_weak(RetrievedRecord, NewRecord)); // loop until successfully written;
-
+		} while (!pAtomicRecord2->compare_exchange_weak(RetrievedRecord2, NewRecord2)); // loop until successfully written;
 #endif
+
 	}
 }
 
@@ -258,8 +258,8 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 #ifdef _USE_HASH
 		// Consult the HashTable:
 		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];	
-		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);								// get address of atomic record
-		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();		// Load a non-atomic copy of the record
+		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);	// get address of atomic record
+		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();	// Load a non-atomic copy of the record
 
 		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {
 			if (RetrievedRecord[currentdepth].depth == currentdepth) {
@@ -273,7 +273,6 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 			}
 		}
 #endif
-
 		// conditionally generate move list:
 		if (pMovePtr[currentdepth] == nullptr) {
 			orig_nNodes[currentdepth] = nNodes;
@@ -322,37 +321,25 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 	}
 }
 
-// PerftMT() : Multi-threaded version of Perft(), which depends on Perft() - dumb algorithm (no use of thread Pool)
-// It works by splitting all of the legal moves into batches of (nThread) Threads at a time
+
+// PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
+
 void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
-	// determine number of threads. Note:
-	// MAX_THREADS is compile-time hard limit. 
-	// TheEngine.nNumCores is how many cores user wants. 
-	// concurrency is what system is capable of.
-	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-
-	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
-	std::vector<std::thread> worker_thread(nThreads);
-	std::vector<PerftInfo> PerftInfoPARTIAL(nThreads);
-
 	ChessMove MoveList[MOVELIST_SIZE];
-	ChessPosition Q;
-	ChessMove* pM;
 	GenerateMoves(P, MoveList);
 
-	if (depth == maxdepth)
-	{
-		for (pM = MoveList; pM->NoMoreMoves == 0; pM++)
+	if (depth == maxdepth) {
+		for (ChessMove* pM = MoveList; pM->NoMoreMoves == 0; pM++)
 		{
 			pI->nMoves++;
-			if (pM->Capture != 0)
+			if (pM->Capture)
 				pI->nCapture++;
-			if (pM->Castle != 0)
+			if (pM->Castle)
 				pI->nCastle++;
-			if (pM->CastleLong != 0)
+			if (pM->CastleLong)
 				pI->nCastleLong++;
-			if (pM->EnPassantCapture != 0)
+			if (pM->EnPassantCapture)
 				pI->nEPCapture++;
 			if (pM->PromoteBishop ||
 				pM->PromoteKnight ||
@@ -360,80 +347,6 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				pM->PromoteRook)
 				pI->nPromotion++;
 		}
-	}
-	else
-	{
-		pM = MoveList;
-
-		unsigned int s;
-		while (pM->NoMoreMoves == 0)
-		{
-			// Launch the threads ... watch those CPU cores go up in smoke :-) 
-			for (s = 0; s < nThreads; s++)
-			{
-				// reset counters
-				PerftInfoPARTIAL[s].nCapture = 0;
-				PerftInfoPARTIAL[s].nCastle = 0;
-				PerftInfoPARTIAL[s].nCastleLong = 0;
-				PerftInfoPARTIAL[s].nEPCapture = 0;
-				PerftInfoPARTIAL[s].nMoves = 0;
-				PerftInfoPARTIAL[s].nPromotion = 0;
-
-				// Set up position
-				Q = P;
-				Q.PerformMove(*pM).SwitchSides();
-
-				// Start Thread
-				worker_thread[s] = std::thread(Perft, Q, maxdepth, depth + 1, &PerftInfoPARTIAL[s]);
-
-				// Go to next Move ...
-				pM++;
-				if (pM->NoMoreMoves) {
-					s++;
-					break;
-				}
-			}
-
-			// Wait for threads to finish and add the results to *pI
-			for (unsigned int f = 0; f < s; f++)
-			{
-				worker_thread[f].join();
-
-				// accumulate the results
-				pI->nCapture += PerftInfoPARTIAL[f].nCapture;
-				pI->nCastle += PerftInfoPARTIAL[f].nCastle;
-				pI->nCastleLong += PerftInfoPARTIAL[f].nCastleLong;
-				pI->nEPCapture += PerftInfoPARTIAL[f].nEPCapture;
-				pI->nMoves += PerftInfoPARTIAL[f].nMoves;
-				pI->nPromotion += PerftInfoPARTIAL[f].nPromotion;
-				printf_s("."); // show progress: print a dot every time thread finishes
-			}
-		}
-	}
-}
- 
-
-////////////////////////////////////////////////////////
-// Thread Pool versions to follow  (under development)
-////////////////////////////////////////////////////////
-
-// PerftFastMTp() - Multi-threaded perft() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
-// 01/03/2016: (working ok)
-
-void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
-{
-	nNodes = 0i64;
-	ChessMove MoveList[MOVELIST_SIZE];
-
-	GenerateMoves(P, MoveList);
-
-	if (depth == 0) {
-		nNodes = 1;
-		return;
-	}
-
-	if (depth == 1) {
-		nNodes = MoveList->MoveCount;
 		return;
 	}
 
@@ -444,7 +357,96 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
 
 	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+	std::vector<std::thread> threads;
+	std::vector<PerftInfo> PerftPartial(nThreads);
+	std::queue<ChessMove> MoveQueue;
+	std::mutex q_mutex;
+	std::condition_variable cv;
+	bool bStart = false;
 
+	// Set up a simple Thread Pool:
+	for (unsigned int t = 0; t < min(nThreads, MoveList->MoveCount); t++) {
+		threads.emplace_back([&, depth, P] {
+			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
+
+			std::unique_lock<std::mutex> lock(q_mutex);
+			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
+
+																						   // upon wake-up:
+			PerftInfo T;
+			T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = 0i64;
+			for (;;) // thread's event loop
+			{
+				if (!MoveQueue.empty()) {
+					ChessPosition Q = P;							// Set up position
+					ChessMove M = MoveQueue.front();
+					MoveQueue.pop();								// remove ChessMove from queue:
+					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
+					Q.PerformMove(M).SwitchSides();					// make move
+					Perft(Q, maxdepth, depth + 1, &T);
+					printf_s(".");									// show progress
+					lock.lock();									// lock the queue again
+				}
+
+				if (MoveQueue.empty())
+					break;
+			}
+			PerftPartial.push_back(T);
+		});
+	}
+
+	// Put Moves into Queue for Thread pool to process:
+	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
+		MoveQueue.push(MoveList[i]);
+	}
+
+	// start the ball rolling:
+	bStart = true;
+	cv.notify_all();
+
+	//Join Threads:
+	for (auto & th : threads) {
+		th.join();
+	}
+
+	// add up total:
+	std::for_each(PerftPartial.begin(), PerftPartial.end(), [pI](PerftInfo& t) {
+		pI->nCapture += t.nCapture;
+		pI->nCastle += t.nCastle;
+		pI->nCastleLong += t.nCastleLong;
+		pI->nEPCapture += t.nEPCapture;
+		pI->nMoves += t.nMoves;
+		pI->nPromotion += t.nPromotion;
+	});
+}
+
+// PerftFastMT() - Multi-threaded PerftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
+// 01/03/2016: (working ok)
+
+void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
+{
+	nNodes = 0i64;
+
+	if (depth == 0) {
+		nNodes = 1;
+		return;
+	}
+
+	ChessMove MoveList[MOVELIST_SIZE];
+	GenerateMoves(P, MoveList);
+
+	if (depth == 1) {
+		nNodes = MoveList->MoveCount;
+		return;
+	}
+	
+	// determine number of threads. Note:
+	// MAX_THREADS is compile-time hard limit. 
+	// TheEngine.nNumCores is how many cores user wants. 
+	// concurrency is what system is capable of.
+	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
+
+	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
 	std::vector<std::thread> threads;
 	std::vector<__int64> subTotal(nThreads, 0i64);
 	std::queue<ChessMove> MoveQueue;
@@ -499,85 +501,3 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	// add up total:
 	nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0i64);
 }
-
-
-//// PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
-//// It works by splitting all of the legal moves into batches of (nThread) Threads at a time
-//
-//void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
-//{
-//	ChessMove MoveList[MOVELIST_SIZE];
-//	ChessPosition Q;
-//	ChessMove* pM;
-//	GenerateMoves(P, MoveList);
-//	
-//	if (depth == maxdepth)
-//	{
-//		for (pM = MoveList; pM->NoMoreMoves == 0; pM++)
-//		{
-//			pI->nMoves++;
-//			if (pM->Capture != 0)
-//				pI->nCapture++;
-//			if (pM->Castle != 0)
-//				pI->nCastle++;
-//			if (pM->CastleLong != 0)
-//				pI->nCastleLong++;
-//			if (pM->EnPassantCapture != 0)
-//				pI->nEPCapture++;
-//			if (pM->PromoteBishop ||
-//				pM->PromoteKnight ||
-//				pM->PromoteQueen ||
-//				pM->PromoteRook)
-//				pI->nPromotion++;
-//		}
-//	}
-//	else{
-//		// determine number of threads. Note:
-//		// MAX_THREADS is compile-time hard limit. 
-//		// TheEngine.nNumCores is how many cores user wants. 
-//		// concurrency is what system is capable of.
-//		// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
-//
-//		unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
-//		ThreadPool pool(nThreads);
-//		std::vector<PerftInfo> PerftInfoPARTIAL(1+MoveList->MoveCount);
-//		std::vector<std::future<__int64>> results;
-//		pM = MoveList;
-//		for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
-//			results.emplace_back(pool.enqueue([&] {
-//				// reset counters
-//				PerftInfoPARTIAL[i].nCapture = 0;
-//				PerftInfoPARTIAL[i].nCastle = 0;
-//				PerftInfoPARTIAL[i].nCastleLong = 0;
-//				PerftInfoPARTIAL[i].nEPCapture = 0;
-//				PerftInfoPARTIAL[i].nMoves = 0;
-//				PerftInfoPARTIAL[i].nPromotion = 0;
-//				// Set up position
-//				Q = P;
-//				Q.PerformMove(*pM).SwitchSides();
-//				// Go to next Move ...
-//				pM++;
-//				// Invoke Perft()
-//				return Perft(Q, maxdepth,depth+1,&PerftInfoPARTIAL[i]);
-//			}));
-//		}
-//
-//		for (auto && result : results) {
-//			result.get();
-//			printf_s("."); // show progress: print a dot every time thread finishes
-//		}
-//
-//		for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
-//			// accumulate the results
-//			pI->nCapture += PerftInfoPARTIAL[i].nCapture;
-//			pI->nCastle += PerftInfoPARTIAL[i].nCastle;
-//			pI->nCastleLong += PerftInfoPARTIAL[i].nCastleLong;
-//			pI->nEPCapture += PerftInfoPARTIAL[i].nEPCapture;
-//			pI->nMoves += PerftInfoPARTIAL[i].nMoves;
-//			pI->nPromotion += PerftInfoPARTIAL[i].nPromotion;
-//		}
-//		
-//	} // Ends else{}
-//}
-
-

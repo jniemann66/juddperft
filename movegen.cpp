@@ -289,11 +289,6 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D ^= 0x0f00000000000000i64;
 #ifdef _USE_HASH
 			HK ^= ZobristKeys.zkDoBlackCastle;
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][57]; // Place King on g8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][56]; // Remove Rook from h8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][58]; // Place Rook on f8
-			//ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// (unconditionally) flip black castling
 			if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 			ChessPosition::BlackDidCastle = 1;
@@ -309,11 +304,6 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D ^= 0xb800000000000000i64;
 #ifdef _USE_HASH
 			HK ^= ZobristKeys.zkDoBlackCastleLong;
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][59]; // Remove King from e8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BKING][61]; // Place King on c8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][63]; // Remove Rook from a8
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BROOK][60]; // Place Rook on d8
-			//ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// (unconditionally) flip black castling long
 			if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// conditionally flip black castling
 #endif
 			ChessPosition::BlackDidCastleLong = 1;
@@ -350,14 +340,6 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D &= 0xfffffffffffffff0i64;	// clear colour of e1,f1,g1,h1 (make white)
 #ifdef _USE_HASH
 			HK^=ZobristKeys.zkDoWhiteCastle;
-			//BitBoard XX = HK^ZobristKeys.zkDoWhiteCastle;
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][1]; // Place King on g1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][0]; // Remove Rook from h1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][2]; // Place Rook on f1
-			//ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// (unconditionally) flip white castling
-			//assert(XX == HK);
-
 			if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
 #endif
 			ChessPosition::WhiteDidCastle = 1;
@@ -375,14 +357,6 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D &= 0xffffffffffffff07i64;	// clear colour of a1,b1,c1,d1,e1 (make white)
 #ifdef _USE_HASH
 			HK^=ZobristKeys.zkDoWhiteCastleLong;
-			//BitBoard XX = HK^ZobristKeys.zkDoWhiteCastleLong;
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][3]; // Remove King from e1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WKING][5]; // Place King on c1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][7]; // Remove Rook from a1
-			//ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WROOK][4]; // Place Rook on d1
-			//ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// (unconditionally) flip white castling long
-			//assert(XX == HK);
-			
 			if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
 			
 #endif
@@ -476,18 +450,28 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		int capturedpiece;
 		// find out which piece has been captured:
 
-		// Branchy version (reliable, and no slower):
-		capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
+		// Branchy version (reliable, maybe a tiny bit slower):
+		/*capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
 		capturedpiece |=(ChessPosition::C & (1i64<<nToSquare))?4:0;
 		capturedpiece |=(ChessPosition::B & (1i64<<nToSquare))?2:0;
-		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;
+		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;*/
 		
-		// Branchless - buggy ??
-		/*capturedpiece =	(ChessPosition::D & (1i64 << nToSquare)) >> (nToSquare - 3);
-		capturedpiece |=(ChessPosition::C & (1i64 << nToSquare)) >> (nToSquare - 2);
-		capturedpiece |=(ChessPosition::B & (1i64 << nToSquare)) >> (nToSquare - 1);
-		capturedpiece |=(ChessPosition::A & (1i64 << nToSquare)) >> nToSquare;*/
+		// Branchless version:
+		capturedpiece =	((ChessPosition::D & P) >> nToSquare) << 3;
+		capturedpiece |=((ChessPosition::C & P) >> nToSquare) << 2;
+		capturedpiece |=((ChessPosition::B & P) >> nToSquare) << 1;
+		capturedpiece |=((ChessPosition::A & P) >> nToSquare);
 
+		// using BitTest Intrinsic:
+		/*const long long d = ChessPosition::D;
+		const long long c = ChessPosition::C;
+		const long long b = ChessPosition::B;
+		const long long a = ChessPosition::A;
+
+		capturedpiece = _bittest64(&d, nToSquare) << 3;
+		capturedpiece |= _bittest64(&c, nToSquare) << 2;
+		capturedpiece |= _bittest64(&b, nToSquare) << 1;
+		capturedpiece |= _bittest64(&a, nToSquare);*/
 
 #ifdef _USE_HASH
 		// Update Hash
@@ -516,7 +500,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	ChessPosition::C |= static_cast<__int64>((M.Piece & 4) >> 2) << M.ToSquare;
 	ChessPosition::D |= static_cast<__int64>((M.Piece & 8) >> 3) << M.ToSquare;
 
-	//// Populate new square (Branchless method):
+	//// Populate new square (Branchless method, BitBoard input):
 	//ChessPosition::A |= P & -( static_cast<__int64>(M.Piece) & 1);
 	//ChessPosition::B |= P & -((static_cast<__int64>(M.Piece) & 2) >> 1);
 	//ChessPosition::C |= P & -((static_cast<__int64>(M.Piece) & 4) >> 2);
@@ -1041,12 +1025,6 @@ inline void AddWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		Q.B &= O;
 		Q.C &= O;
 		Q.D &= O;
-			
-		//// Populate new square (Branchless method):
-		//Q.A |= static_cast<__int64>(piece & 1) << pM->ToSquare;
-		//Q.B |= static_cast<__int64>((piece & 2) >> 1) << pM->ToSquare;
-		//Q.C |= static_cast<__int64>((piece & 4) >> 2) << pM->ToSquare;
-		//Q.D |= static_cast<__int64>((piece & 8) >> 3) << pM->ToSquare;
 
 		// Populate new square with Queen:
 		Q.B |= to;
@@ -1242,7 +1220,6 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 				else
 				{
 					piece=BKNIGHT;
-
 					Square=MoveKnight1[q] & BlackFree;
 					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight2[q] & BlackFree;
@@ -1259,7 +1236,6 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight8[q] & BlackFree;
 					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
-
 					continue;
 				}
 			}	// ENDS if (B ==0)

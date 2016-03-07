@@ -20,8 +20,11 @@
 #include <numeric>
 
 ofstream logfile("perft.txt");
-extern HashTable<std::atomic<PerftTableEntry> > PerftTable;
+
+#ifdef _USE_HASH
+extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
 extern HashTable <std::atomic<LeafEntry>> LeafTable;
+#endif
 
 WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
 {
@@ -280,6 +283,7 @@ void parse_input_showhash(const char* s,Engine* pE)
 		printf_s("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
 	}
 	printf_s("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0i64));
+
 }
 
 void parse_input_perft(const char* s,Engine* pE)

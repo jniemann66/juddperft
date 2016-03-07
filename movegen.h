@@ -781,8 +781,7 @@ inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 
 	// But, it will optimize much better if we break it up
 	// into a series of single instuctions, and let the compiler
-	// play around with the instruction scheduling 
-	// (assuming its a good compiler): 
+	// play around with the instruction scheduling: 
 
 	BitBoard a, b, c, d, e, f, i, j;
 	BitBoard s, t, u, v, w, x, y, z;

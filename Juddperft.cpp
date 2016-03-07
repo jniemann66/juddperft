@@ -13,20 +13,21 @@
 
 // Globals:
 Engine TheEngine;
+#ifdef _USE_HASH
 HashTable <std::atomic<PerftTableEntry>> PerftTable("Perft table");
-HashTable <std::atomic<LeafEntry>> LeafTable("Leaf node table");
+HashTable <std::atomic<LeafEntry>> LeafTable("Leaf Node Table");
+#endif
 //
 
 int main(int argc, char *argv[], char *envp[])
 {
-	//unsigned __int64 nBytesToAllocate = 500000000; // 500 Megagbytes
-	unsigned __int64 nBytesToAllocate = 6000000000i64; // 6 GBytes
+	unsigned __int64 nBytesToAllocate = 6'000'000'000i64; // 6 GiBytes
 
 #ifdef _WIN64
-	//MEMORYSTATUSEX statex;
-	//GlobalMemoryStatusEx(&statex);
-	//nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
-	//printf_s("Available Physical RAM: %I64d\n\n", nBytesToAllocate);
+	MEMORYSTATUSEX statex;
+	GlobalMemoryStatusEx(&statex);
+	nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
+	printf_s("Available Physical RAM: %I64d\n\n", nBytesToAllocate);
 #endif
 
 	while (!SetMemory(nBytesToAllocate)) {
