@@ -29,9 +29,10 @@ just run the program as a console application on 64-bit windows. It will accept 
 juddperft defaults to the normal chess starting position.
 Other positions can be entered by using the "setboard" command, followed by a FEN string representing the position.
 There are three variants on the perft function:
-* perftfast uses the hashtable, but doesn't tally stats on En Passants, captures, Castling etc
-* perft doesn't use hashtable (and therefore slower), but does collect stats
-* divide / dividefast split position by legal move, and then does perft on each of those moves
+* perftfast - uses the hashtable, but doesn't tally stats on En Passants, captures, Castling etc
+* perft - doesn't use hashtable (and therefore slower), but does collect stats
+* divide - splits position by legal move, and then does perft on each of those moves
+* dividefast - splits position by legal move, and then does perftfast on each of those moves (uses Hash tables)
 
-note: using dividefast instead of perftfast is often faster for large n, because it puts less strain on the hash tables, by splitting the job into n lots of perft(n-1).
+note: using dividefast instead of perftfast is often faster for large n, because it puts less strain on the hash tables, by splitting the job into a number of perftfast(n-1) 's
 
