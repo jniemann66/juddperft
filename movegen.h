@@ -14,12 +14,13 @@
 
 #include <intrin.h>
 
-// Various Build Options:
+// Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
 //
 #define _USE_BITSCAN_INSTRUCTIONS 1				// if defined, use x86-64 BSR and BSF instructions (Only available on x86-64)
 #define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
-// #define _USE_BITTEST_INSTRUCTION 1				// if defined, use the BT instruction (all Intels)
+// #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
+//
 //define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
 //
 #ifndef NULL

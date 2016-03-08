@@ -225,12 +225,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	BitBoard O, To;
 	To = 1i64 << M.ToSquare;
 	O = ~((1i64 << M.FromSquare) | To);
-
-#ifdef _USE_HASH
 	unsigned long nFromSquare = M.FromSquare;
 	unsigned long nToSquare = M.ToSquare;
-	unsigned long nEPSquare;
-#endif
 
 	// CLEAR EP SQUARES :
 	// clear any enpassant squares
@@ -242,6 +238,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	ChessPosition::D &= ~EnPassant;
 
 #ifdef _USE_HASH
+	unsigned long nEPSquare;
 	nEPSquare = GetSquareIndex(EnPassant);
 	ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
 #endif // _USE_HASH

@@ -21,8 +21,9 @@ HashTable <std::atomic<LeafEntry>> LeafTable("Leaf Node Table");
 
 int main(int argc, char *argv[], char *envp[])
 {
-	unsigned __int64 nBytesToAllocate = 6'000'000'000i64; // 6 GiBytes
 
+#ifdef _USE_HASH
+	unsigned __int64 nBytesToAllocate = 6'000'000'000i64; // 6 GiBytes
 #ifdef _WIN64
 	MEMORYSTATUSEX statex;
 	GlobalMemoryStatusEx(&statex);
@@ -35,6 +36,7 @@ int main(int argc, char *argv[], char *envp[])
 		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
 			return EXIT_FAILURE;	// not going to end well ...
 	}
+#endif
 
 	// RunTestSuite();
 
@@ -53,7 +55,7 @@ int main(int argc, char *argv[], char *envp[])
 }
 
 bool SetMemory(unsigned __int64 nTotalBytes) {
-
+#ifdef _USE_HASH
 	// constraint: Leaf Table should have 3 times as many Entries as PerftTable (ie 3:1 ratio)
 	
 	unsigned __int64 BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
@@ -63,4 +65,7 @@ bool SetMemory(unsigned __int64 nTotalBytes) {
 		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
 	return	(PerftTable.SetSize(BytesForPerftTable) && LeafTable.SetSize(BytesForLeafTable));
+#else
+	return false;
+#endif
 }

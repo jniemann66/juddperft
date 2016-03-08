@@ -243,10 +243,9 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 	std::vector<ChessMove*> pMovePtr(depth + 1,nullptr);
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
-	
+	std::vector<__int64> orig_nNodes(depth+1);
 #ifdef _USE_HASH
 	std::vector<HashKey> HK(depth+1);
-	std::vector<__int64> orig_nNodes(depth+1);
 	std::vector<std::atomic<PerftTableEntry>*> pAtomicRecord(depth + 1);
 	std::vector<PerftTableEntry> RetrievedRecord(depth+1);
 	std::vector<PerftTableEntry> NewRecord(depth + 1);

@@ -255,6 +255,7 @@ void parse_input_showposition(const char* s, Engine* pE)
 }
 void parse_input_showhash(const char* s,Engine* pE)
 {
+#ifdef _USE_HASH
 	printf_s("Leaf Node Table Size: %I64d bytes\n", LeafTable.GetSize());
 	__int64 numEntries = LeafTable.GetNumEntries();
 	__int64 nPopulatedLeafEntries = 0i64;
@@ -283,7 +284,7 @@ void parse_input_showhash(const char* s,Engine* pE)
 		printf_s("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
 	}
 	printf_s("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0i64));
-
+#endif
 }
 
 void parse_input_perft(const char* s,Engine* pE)
