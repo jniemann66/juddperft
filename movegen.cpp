@@ -42,14 +42,6 @@ bool Move::operator==(const Move& B) const
 	// on both sides.
 }
 
-//Move& Move::operator=(const Move& M)
-//{
-//	Move::Flags = M.Flags;
-//	Move::From = M.From;
-//	Move::To = M.To;
-//	return *this;
-//}
-
 Move& Move::Format(
 		BitBoard From /*=0*/,
 		BitBoard To /*=0*/,
@@ -230,9 +222,9 @@ ChessPosition& ChessPosition::CalculateMaterial()
 
 ChessPosition& ChessPosition::PerformMove(ChessMove M)
 {
-	BitBoard O, P;
-	P = 1i64 << M.ToSquare;
-	O = ~((1i64 << M.FromSquare) | P);
+	BitBoard O, To;
+	To = 1i64 << M.ToSquare;
+	O = ~((1i64 << M.FromSquare) | To);
 
 #ifdef _USE_HASH
 	unsigned long nFromSquare = M.FromSquare;
@@ -448,30 +440,33 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	if (M.Capture)
 	{
 		int capturedpiece;
-		// find out which piece has been captured:
 
-		// Branchy version (reliable, maybe a tiny bit slower):
-		/*capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
-		capturedpiece |=(ChessPosition::C & (1i64<<nToSquare))?4:0;
-		capturedpiece |=(ChessPosition::B & (1i64<<nToSquare))?2:0;
-		capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;*/
-		
-		// Branchless version:
-		capturedpiece =	((ChessPosition::D & P) >> nToSquare) << 3;
-		capturedpiece |=((ChessPosition::C & P) >> nToSquare) << 2;
-		capturedpiece |=((ChessPosition::B & P) >> nToSquare) << 1;
-		capturedpiece |=((ChessPosition::A & P) >> nToSquare);
-
-		// using BitTest Intrinsic:
-		/*const long long d = ChessPosition::D;
+#if defined (_WIN64) && defined (_USE_BITTEST_INSTRUCTION)
+		const long long d = ChessPosition::D;
 		const long long c = ChessPosition::C;
 		const long long b = ChessPosition::B;
 		const long long a = ChessPosition::A;
 
-		capturedpiece = _bittest64(&d, nToSquare) << 3;
-		capturedpiece |= _bittest64(&c, nToSquare) << 2;
-		capturedpiece |= _bittest64(&b, nToSquare) << 1;
-		capturedpiece |= _bittest64(&a, nToSquare);*/
+		// using BitTest Intrinsic:
+		capturedpiece = _bittest64(&d, nToSquare) << 3
+			| _bittest64(&c, nToSquare) << 2
+			| _bittest64(&b, nToSquare) << 1
+			| _bittest64(&a, nToSquare);		
+#else
+		// find out which piece has been captured:
+
+		// Branchy version (reliable, maybe a tiny bit slower):
+		//capturedpiece = (ChessPosition::D & (1i64<<nToSquare))?8:0;
+		//capturedpiece |=(ChessPosition::C & (1i64<<nToSquare))?4:0;
+		//capturedpiece |=(ChessPosition::B & (1i64<<nToSquare))?2:0;
+		//capturedpiece |=(ChessPosition::A & (1i64<<nToSquare))?1:0;
+
+		// Branchless version:
+		capturedpiece = ((ChessPosition::D & To) >> nToSquare) << 3
+			| ((ChessPosition::C & To) >> nToSquare) << 2
+			| ((ChessPosition::B & To) >> nToSquare) << 1
+			| ((ChessPosition::A & To) >> nToSquare);
+#endif
 
 #ifdef _USE_HASH
 		// Update Hash
@@ -484,28 +479,28 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	ChessPosition::B &= O;
 	ChessPosition::C &= O;
 	ChessPosition::D &= O;
-			
-	//if (M.Piece & 1)
-	//	ChessPosition::A |=  P;
-	//if (M.Piece & 2)
-	//	ChessPosition::B |=  P;
-	//if (M.Piece & 4)
-	//	ChessPosition::C |=  P;
-	//if (M.Piece & 8)
-	//	ChessPosition::D |=  P;
 
 	// Populate new square (Branchless method):
 	ChessPosition::A |= static_cast<__int64>(M.Piece & 1) << M.ToSquare;
 	ChessPosition::B |= static_cast<__int64>((M.Piece & 2) >> 1) << M.ToSquare;
 	ChessPosition::C |= static_cast<__int64>((M.Piece & 4) >> 2) << M.ToSquare;
 	ChessPosition::D |= static_cast<__int64>((M.Piece & 8) >> 3) << M.ToSquare;
-
+	
+	// Populate new square (Branchy):
+	//if (M.Piece & 1)
+	//	ChessPosition::A |=  To;
+	//if (M.Piece & 2)
+	//	ChessPosition::B |=  To;
+	//if (M.Piece & 4)
+	//	ChessPosition::C |=  To;
+	//if (M.Piece & 8)
+	//	ChessPosition::D |=  To;
+	
 	//// Populate new square (Branchless method, BitBoard input):
-	//ChessPosition::A |= P & -( static_cast<__int64>(M.Piece) & 1);
-	//ChessPosition::B |= P & -((static_cast<__int64>(M.Piece) & 2) >> 1);
-	//ChessPosition::C |= P & -((static_cast<__int64>(M.Piece) & 4) >> 2);
-	//ChessPosition::D |= P & -((static_cast<__int64>(M.Piece) & 8) >> 3);
-
+	//ChessPosition::A |= To & -( static_cast<__int64>(M.Piece) & 1);
+	//ChessPosition::B |= To & -((static_cast<__int64>(M.Piece) & 2) >> 1);
+	//ChessPosition::C |= To & -((static_cast<__int64>(M.Piece) & 4) >> 2);
+	//ChessPosition::D |= To & -((static_cast<__int64>(M.Piece) & 8) >> 3);
 
 #ifdef _USE_HASH
 	// Update Hash
@@ -517,8 +512,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 	if (M.PromoteBishop)
 	{
-		ChessPosition::A &= ~P;
-		ChessPosition::B |= P;	
+		ChessPosition::A &= ~To;
+		ChessPosition::B |= To;	
 #ifdef _USE_HASH
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BBISHOP : WBISHOP][nToSquare]; // place Bishop at To square
@@ -530,7 +525,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 	else if (M.PromoteKnight)
 	{
-		ChessPosition::C |= P;
+		ChessPosition::C |= To;
 #ifdef _USE_HASH
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BKNIGHT : WKNIGHT][nToSquare];// place Knight at To square
@@ -542,8 +537,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 	else if (M.PromoteRook)
 	{		
-		ChessPosition::A &= ~P;
-		ChessPosition::C |= P;
+		ChessPosition::A &= ~To;
+		ChessPosition::C |= To;
 #ifdef _USE_HASH
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BROOK : WROOK][nToSquare];	// place Rook at To square
@@ -555,9 +550,9 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 	else if (M.PromoteQueen)
 	{
-		ChessPosition::A &= ~P;
-		ChessPosition::B |= P;
-		ChessPosition::C |= P;
+		ChessPosition::A &= ~To;
+		ChessPosition::B |= To;
+		ChessPosition::C |= To;
 #ifdef _USE_HASH
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
 		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BQUEEN : WQUEEN][nToSquare];	// place Queen at To square
@@ -573,27 +568,24 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		// Set EnPassant Square
 		if(M.BlackToMove)
 		{
-			P <<= 8;
-			ChessPosition::A &= ~P;
-			ChessPosition::B &= ~P;
-			ChessPosition::C &= ~P;
-			ChessPosition::D &= ~P;
-			ChessPosition::A |= P;
-			ChessPosition::B |= P;
-			ChessPosition::D |= P;
+			To <<= 8;
+			ChessPosition::A |= To;
+			ChessPosition::B |= To;
+			ChessPosition::C &= ~To;
+			ChessPosition::D |= To;
+
 #ifdef _USE_HASH
 			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
 #endif
 		}
 		else
 		{	
-			P >>= 8;
-			ChessPosition::A &= ~P;
-			ChessPosition::B &= ~P;
-			ChessPosition::C &= ~P;
-			ChessPosition::D &= ~P;
-			ChessPosition::A |= P;
-			ChessPosition::B |= P;
+			To >>= 8;
+			ChessPosition::A |= To;
+			ChessPosition::B |= To;
+			ChessPosition::C &= ~To;
+			ChessPosition::D &= ~To;
+		
 #ifdef _USE_HASH
 			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
 #endif
@@ -608,11 +600,11 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		// remove the actual pawn (it is different to the capture square)
 		if(M.BlackToMove)
 		{
-			P <<= 8;
-			ChessPosition::A &= ~P; // clear the pawn's square
-			ChessPosition::B &= ~P; 
-			ChessPosition::C &= ~P;
-			ChessPosition::D &= ~P;
+			To <<= 8;
+			ChessPosition::A &= ~To; // clear the pawn's square
+			ChessPosition::B &= ~To;
+			ChessPosition::C &= ~To;
+			ChessPosition::D &= ~To;
 		//	ChessPosition::material -= 100; // perft doesn't care
 #ifdef _USE_HASH
 			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
@@ -620,11 +612,11 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		}
 		else
 		{	
-			P >>= 8;
-			ChessPosition::A &= ~P;
-			ChessPosition::B &= ~P;
-			ChessPosition::C &= ~P;
-			ChessPosition::D &= ~P;
+			To >>= 8;
+			ChessPosition::A &= ~To;
+			ChessPosition::B &= ~To;
+			ChessPosition::C &= ~To;
+			ChessPosition::D &= ~To;
 		//	ChessPosition::material += 100; // perft doesn't care
 #ifdef _USE_HASH
 			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
@@ -1161,7 +1153,7 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 	// (just scan all 64 squares: 0-63)
 #endif
 	
-	for (unsigned int q = b; q <= a; q++)
+	for (unsigned int q = b; q <= a; ++q)
 	{
 		assert(q >= 0);
 		assert(q <= 63);

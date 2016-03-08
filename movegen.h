@@ -16,8 +16,10 @@
 
 // Various Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
+//
 #define _USE_BITSCAN_INSTRUCTIONS 1				// if defined, use x86-64 BSR and BSF instructions (Only available on x86-64)
 #define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
+// #define _USE_BITTEST_INSTRUCTION 1				// if defined, use the BT instruction (all Intels)
 //define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
 //
 #ifndef NULL
@@ -770,38 +772,38 @@ inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 {
 	// Original Function looked like this:
 
-	//BitBoard a;
-	//a =FillRightOccluded(g,p);
-	//a |= FillLeftOccluded(g,p);
-	//a |= FillUpOccluded(g,p);
-	//a |= FillDownOccluded(g,p);
-	//a &= ~g; // exclude attacking pieces 
-	//return a; 
+	BitBoard a;
+	a =FillRightOccluded(g,p);
+	a |= FillLeftOccluded(g,p);
+	a |= FillUpOccluded(g,p);
+	a |= FillDownOccluded(g,p);
+	a &= ~g; // exclude attacking pieces 
+	return a; 
 
 
 	// But, it will optimize much better if we break it up
 	// into a series of single instuctions, and let the compiler
 	// play around with the instruction scheduling: 
 
-	BitBoard a, b, c, d, e, f, i, j;
-	BitBoard s, t, u, v, w, x, y, z;
-	BitBoard r;
-	const BitBoard m1 = 0xfefefefefefefefe;
-	const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
-	// up
-	a = g; b = p; s = a; s <<= 8; s &= b; a |= s; t = b; t <<= 8; b &= t; s = a; s <<= 16; s &= b;
-	a |= s; t = b; t <<= 16; b &= t; s = a; s <<= 32; s &= b; a |= s; r = a;
-	// down:
-	c = g; d = p; u = c; u >>= 8; u &= d; c |= u; v = d; v >>= 8; d &= v; u = c; u >>= 16; u &= d;
-	c |= u; v = d; v >>= 16; d &= v; u = c; u >>= 32; u &= d; c |= u; r |= c;
-	// Left:
-	e = g; f = p; f &= m1; w = e; w <<= 1; w &= f; e |= w; x = f; x <<= 1; f &= x; w = e; w <<= 2; w &= f;
-	e |= w; x = f; x <<= 2; f &= x; w = e; w <<= 4; w &= f; e |= w; r |= e;
-	// Right:
-	i = g; j = p; j &= m2; y = i; y >>= 1; y &= j; i |= y; z = j; z >>= 1; j &= z; y = i; y >>= 2; y &= j;
-	i |= y; z = j; z >>= 2; j &= z; y = i; y >>= 4; y &= j; i |= y; r |= i;
-	r&=~g;
-	return r;
+	//BitBoard a, b, c, d, e, f, i, j;
+	//BitBoard s, t, u, v, w, x, y, z;
+	//BitBoard r;
+	//const BitBoard m1 = 0xfefefefefefefefe;
+	//const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
+	//// up
+	//a = g; b = p; s = a; s <<= 8; s &= b; a |= s; t = b; t <<= 8; b &= t; s = a; s <<= 16; s &= b;
+	//a |= s; t = b; t <<= 16; b &= t; s = a; s <<= 32; s &= b; a |= s; r = a;
+	//// down:
+	//c = g; d = p; u = c; u >>= 8; u &= d; c |= u; v = d; v >>= 8; d &= v; u = c; u >>= 16; u &= d;
+	//c |= u; v = d; v >>= 16; d &= v; u = c; u >>= 32; u &= d; c |= u; r |= c;
+	//// Left:
+	//e = g; f = p; f &= m1; w = e; w <<= 1; w &= f; e |= w; x = f; x <<= 1; f &= x; w = e; w <<= 2; w &= f;
+	//e |= w; x = f; x <<= 2; f &= x; w = e; w <<= 4; w &= f; e |= w; r |= e;
+	//// Right:
+	//i = g; j = p; j &= m2; y = i; y >>= 1; y &= j; i |= y; z = j; z >>= 1; j &= z; y = i; y >>= 2; y &= j;
+	//i |= y; z = j; z >>= 2; j &= z; y = i; y >>= 4; y &= j; i |= y; r |= i;
+	//r&=~g;
+//	return r;
 }
 
 ////////////////////////////////////////////
@@ -811,35 +813,35 @@ inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 inline BitBoard FillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 {
 
-/*	BitBoard a;
+	BitBoard a;
 	a =  FillUpRightOccluded(g,p);
 	a |= FillDownRightOccluded(g,p);
 	a |= FillDownLeftOccluded(g,p);
 	a |= FillUpLeftOccluded(g,p);
 	a &= ~g; // exclude attacking pieces
 	return a;
-*/
 
-	BitBoard a, b, c, d, e, f, i, j;
-	BitBoard s, t, u, v, w, x, y, z;
-	const BitBoard m1 = 0xfefefefefefefefe;
-	const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
-	BitBoard r;
-	// UpRight
-	a = g; b = p; b &= m2; s = a; s <<= 7; s &= b; a |= s; t = b; t <<= 7; b &= t; s = a; s <<= 14; s &= b;
-	a |= s; t = b; t <<= 14; b &= t; s = a; s <<= 28; s &= b; a |= s; r = a;
-	// downRight:
-	c = g; d = p; d &= m2; u = c; u >>= 9; u &= d; c |= u; v = d; v >>= 9; d &= v; u = c; u >>= 18; u &= d;
-	c |= u; v = d; v >>= 18; d &= v; u = c; u >>= 36; u &= d; c |= u; r |= c;
-	// DownLeft:
-	e = g; f = p; f &= m1; w = e; w >>= 7; w &= f; e |= w; x = f; x >>= 7; f &= x; w = e; w >>= 14; w &= f;
-	e |= w; x = f; x >>= 14; f &= x; w = e; w >>= 28; w &= f; e |= w; r |= e;
-	// UpLeft:
-	i = g; j = p; j &= m1; y = i; y <<= 9; y &= j; i |= y; z = j; z <<= 9; j &= z; y = i; y <<= 18; y &= j;
-	i |= y; z = j; z <<= 18; j &= z; y = i; y <<= 36; y &= j; i |= y; r |= i;
-	//
-	r &= ~g;
-	return r;
+
+	//BitBoard a, b, c, d, e, f, i, j;
+	//BitBoard s, t, u, v, w, x, y, z;
+	//const BitBoard m1 = 0xfefefefefefefefe;
+	//const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
+	//BitBoard r;
+	//// UpRight
+	//a = g; b = p; b &= m2; s = a; s <<= 7; s &= b; a |= s; t = b; t <<= 7; b &= t; s = a; s <<= 14; s &= b;
+	//a |= s; t = b; t <<= 14; b &= t; s = a; s <<= 28; s &= b; a |= s; r = a;
+	//// downRight:
+	//c = g; d = p; d &= m2; u = c; u >>= 9; u &= d; c |= u; v = d; v >>= 9; d &= v; u = c; u >>= 18; u &= d;
+	//c |= u; v = d; v >>= 18; d &= v; u = c; u >>= 36; u &= d; c |= u; r |= c;
+	//// DownLeft:
+	//e = g; f = p; f &= m1; w = e; w >>= 7; w &= f; e |= w; x = f; x >>= 7; f &= x; w = e; w >>= 14; w &= f;
+	//e |= w; x = f; x >>= 14; f &= x; w = e; w >>= 28; w &= f; e |= w; r |= e;
+	//// UpLeft:
+	//i = g; j = p; j &= m1; y = i; y <<= 9; y &= j; i |= y; z = j; z <<= 9; j &= z; y = i; y <<= 18; y &= j;
+	//i |= y; z = j; z <<= 18; j &= z; y = i; y <<= 36; y &= j; i |= y; r |= i;
+	////
+	//r &= ~g;
+	//return r;
 }
 
 ////////////////////////////////////////////

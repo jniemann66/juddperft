@@ -46,7 +46,7 @@ int main(int argc, char *argv[], char *envp[])
 	//ChessPosition P;
 	//DumpChessPosition(P);
 	//P.SetupStartPosition();
-	// FindPerftBug(&P, 5);
+	//FindPerftBug(&P, 8);
 
 	WinBoard(&TheEngine);
 	return EXIT_SUCCESS;

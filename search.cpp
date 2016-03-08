@@ -33,22 +33,22 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 #endif
 	
 	GenerateMoves(P,MoveList);
+	int movecount = MoveList->MoveCount;
+
 	if (depth == maxdepth)
 	{
-		for (pM = MoveList; pM->NoMoreMoves == 0; pM++)
+		pM = MoveList;
+		for (int i = 0; i<movecount; i++, pM++)
 		{
 			pI->nMoves++;
-			if (pM->Capture != 0) {
+			if (pM->Capture)
 				pI->nCapture++;
-			}
-				
-			if (pM->Castle != 0)
+			if (pM->Castle)
 				pI->nCastle++;
-			if (pM->CastleLong != 0)
+			if (pM->CastleLong)
 				pI->nCastleLong++;
-			if (pM->EnPassantCapture != 0) {
+			if (pM->EnPassantCapture) 
 				pI->nEPCapture++;
-			}
 			if (pM->PromoteBishop ||
 				pM->PromoteKnight ||
 				pM->PromoteQueen ||
@@ -59,7 +59,8 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	
 	else
 	{
-		for( pM=MoveList ; pM->NoMoreMoves == 0 ; pM++ )
+		pM = MoveList;
+		for (int i = 0; i<movecount; i++, pM++)
 		{
 			Q.PerformMove(*pM).SwitchSides();
 			//// ---------------------------------------------------
@@ -120,7 +121,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 #endif // _USE_HASH
 
 		GenerateMoves(P, MoveList);
-		int movecount = MoveList[0].MoveCount;
+		int movecount = MoveList->MoveCount;
 		nNodes += movecount;
 
 #ifdef _USE_HASH
@@ -150,7 +151,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 		}
 #endif
 		GenerateMoves(P, MoveList);
-		int movecount = MoveList[0].MoveCount;
+		int movecount = MoveList->MoveCount;
 		for (int i=0; i<movecount; i++) {
 
 			Q = P;								// unmake move
@@ -372,7 +373,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			std::unique_lock<std::mutex> lock(q_mutex);
 			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
-																						   // upon wake-up:
+			// upon wake-up:
 			PerftInfo T;
 			T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = 0i64;
 			for (;;) // thread's event loop

@@ -354,7 +354,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		Q.PerformMove(*pM);
 		Q.SwitchSides();
 	
-		DumpMove(*pM);
+		DumpMove(*pM,LongAlgebraicNoNewline);
 	
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0i64;
 		PerftMT(Q, depth-1, 1, &T);
@@ -410,7 +410,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q = pE->CurrentPosition;
 		Q.PerformMove(*pM).SwitchSides();
 		
-		DumpMove(*pM);
+		DumpMove(*pM, LongAlgebraicNoNewline);
 		__int64 nNumPositions = 0i64;
 		PerftFastMT(Q, depth-1, nNumPositions);
 		printf_s("Perft %d: %I64d \n",
