@@ -37,6 +37,7 @@ int main(int argc, char *argv[], char *envp[])
 			return EXIT_FAILURE;	// not going to end well ...
 	}
 #endif
+	SetProcessPriority();
 
 	// RunTestSuite();
 
@@ -68,4 +69,14 @@ bool SetMemory(unsigned __int64 nTotalBytes) {
 #else
 	return false;
 #endif
+}
+
+void SetProcessPriority()
+{
+	DWORD dwError;
+
+	if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)){
+		dwError = GetLastError();
+		printf_s("Failed to set Process priority (%d)\n", dwError);
+	}
 }
