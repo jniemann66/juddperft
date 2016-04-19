@@ -61,6 +61,25 @@ note: using dividefast instead of perftfast is often faster for large n, because
 
 **quit** - exit the app
 
+## Additional Information
 
+The known perft numbers up to 13 are as follows:
 
+	0	1
+	1	20
+	2	400
+	3	8,902
+	4	197,281
+	5	4,865,609
+	6	119,060,324
+	7	3,195,901,860
+	8	84,998,978,956
+	9	2,439,530,234,167
+	10	69,352,859,712,417
+	11	2,097,651,003,696,800
+	12	62,854,969,236,701,700
+	13	1,981,066,775,000,390,000
 
+Note: The perft numbers have an entry in the [On-line Encycolpedia of Integer Sequences](https://oeis.org/A048987)
+
+Additional information can be found on the [Chess Programming Wiki](https://chessprogramming.wikispaces.com/Perft "Chess Programming Wiki")
