@@ -9,9 +9,12 @@ The job of Juddperft is to calculate these perft numbers to an arbitrary depth, 
 *Screenshot of juddperft in action, showing the results for a search depth of 8*
 
 ## Description of code
-juddperft employs a global hashtable, to accelerate the speed of the search, by storing previously reached positions. Since juddperft is multi-threaded, atomic operations are used on hash table entries to eliminate the possibility of race conditions. This is easily manageable using the std::atomic Atomic Operations library in the C++11 standard. Currently, some experimentation with iterative functions, as opposed to recursive, is underway, which would pave the way for future implementation on a GPU.
+Chess positions are represented internally as a set of four 64-bit "bitBoards", allowing each of the 64 squares on the chess board to be populated by one of 16 possible values, representing the piece (or absence of a piece) occupying each square, and it's colour. In dealing with bitboards, there is inevitably a large amount of "bit-twiddling" involved (lots of ANDs / ORs / XORs / ones-complements / bit-shifts etc). This is pretty standard for chess programs.  
+juddperft employs two global hashtables (one for leaf nodes, and the other for "branch" nodes), to accelerate the speed of the search, by storing previously reached positions. Since juddperft is multi-threaded, atomic operations are used on hash table entries to eliminate the possibility of race conditions. This is easily manageable using the **std::atomic** Atomic Operations library in the **C++11** standard. Currently, some experimentation with iterative functions, as opposed to recursive, is underway, which would pave the way for future implementation on a **GPU**.
 
 juddperft needs to be compiled on Visual C++ 2015, as it uses some C++11 features. (Porting to other environments is intended in the future)
+
+*note: Some of the source files in this project look a little bare, and this is because they have been stripped-down from the full chess-engine, leaving only the perft-related code.*
 
 ## Motivation
 juddperft was developed as a by-product of developing my own chess engine. Often, the perft function is used to verify that the move generator (at the heart of any chess program) is correctly generating all legal moves in all situations. However, this project is also a vehicle for testing out various parallel processing techniques, and for optimising the various algorthims used to make the program run as fast as possible.
