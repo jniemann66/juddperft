@@ -1,6 +1,8 @@
 ## Synopsis
 juddperft is a "perft" (short for "PERF-ormance T-est") utility which is used to count the number of chess positions reachable from a given position, at a given depth, or number of plies.
 
+![JuddPerft Screenshot](https://github.com/jniemann66/juddperft/blob/master/screenshot.jpg)
+
 ## Description of code
 juddperft employs a global hashtable, to accelerate the speed of the search, by storing previously reached positions. Since juddperft is multi-threaded, atomic operations are used on hash table entries to eliminate the possibility of race conditions. This is easily manageable using the std::atomic Atomic Operations library in the C++11 standard. Currently, some experimentation with iterative functions, as opposed to recursive, is underway, which would pave the way for future implementation on a GPU.
 
