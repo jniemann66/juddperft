@@ -22,16 +22,14 @@ typedef struct WinboardInputCommandDefinition{
 //	unsigned int maxdepth;
 //} THINKINFO;
 
-using namespace std;
-
 // Winboard Input/Output ///////////////
 // WinBoardOutput
 // -- all Winboard output should be via this function !! --
 void WinBoardOutput(const char* s);
 
 // functions for dumping output to log file
-void LogInput(ofstream& logfile,const char* s);
-void LogOutput(ofstream& logfile,const char* s);
+void LogInput(std::ofstream& logfile,const char* s);
+void LogOutput(std::ofstream& logfile,const char* s);
 
 // functions for parsing input commands
 void parse_input_xboard(const char* s,Engine* pE);

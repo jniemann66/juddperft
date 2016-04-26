@@ -52,7 +52,6 @@
 #define BQUEEN 14
 #define BKING 15
 
-// using namespace std;
 typedef unsigned __int64 BitBoard;
 typedef unsigned __int64 HashKey;
 

@@ -19,7 +19,7 @@
 #include <vector>
 #include <numeric>
 
-ofstream logfile("perft.txt");
+std::ofstream logfile("perft.txt");
 
 #ifdef _USE_HASH
 extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
@@ -512,16 +512,16 @@ void WinBoardOutput(const char* s)
 	LogOutput(logfile,s);
 }
 
-void LogInput(ofstream& logfile, const char* s)
+void LogInput(std::ofstream& logfile, const char* s)
 {
 	if(logfile)
-		logfile << "Received command: " << s << endl;
+		logfile << "Received command: " << s << std::endl;
 }
 
-void LogOutput(ofstream& logfile,const char* s)
+void LogOutput(std::ofstream& logfile,const char* s)
 {
 	if(logfile)
-		logfile << "Sent command: " << s << endl;
+		logfile << "Sent command: " << s << std::endl;
 }
 
 void SendReplyMove(const char* s,Engine* pE){}	
