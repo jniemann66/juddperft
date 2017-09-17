@@ -12,6 +12,6 @@ Engine::Engine()
 	Engine::ForceMode=false;
 	Engine::ShowThinking=true;
 	Engine::nNumCores = MAX_THREADS;	// Hard maximum: 
-										// App should only ever dispatch min(concurrency, nNumCores, MAX_THREADS) threads
+										// App should only ever dispatch std::min(concurrency, nNumCores, MAX_THREADS) threads
 }
 

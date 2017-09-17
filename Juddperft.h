@@ -1,5 +1,5 @@
 #pragma once
 
-bool SetMemory(unsigned __int64 nTotalBytes);
+bool SetMemory(uint64_t nTotalBytes);
 
 void SetProcessPriority();

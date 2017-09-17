@@ -110,7 +110,7 @@ bool ReadFen(ChessPosition* pP, const char* pzFENString)
 			shift=0;
 		}
 
-			pP->SetPieceAtSquare(piece,1i64 << Square);
+			pP->SetPieceAtSquare(piece,1LL << Square);
 			Square -= shift; 
 			s++;
 	} // ends while((s != NULL) && (Square >= 0))
@@ -171,7 +171,7 @@ bool ReadFen(ChessPosition* pP, const char* pzFENString)
 		}
 		if (((iSquare >= 16) && (iSquare <= 24)) ||
 			((iSquare >= 40) && (iSquare <= 48)))
-			pP->SetPieceAtSquare(piece,1i64 << (iSquare));
+			pP->SetPieceAtSquare(piece,1LL << (iSquare));
 		token=strtok(NULL," ");
 	}
 	// Read Field 5: Halfmove clock (number of half moves since last capture or pawn advance)
@@ -203,10 +203,10 @@ bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
 	unsigned int nBlanks = 0;
 	int EPSquare = 0;
 	char s[1024];
-	sprintf_s(pzFENBuffer, 1023,"");
+	//sprintf(pzFENBuffer, 1023,"");
 	for (int square = 63; square >= 0; --square)
 	{
-		piece = pP->GetPieceAtSquare(1i64 << square);
+		piece = pP->GetPieceAtSquare(1LL << square);
 		if ((piece & 0x07) == 0) // Blank
 			nBlanks++;
 		else 
@@ -221,7 +221,7 @@ bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
 			else
 			{
 				if (nBlanks != 0) {
-					sprintf_s(s, "%d", nBlanks);
+					sprintf(s, "%d", nBlanks);
 					strncat(pzFENBuffer, s, 1023);
 				}
 				switch (piece)
@@ -272,7 +272,7 @@ bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
 		{
 			// Reached Last File ('h')
 			if (nBlanks != 0) {
-				sprintf_s(s, "%d", nBlanks);
+				sprintf(s, "%d", nBlanks);
 				strncat(pzFENBuffer, s, 1023);
 			}
 			if (square != 0)
@@ -316,18 +316,18 @@ bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
 	{
 		char f = 'h' - EPSquare % 8;
 		char r = '1' + EPSquare / 8;
-		sprintf_s(s, "%c%c ", f, r);
+		sprintf(s, "%c%c ", f, r);
 		strncat(pzFENBuffer, s, 1023);
 	}
 	else
 		strcat(pzFENBuffer, "- ");
 
 	// Field 5: Half-Move Clock
-	sprintf_s(s,"%d ", pP->HalfMoves);
+	sprintf(s,"%d ", pP->HalfMoves);
 	strncat(pzFENBuffer, s, 1023);
 
 	// Field 6: Fullmove number
-	sprintf_s(s,"%d", pP->MoveNumber);
+	sprintf(s,"%d", pP->MoveNumber);
 	strncat(pzFENBuffer, s, 1023);
 
 	return true;

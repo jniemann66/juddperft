@@ -19,10 +19,10 @@ extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
 extern HashTable <std::atomic<LeafEntry>> LeafTable;
 #endif
 
-unsigned __int64 nodecount;
+uint64_t nodecount;
 //
 
-__int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
+int64_t Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {	
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
@@ -72,19 +72,19 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			////assert (Q2.HK == Q.HK);
 			//if (Q2.HK != Q.HK)
 			//{
-			//	printf_s("keys Don't match!\n ");
-			//	printf_s("before:\n");
+			//	printf("keys Don't match!\n ");
+			//	printf("before:\n");
 			//	DumpChessPosition(P);
-			//	printf_s("after:\n");
+			//	printf("after:\n");
 			//	DumpMove(*pM);
 			//	DumpChessPosition(Q);
-			//	printf_s("\n\n");
+			//	printf("\n\n");
 			//	getchar();
 			//	Q.CalculateHash(); // Repair the bad hash Key
 			//}
 			//else
 			//{
-			//	//	printf_s( "keys Match: " );
+			//	//	printf( "keys Match: " );
 			//	//	DumpMove(*pM);
 			//	//	getchar();
 			//}
@@ -101,11 +101,11 @@ __int64 Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 }
 
 // PerftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
-void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
+void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
-	__int64 orig_nNodes = nNodes;
+	int64_t orig_nNodes = nNodes;
 
 	if (depth == 1) { /* Leaf Node*/
 
@@ -173,7 +173,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 }
 
 // PerftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
-//void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
+//void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //{
 //	ChessMove MoveList[MOVELIST_SIZE];
 //	ChessPosition Q = P;
@@ -181,7 +181,7 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 //#ifdef _USE_HASH
 //	// Consult the HashTable:
 //	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
-//	__int64 orig_nNodes = nNodes;
+//	int64_t orig_nNodes = nNodes;
 //
 //	std::atomic<PerftTableEntry> *pAtomicRecord = PerftTable.GetAddress(HK);								// get address of atomic record
 //	PerftTableEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
@@ -222,10 +222,10 @@ void PerftFast(const ChessPosition& P, int depth, __int64& nNodes)
 //}
 
 // PerftFastIterative() - Iterative version of perft.
-void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
+void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 {
 	if (depth==0){
-		nNodes = 1i64;
+		nNodes = 1LL;
 		return;
 	}
 
@@ -243,7 +243,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, __int64& nNodes)
 	std::vector<ChessMove*> pMovePtr(depth + 1,nullptr);
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
-	std::vector<__int64> orig_nNodes(depth+1);
+	std::vector<int64_t> orig_nNodes(depth+1);
 #ifdef _USE_HASH
 	std::vector<HashKey> HK(depth+1);
 	std::vector<std::atomic<PerftTableEntry>*> pAtomicRecord(depth + 1);
@@ -356,7 +356,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
 
-	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+	unsigned int nThreads = std::min(std::thread::hardware_concurrency(), std::min(TheEngine.nNumCores, static_cast<unsigned int>(MAX_THREADS)));
 	std::vector<std::thread> threads;
 	std::vector<PerftInfo> PerftPartial(nThreads);
 	std::queue<ChessMove> MoveQueue;
@@ -365,7 +365,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	bool bStart = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < min(nThreads, MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
 		threads.emplace_back([&, depth, P] {
 			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
 
@@ -384,7 +384,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
 					Q.PerformMove(M).SwitchSides();					// make move
 					Perft(Q, maxdepth, depth + 1, &T);
-					printf_s(".");									// show progress
+					printf(".");									// show progress
 					lock.lock();									// lock the queue again
 				}
 
@@ -423,7 +423,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 // PerftFastMT() - Multi-threaded PerftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
 // 01/03/2016: (working ok)
 
-void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
+void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 {
 	nNodes = ZERO_64;
 
@@ -446,16 +446,16 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
 
-	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
+	unsigned int nThreads = std::min(std::thread::hardware_concurrency(), std::min(TheEngine.nNumCores, static_cast<unsigned int>(MAX_THREADS)));
 	std::vector<std::thread> threads;
-	std::vector<__int64> subTotal(nThreads, ZERO_64);
+	std::vector<int64_t> subTotal(nThreads, ZERO_64);
 	std::queue<ChessMove> MoveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
 	bool bStart = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < min(nThreads,MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads,MoveList->MoveCount); t++) {
 		threads.emplace_back([&, depth, P] {
 			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
 
@@ -463,7 +463,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up:
-			__int64 s = ZERO_64; // local accumulator for thread
+			int64_t s = ZERO_64; // local accumulator for thread
 			for (;;) // thread's event loop
 			{
 				if (!MoveQueue.empty()) {
@@ -473,7 +473,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
 					Q.PerformMove(M).SwitchSides();					// make move
 					PerftFast(Q, depth - 1, s);						// Invoke PerftFast()		
-					printf_s(".");									// show progress
+					printf(".");									// show progress
 					lock.lock();									// lock the queue again
 				}
 

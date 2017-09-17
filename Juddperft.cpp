@@ -6,7 +6,7 @@
 #include "hashtable.h"
 
 #include <stdio.h>
-#include <intrin.h>
+#include <x86intrin.h>
 
 #include <atomic>
 #include "Juddperft.h"
@@ -23,12 +23,12 @@ int main(int argc, char *argv[], char *envp[])
 {
 
 #ifdef _USE_HASH
-	unsigned __int64 nBytesToAllocate = 6'000'000'000i64; // 6 GiBytes
+	uint64_t nBytesToAllocate = 6000000000; // 6 GiBytes
 #ifdef _WIN64
 	MEMORYSTATUSEX statex;
 	GlobalMemoryStatusEx(&statex);
 	nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
-	printf_s("Available Physical RAM: %I64d\n\n", nBytesToAllocate);
+	printf("Available Physical RAM: %I64d\n\n", nBytesToAllocate);
 #endif
 
 	while (!SetMemory(nBytesToAllocate)) {
@@ -55,14 +55,14 @@ int main(int argc, char *argv[], char *envp[])
 	return EXIT_SUCCESS;
 }
 
-bool SetMemory(unsigned __int64 nTotalBytes) {
+bool SetMemory(uint64_t nTotalBytes) {
 #ifdef _USE_HASH
 	// constraint: Leaf Table should have 3 times as many Entries as PerftTable (ie 3:1 ratio)
 	
-	unsigned __int64 BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
+	uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
 		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
-	unsigned __int64 BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
+	uint64_t BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
 		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
 	return	(PerftTable.SetSize(BytesForPerftTable) && LeafTable.SetSize(BytesForLeafTable));
@@ -73,10 +73,12 @@ bool SetMemory(unsigned __int64 nTotalBytes) {
 
 void SetProcessPriority()
 {
+#ifdef MSC_VER
 	DWORD dwError;
 
 	if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)){
 		dwError = GetLastError();
-		printf_s("Failed to set Process priority (%d)\n", dwError);
+		printf("Failed to set Process priority (%d)\n", dwError);
 	}
+#endif
 }

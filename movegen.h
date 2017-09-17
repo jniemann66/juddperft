@@ -12,7 +12,11 @@
 #define _MOVEGEN 1
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#ifdef MSC_VER
 #include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
@@ -52,8 +56,8 @@
 #define BQUEEN 14
 #define BKING 15
 
-typedef unsigned __int64 BitBoard;
-typedef unsigned __int64 HashKey;
+typedef uint64_t BitBoard;
+typedef uint64_t HashKey;
 
 
 // class Move: This is the Long-Format, in which to From and To squares are represented by Bitboards.
@@ -67,38 +71,37 @@ public:
 	BitBoard To;
 	union{
 		struct{
-				unsigned __int32 BlackToMove : 1;
-				unsigned __int32 Check : 1;
-				unsigned __int32 Capture : 1;
-				unsigned __int32 EnPassantCapture : 1;
-				unsigned __int32 DoublePawnMove : 1;
-				unsigned __int32 Castle : 1;
-				unsigned __int32 CastleLong : 1;
-				unsigned __int32 PromoteKnight : 1;
-				unsigned __int32 PromoteBishop : 1;
-				unsigned __int32 PromoteRook : 1;
-				unsigned __int32 PromoteQueen : 1;
-				unsigned __int32 Unused : 7;
-				unsigned __int32 IllegalMove : 1;
-				unsigned __int32 NoMoreMoves : 1;
-				unsigned __int32 Piece : 4;	
-				unsigned __int32 MoveCount : 8;	
-		};
-		unsigned 
-		__int32 Flags;
+				uint32_t BlackToMove : 1;
+				uint32_t Check : 1;
+				uint32_t Capture : 1;
+				uint32_t EnPassantCapture : 1;
+				uint32_t DoublePawnMove : 1;
+				uint32_t Castle : 1;
+				uint32_t CastleLong : 1;
+				uint32_t PromoteKnight : 1;
+				uint32_t PromoteBishop : 1;
+				uint32_t PromoteRook : 1;
+				uint32_t PromoteQueen : 1;
+				uint32_t Unused : 7;
+				uint32_t IllegalMove : 1;
+				uint32_t NoMoreMoves : 1;
+				uint32_t Piece : 4;	
+				uint32_t MoveCount : 8;	
+		}; 
+		uint32_t Flags;
 	};
 	
 public:
-	Move(BitBoard From=0,BitBoard To=0,unsigned __int32 Flags=0);
+	Move(BitBoard From=0,BitBoard To=0,uint32_t Flags=0);
 	bool operator==(const Move & B) const;
 //	Move & operator=(const Move & M);
 
 	Move& Format(
 		BitBoard From,
 		BitBoard To,
-		unsigned __int32 BlackToMove=0,
-		unsigned __int32 Piece=0, 
-		unsigned __int32 Flags=0
+		uint32_t BlackToMove=0,
+		uint32_t Piece=0, 
+		uint32_t Flags=0
 		);
 	void ClearFlags() {
 		Move::Flags = 0;
@@ -112,24 +115,24 @@ public:
 struct ChessMove {
 	union {
 		struct {
-			unsigned __int32 BlackToMove : 1;
-			unsigned __int32 Check : 1;
-			unsigned __int32 Capture : 1;
-			unsigned __int32 EnPassantCapture : 1;
-			unsigned __int32 DoublePawnMove : 1;
-			unsigned __int32 Castle : 1;
-			unsigned __int32 CastleLong : 1;
-			unsigned __int32 PromoteKnight : 1;
-			unsigned __int32 PromoteBishop : 1;
-			unsigned __int32 PromoteRook : 1;
-			unsigned __int32 PromoteQueen : 1;
-			unsigned __int32 Unused : 7;
-			unsigned __int32 IllegalMove : 1;
-			unsigned __int32 NoMoreMoves : 1;
-			unsigned __int32 Piece : 4;
-			unsigned __int32 MoveCount : 8;
+			uint32_t BlackToMove : 1;
+			uint32_t Check : 1;
+			uint32_t Capture : 1;
+			uint32_t EnPassantCapture : 1;
+			uint32_t DoublePawnMove : 1;
+			uint32_t Castle : 1;
+			uint32_t CastleLong : 1;
+			uint32_t PromoteKnight : 1;
+			uint32_t PromoteBishop : 1;
+			uint32_t PromoteRook : 1;
+			uint32_t PromoteQueen : 1;
+			uint32_t Unused : 7;
+			uint32_t IllegalMove : 1;
+			uint32_t NoMoreMoves : 1;
+			uint32_t Piece : 4;
+			uint32_t MoveCount : 8;
 		};
-		unsigned __int32 Flags;
+		uint32_t Flags;
 	};
 	unsigned char FromSquare;
 	unsigned char ToSquare;
@@ -173,26 +176,26 @@ public:
 	BitBoard D;
 	union{
 		struct{
-			unsigned __int32 BlackToMove : 1;
-			unsigned __int32 WhiteCanCastle : 1;
-			unsigned __int32 WhiteCanCastleLong : 1;
-			unsigned __int32 BlackCanCastle : 1;
-			unsigned __int32 BlackCanCastleLong : 1;
-			unsigned __int32 WhiteForfeitedCastle : 1;
-			unsigned __int32 WhiteForfeitedCastleLong : 1;
-			unsigned __int32 BlackForfeitedCastle : 1;
-			unsigned __int32 BlackForfeitedCastleLong : 1;
-			unsigned __int32 WhiteDidCastle : 1;
-			unsigned __int32 WhiteDidCastleLong : 1;
-			unsigned __int32 BlackDidCastle : 1;
-			unsigned __int32 BlackDidCastleLong : 1;
-			unsigned __int32 CheckmateWhite;
-			unsigned __int32 CheckmateBlack;
+			uint32_t BlackToMove : 1;
+			uint32_t WhiteCanCastle : 1;
+			uint32_t WhiteCanCastleLong : 1;
+			uint32_t BlackCanCastle : 1;
+			uint32_t BlackCanCastleLong : 1;
+			uint32_t WhiteForfeitedCastle : 1;
+			uint32_t WhiteForfeitedCastleLong : 1;
+			uint32_t BlackForfeitedCastle : 1;
+			uint32_t BlackForfeitedCastleLong : 1;
+			uint32_t WhiteDidCastle : 1;
+			uint32_t WhiteDidCastleLong : 1;
+			uint32_t BlackDidCastle : 1;
+			uint32_t BlackDidCastleLong : 1;
+			uint32_t CheckmateWhite;
+			uint32_t CheckmateBlack;
 		};
-		unsigned __int32 Flags;
+		uint32_t Flags;
 	};
-	unsigned __int16 MoveNumber;
-	unsigned __int16 HalfMoves;
+	uint16_t MoveNumber;
+	uint16_t HalfMoves;
 	int material;
 	bool operator==(const ChessPosition& Q) {
 		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::Flags == Q.Flags));
@@ -209,7 +212,7 @@ public:
 	ChessPosition& CalculateHash();
 #endif
 	ChessPosition & SetPieceAtSquare(const unsigned int & piece, BitBoard square);
-	unsigned __int32 GetPieceAtSquare(const BitBoard & square) const;
+	uint32_t GetPieceAtSquare(const BitBoard & square) const;
 	ChessPosition& CalculateMaterial();
 	ChessPosition& PerformMove(ChessMove M);
 	void SwitchSides();
@@ -243,15 +246,15 @@ bool IsInCheck(const ChessPosition& P, bool bIsBlack);
 void GenWhiteMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenBlackAttacks(const ChessPosition& Z);
 BitBoard IsWhiteInCheck(const ChessPosition & Z);
-void AddWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
-void AddWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void AddWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 
 // Black Move-Generation Functions:
 void GenBlackMoves(const ChessPosition& P, ChessMove*);
 extern inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
 BitBoard IsBlackInCheck(const ChessPosition & Z);
-void AddBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
-void AddBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, __int32 piece, __int32 flags=0);
+void AddBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void AddBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 
 // Dump I/O functions:
 void DumpBitBoard(BitBoard b);
@@ -320,77 +323,77 @@ const int PieceMaterialValue[16] =
 };
 
 // Various Bitboard configurations:
-#define RANK1 0x00000000000000ffi64
-#define RANK2 0x000000000000ff00i64
-#define RANK3 0x0000000000ff0000i64
-#define RANK4 0x00000000ff000000i64
-#define RANK5 0x000000ff00000000i64
-#define RANK6 0x0000ff0000000000i64
-#define RANK7 0x00ff000000000000i64
-#define RANK8 0xff00000000000000i64
+#define RANK1 0x00000000000000ff
+#define RANK2 0x000000000000ff00
+#define RANK3 0x0000000000ff0000
+#define RANK4 0x00000000ff000000
+#define RANK5 0x000000ff00000000
+#define RANK6 0x0000ff0000000000
+#define RANK7 0x00ff000000000000
+#define RANK8 0xff00000000000000
 
-#define FILEA 0x8080808080808080i64
-#define FILEB 0x4040404040404040i64
-#define FILEC 0x2020202020202020i64
-#define FILED 0x1010101010101010i64
-#define FILEE 0x0808080808080808i64
-#define FILEF 0x0404040404040404i64
-#define FILEG 0x0202020202020202i64
-#define FILEH 0x0101010101010101i64
+#define FILEA 0x8080808080808080
+#define FILEB 0x4040404040404040
+#define FILEC 0x2020202020202020
+#define FILED 0x1010101010101010
+#define FILEE 0x0808080808080808
+#define FILEF 0x0404040404040404
+#define FILEG 0x0202020202020202
+#define FILEH 0x0101010101010101
 
-#define A1 0x0000000000000080i64
-#define B1 0x0000000000000040i64
-#define C1 0x0000000000000020i64
-#define D1 0x0000000000000010i64
-#define E1 0x0000000000000008i64
-#define F1 0x0000000000000004i64
-#define G1 0x0000000000000002i64
-#define H1 0x0000000000000001i64
-#define D4 0x0000000010000000i64
-#define E4 0x0000000008000000i64
-#define D5 0x0000000100000000i64
-#define E5 0x0000000080000000i64
-#define A8 0x8000000000000000i64
-#define B8 0x4000000000000000i64
-#define C8 0x2000000000000000i64
-#define D8 0x1000000000000000i64
-#define E8 0x0800000000000000i64
-#define F8 0x0400000000000000i64
-#define G8 0x0200000000000000i64
-#define H8 0x0100000000000000i64
+#define A1 0x0000000000000080
+#define B1 0x0000000000000040
+#define C1 0x0000000000000020
+#define D1 0x0000000000000010
+#define E1 0x0000000000000008
+#define F1 0x0000000000000004
+#define G1 0x0000000000000002
+#define H1 0x0000000000000001
+#define D4 0x0000000010000000
+#define E4 0x0000000008000000
+#define D5 0x0000000100000000
+#define E5 0x0000000080000000
+#define A8 0x8000000000000000
+#define B8 0x4000000000000000
+#define C8 0x2000000000000000
+#define D8 0x1000000000000000
+#define E8 0x0800000000000000
+#define F8 0x0400000000000000
+#define G8 0x0200000000000000
+#define H8 0x0100000000000000
 
 
-#define RIM	0xff818181818181ffi64
-#define UPPER_CENTRE 0x0000001800000000i64
-#define LOWER_CENTRE 0x0000000018000000i64
+#define RIM	0xff818181818181ff
+#define UPPER_CENTRE 0x0000001800000000
+#define LOWER_CENTRE 0x0000000018000000
 
-#define	WHITECASTLEZONE		0x0000000000000006i64
-#define	BLACKCASTLEZONE		0x0600000000000000i64
-#define	WHITECASTLELONGZONE	0x0000000000000070i64
-#define	BLACKCASTLELONGZONE	0x7000000000000000i64
-#define WHITEOUTPOSTZONE 0x0000ffffff000000i64
-#define BLACKOUTPOSTZONE 0x000000ffffff0000i64
+#define	WHITECASTLEZONE		0x0000000000000006
+#define	BLACKCASTLEZONE		0x0600000000000000
+#define	WHITECASTLELONGZONE	0x0000000000000070
+#define	BLACKCASTLELONGZONE	0x7000000000000000
+#define WHITEOUTPOSTZONE 0x0000ffffff000000
+#define BLACKOUTPOSTZONE 0x000000ffffff0000
 
-#define WHITEQRPOS 0x0000000000000080i64
-#define WHITEQNPOS 0x0000000000000040i64
-#define WHITEQBPOS 0x0000000000000020i64
-#define WHITEQUEENPOS  0x0000000000000010i64
-#define WHITEKINGPOS 0x0000000000000008i64
-#define WHITEKBPOS 0x0000000000000004i64
-#define WHITEKNPOS 0x0000000000000002i64
-#define WHITEKRPOS 0x0000000000000001i64
+#define WHITEQRPOS 0x0000000000000080
+#define WHITEQNPOS 0x0000000000000040
+#define WHITEQBPOS 0x0000000000000020
+#define WHITEQUEENPOS  0x0000000000000010
+#define WHITEKINGPOS 0x0000000000000008
+#define WHITEKBPOS 0x0000000000000004
+#define WHITEKNPOS 0x0000000000000002
+#define WHITEKRPOS 0x0000000000000001
 
-#define BLACKQRPOS 0x8000000000000000i64
-#define BLACKQNPOS 0x4000000000000000i64
-#define BLACKQBPOS 0x2000000000000000i64
-#define BLACKQUEENPOS 0x1000000000000000i64
-#define BLACKKINGPOS 0x0800000000000000i64
-#define BLACKKBPOS 0x0400000000000000i64
-#define BLACKKNPOS 0x0200000000000000i64
-#define BLACKKRPOS 0x0100000000000000i64
+#define BLACKQRPOS 0x8000000000000000
+#define BLACKQNPOS 0x4000000000000000
+#define BLACKQBPOS 0x2000000000000000
+#define BLACKQUEENPOS 0x1000000000000000
+#define BLACKKINGPOS 0x0800000000000000
+#define BLACKKBPOS 0x0400000000000000
+#define BLACKKNPOS 0x0200000000000000
+#define BLACKKRPOS 0x0100000000000000
 
-const BitBoard LEFTMASK =0xfefefefefefefefei64;
-const BitBoard RIGHTMASK=0x7f7f7f7f7f7f7f7fi64;
+const BitBoard LEFTMASK =0xfefefefefefefefe;
+const BitBoard RIGHTMASK=0x7f7f7f7f7f7f7f7f;
 
 // Pre-calculated move tables: BitBoards
 
@@ -749,14 +752,18 @@ const int  MoveKnight8SquareIndex[64] = {
 };
 
 // Timer macros:
-
+#ifdef MSC_VER
 #define START_TIMER() LARGE_INTEGER starttime,finishtime,elapsed,frequency,timetaken; \
 	QueryPerformanceFrequency(&frequency); \
 	QueryPerformanceCounter(&starttime)
 #define STOP_TIMER() QueryPerformanceCounter(&finishtime); \
 	elapsed.QuadPart=finishtime.QuadPart-starttime.QuadPart; \
 	timetaken.QuadPart=((1000*elapsed.QuadPart)/frequency.QuadPart); \
-	printf_s("Time = %d ms\n",(long)timetaken.QuadPart)
+	printf("Time = %d ms\n",(long)timetaken.QuadPart)
+#else 
+#define START_TIMER()
+#define STOP_TIMER()
+#endif
 
 // Note : Inline Functions to follow
 inline unsigned long GetSquareIndex(BitBoard b);
@@ -866,12 +873,12 @@ inline BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p)
 #else
 	
 	// More efficient.
-	//const BitBoard m1=0xfefefefefefefefei64;
-	//const BitBoard m2=0x7f7f7f7f7f7f7f7fi64;
+	//const BitBoard m1=0xfefefefefefefefe;
+	//const BitBoard m2=0x7f7f7f7f7f7f7f7f;
 /*	BitBoard a;
-	a = g | (0xfefefefefefefefei64 & (g << 1));
+	a = g | (0xfefefefefefefefe & (g << 1));
 	a |= a << 8;
-	a |= 0x7f7f7f7f7f7f7f7fi64 & (a >> 1);
+	a |= 0x7f7f7f7f7f7f7f7f & (a >> 1);
 	a |= a >> 8;
 	a &=~g;
 	a &=p;
@@ -879,8 +886,8 @@ inline BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p)
 	// 
 	BitBoard a, b;
 	BitBoard t, u;
-	a = g; t = g; t <<= 1; t &= 0xfefefefefefefefei64; a |= t;
-	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= 0x7f7f7f7f7f7f7f7fi64; a |= u;
+	a = g; t = g; t <<= 1; t &= 0xfefefefefefefefe; a |= t;
+	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= 0x7f7f7f7f7f7f7f7f; a |= u;
 	b = a; b >>= 8; a |= b; a &= ~g; a &= p;
 	return a;
 #endif
@@ -890,8 +897,8 @@ inline BitBoard FillKingAttacks(BitBoard g)
 {
 	BitBoard a, b;
 	BitBoard t, u;
-	a = g; t = g; t <<= 1; t &= 0xfefefefefefefefei64; a |= t;
-	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= 0x7f7f7f7f7f7f7f7fi64; a |= u;
+	a = g; t = g; t <<= 1; t &= 0xfefefefefefefefe; a |= t;
+	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= 0x7f7f7f7f7f7f7f7f; a |= u;
 	b = a; b >>= 8; a |= b; a &= ~g;
 	return a;
 }
@@ -987,7 +994,7 @@ inline BitBoard FillRightOccluded(BitBoard g, BitBoard p)
 inline BitBoard FillUpRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-	p &= 0x7f7f7f7f7f7f7f7fi64; // left wall
+	p &= 0x7f7f7f7f7f7f7f7f; // left wall
     g |= p & (g <<  7);
     p &=     (p <<  7);
     g |= p & (g << 14);
@@ -999,7 +1006,7 @@ inline BitBoard FillUpRightOccluded(BitBoard g, BitBoard p)
 inline BitBoard FillDownRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-	p &= 0x7f7f7f7f7f7f7f7fi64; // left wall
+	p &= 0x7f7f7f7f7f7f7f7f; // left wall
     g |= p & (g >>  9);
     p &=     (p >>  9);
     g |= p & (g >> 18);
@@ -1040,19 +1047,19 @@ inline BitBoard MoveUpSingleOccluded(BitBoard g, BitBoard p)
 
 inline BitBoard MoveUpRightSingleOccluded(BitBoard g, BitBoard p)
 {
-	p &= 0x7f7f7f7f7f7f7f7fi64;
+	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g << 7));
 }
 
 inline BitBoard MoveRightSingleOccluded(BitBoard g, BitBoard p)
 {
-	p &= 0x7f7f7f7f7f7f7f7fi64;
+	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 1));
 }
 
 inline BitBoard MoveDownRightSingleOccluded(BitBoard g, BitBoard p)
 {
-	p &= 0x7f7f7f7f7f7f7f7fi64;
+	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 9));
 }
 
@@ -1081,13 +1088,13 @@ inline BitBoard MoveUpLeftSingleOccluded(BitBoard g, BitBoard p)
 
 inline BitBoard MoveDownLeftRightSingle(BitBoard g)
 {	
-	return	(0xfefefefefefefefei64 & (g >> 7)) |	// DownLeft
-			(0x7f7f7f7f7f7f7f7fi64 & (g >> 9));		// DownRight
+	return	(0xfefefefefefefefe & (g >> 7)) |	// DownLeft
+			(0x7f7f7f7f7f7f7f7f & (g >> 9));		// DownRight
 }
 
 inline BitBoard MoveUpLeftRightSingle(BitBoard g) {
-	return	(0xfefefefefefefefei64 & (g << 9)) |	// UpLeft
-			(0x7f7f7f7f7f7f7f7fi64 & (g << 7));		// UpRight
+	return	(0xfefefefefefefefe & (g << 9)) |	// UpLeft
+			(0x7f7f7f7f7f7f7f7f & (g << 7));		// UpRight
 }
 
 inline BitBoard MoveKnight1Occluded(BitBoard g, BitBoard p)
@@ -1146,11 +1153,11 @@ inline int PopCount(const BitBoard & B)
 	// This routine comes from: 
 	// Knuth, TAoCP Vol 4: Fascicle 1, (no. 62)
 	BitBoard A;
-	A = B - ((B >> 1) & 0x5555555555555555i64);
-	A = (A & 0x3333333333333333i64) +
-		((A >> 2) & 0x3333333333333333i64);
-	A = (A + (A >> 4)) & 0x0f0f0f0f0f0f0f0fi64;
-	return static_cast<int>((A * 0x0101010101010101i64) >> 56);
+	A = B - ((B >> 1) & 0x5555555555555555);
+	A = (A & 0x3333333333333333) +
+		((A >> 2) & 0x3333333333333333);
+	A = (A + (A >> 4)) & 0x0f0f0f0f0f0f0f0f;
+	return static_cast<int>((A * 0x0101010101010101) >> 56);
 #endif
 }
 
@@ -1167,7 +1174,7 @@ inline unsigned long GetSquareIndex(BitBoard b)
 	// see (https://chessprogramming.wikispaces.com/BitScan)
 	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x03f79d71b4cb0a89i64;
+	const BitBoard db64 = 0x03f79d71b4cb0a89;
 
 	const int tbl[64] = {
 		0, 47,  1, 56, 48, 27,  2, 60,
@@ -1205,7 +1212,7 @@ inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	// see (https://chessprogramming.wikispaces.com/BitScan)
 	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x03f79d71b4cb0a89i64;
+	const BitBoard db64 = 0x03f79d71b4cb0a89;
 	
 	const int tbl[64] = {
 		0, 47,  1, 56, 48, 27,  2, 60,
@@ -1233,8 +1240,8 @@ inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	
 #endif
 
-	Last = B & (1i64 << a); 
-	First = B & (1i64 << b);
+	Last = B & (1LL << a); 
+	First = B & (1LL << b);
 }
 
 // Conversion functions for the different Move formats:
@@ -1246,8 +1253,8 @@ inline void Move2ChessMove(ChessMove& m, const Move& M) {
 
 inline void ChessMove2Move(const ChessMove& m, Move& M) {
 	M.Flags = m.Flags;
-	M.From = 1i64 << m.FromSquare;
-	M.To = 1i64 << m.ToSquare;
+	M.From = 1LL << m.FromSquare;
+	M.To = 1LL << m.ToSquare;
 }
 
 #endif // _MOVEGEN

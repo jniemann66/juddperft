@@ -93,13 +93,13 @@ int WinBoard(Engine* pE)
 	// turn off output buffering
 	setbuf(stdout,NULL);
 	pE->CurrentPosition.SetupStartPosition();
-	printf_s("\nSupported Commands:\n");
+	printf("\nSupported Commands:\n");
 	for (int i = 0; i < (sizeof(WinboardInputCommands) / sizeof(WINBOARD_INPUT_COMMAND_DEFINITION)); i++)
 	{
 		if (WinboardInputCommands[i].implemented)
-			printf_s("   %s\n", WinboardInputCommands[i].pzCommandString);
+			printf("   %s\n", WinboardInputCommands[i].pzCommandString);
 	}
-	printf_s("\n");
+	printf("\n");
 	while(WaitForInput(pE));
 	return 0;
 }
@@ -256,34 +256,34 @@ void parse_input_showposition(const char* s, Engine* pE)
 void parse_input_showhash(const char* s,Engine* pE)
 {
 #ifdef _USE_HASH
-	printf_s("Leaf Node Table Size: %I64d bytes\n", LeafTable.GetSize());
-	__int64 numEntries = LeafTable.GetNumEntries();
-	__int64 nPopulatedLeafEntries = 0i64;
-	std::atomic<LeafEntry> *pLeafTableBaseAddress= LeafTable.GetAddress(0i64);
+	printf("Leaf Node Table Size: %I64d bytes\n", LeafTable.GetSize());
+	int64_t numEntries = LeafTable.GetNumEntries();
+	int64_t nPopulatedLeafEntries = 0;
+	std::atomic<LeafEntry> *pLeafTableBaseAddress= LeafTable.GetAddress(0);
 	LeafEntry LE;
-	for (__int64 w = 0; w < numEntries; w++) {
+	for (int64_t w = 0; w < numEntries; w++) {
 		LE = (pLeafTableBaseAddress + w)->load();
 		if (LE.count != 0)
 			nPopulatedLeafEntries++;
 	}
-	printf_s("%I64d entries occupied out of %I64d (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
+	printf("%I64d entries occupied out of %I64d (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
 	//
-	printf_s("Perft Table Size: %I64d bytes\n", PerftTable.GetSize());
+	printf("Perft Table Size: %I64d bytes\n", PerftTable.GetSize());
 	numEntries = PerftTable.GetNumEntries();
-	std::vector<__int64> depthTally(16,0);
-	std::atomic<PerftTableEntry> *pBaseAddress = PerftTable.GetAddress(0i64);
+	std::vector<int64_t> depthTally(16,0);
+	std::atomic<PerftTableEntry> *pBaseAddress = PerftTable.GetAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 	
-	for (__int64 x = 0; x < numEntries; x++) {
+	for (int64_t x = 0; x < numEntries; x++) {
 		pAtomicRecord = pBaseAddress + x;
 		PerftTableEntry RetrievedRecord = pAtomicRecord->load();
 		++depthTally[RetrievedRecord.depth];
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-		printf_s("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
+		printf("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
 	}
-	printf_s("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0i64));
+	printf("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
 #endif
 }
 
@@ -296,11 +296,11 @@ void parse_input_perft(const char* s,Engine* pE)
 	{
 		START_TIMER();
 		PerftInfo T;
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0i64;
+		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT
 		//Perft
 			(pE->CurrentPosition,q,1,&T);
-		printf_s("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+		printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
 			q,
 			T.nMoves,
 			T.nCapture,
@@ -310,7 +310,7 @@ void parse_input_perft(const char* s,Engine* pE)
 			T.nPromotion
 			);
 		STOP_TIMER();
-		printf_s("\n\n");
+		printf("\n\n");
 	}
 }
 
@@ -322,14 +322,14 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 	for (int q = 1; q <= atoi(s); q++)
 	{
 		START_TIMER();
-		__int64 nNumPositions = 0i64;
+		int64_t nNumPositions = 0;
 		
 		PerftFastMT(pE->CurrentPosition, q, nNumPositions);
-		printf_s("Perft %d: %I64d \n",
+		printf("Perft %d: %I64d \n",
 			q,nNumPositions
 			);
 		STOP_TIMER();
-		printf_s("\n\n");
+		printf("\n\n");
 	}
 }
 
@@ -339,13 +339,13 @@ void parse_input_divide(const char* s, Engine* pE)
 		return;
 
 	int depth;
-	depth = max(2,atoi(s));
+	depth = std::max(2,atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
 	GenerateMoves(pE->CurrentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	PerftInfo GT;
-	GT.nMoves = GT.nCapture = GT.nEPCapture = GT.nCastle = GT.nCastleLong = GT.nPromotion = 0i64;
+	GT.nMoves = GT.nCapture = GT.nEPCapture = GT.nCastle = GT.nCastleLong = GT.nPromotion = 0;
 	PerftInfo T;
 	ChessPosition Q;
 	START_TIMER();
@@ -357,9 +357,9 @@ void parse_input_divide(const char* s, Engine* pE)
 	
 		DumpMove(*pM,LongAlgebraicNoNewline);
 	
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0i64;
+		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT(Q, depth-1, 1, &T);
-		printf_s("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+		printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
 			depth-1,
 			T.nMoves,
 			T.nCapture,
@@ -369,7 +369,7 @@ void parse_input_divide(const char* s, Engine* pE)
 			T.nPromotion
 			);
 		
-		printf_s("\n");
+		printf("\n");
 
 		GT.nMoves += T.nMoves;
 		GT.nCapture += T.nCapture;
@@ -381,7 +381,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		pM++;
 	}
 	STOP_TIMER();
-	printf_s("Summary:\nPerft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+	printf("Summary:\nPerft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
 		depth,
 		GT.nMoves,
 		GT.nCapture,
@@ -398,13 +398,13 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		return;
 
 	int depth;
-	depth = max(2, atoi(s));
+	depth = std::max(2, atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
 	GenerateMoves(pE->CurrentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
-	__int64 GrandTotal = 0i64;
+	int64_t GrandTotal = 0;
 	START_TIMER();
 	while (pM->NoMoreMoves == 0)
 	{
@@ -412,15 +412,15 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q.PerformMove(*pM).SwitchSides();
 		
 		DumpMove(*pM, LongAlgebraicNoNewline);
-		__int64 nNumPositions = 0i64;
+		int64_t nNumPositions = 0;
 		PerftFastMT(Q, depth-1, nNumPositions);
-		printf_s("Perft %d: %I64d \n",
+		printf("Perft %d: %I64d \n",
 			depth-1, nNumPositions
 			);
 		GrandTotal += nNumPositions;
 		pM++;
 	}
-	printf_s("\nPerft %d: %I64d\n",depth, GrandTotal);
+	printf("\nPerft %d: %I64d\n",depth, GrandTotal);
 	STOP_TIMER();
 }
 
@@ -433,7 +433,7 @@ void parse_input_lookuphash(const char* s, Engine* pE)
 }
 
 void parse_input_memory(const char* s, Engine* pE) {
-	unsigned __int64 BytesRequested = _atoi64(s);
+	uint64_t BytesRequested = _atoi64(s);
 	if (s == NULL)
 		return; 
 
@@ -444,7 +444,7 @@ void parse_input_cores(const char* s, Engine* pE) {
 	if (s == NULL)
 		return;
 
-	pE->nNumCores = max(1, min(atoi(s), MAX_THREADS));
+	pE->nNumCores = std::max(1, std::min(atoi(s), MAX_THREADS));
 }
 void parse_input_egtpath(const char* s, Engine* pE) {}
 void parse_input_option(const char* s, Engine* pE) {}
@@ -454,40 +454,40 @@ void  send_output_feature(Engine* pE)
 {
 	char t[4096],s[1024];
 	
-	sprintf_s(t,"feature ");
-	sprintf_s(s, "done=0 "); strcat(t, s);
+	sprintf(t,"feature ");
+	sprintf(s, "done=0 "); strcat(t, s);
 	//
-	sprintf_s(s, "\nfeature "); strcat(t, s);
-	sprintf_s(s,"ping=%d ",IsImplemented("ping",pE)? 1:0); strcat(t,s);					// recommended:	1	
-	sprintf_s(s,"setboard=%d ",IsImplemented("setboard",pE)? 1:0); strcat(t,s);			// recommended: 1
-	sprintf_s(s,"playother=%d ",IsImplemented("playother",pE)? 1:0); strcat(t,s);		// recommended: 1
-	sprintf_s(s,"san=0 "); strcat(t,s);													// no recommendation
-	sprintf_s(s,"usermove=%d ",IsImplemented("usermove",pE)? 1:0); strcat(t,s);			// no recommendation
-	sprintf_s(s,"time=%d ",IsImplemented("time",pE)? 1:0); strcat(t,s);					// recommended: 1	
-	sprintf_s(s,"draw=%d ",IsImplemented("draw",pE)? 1:0); strcat(t,s);					// recommended: 1
+	sprintf(s, "\nfeature "); strcat(t, s);
+	sprintf(s,"ping=%d ",IsImplemented("ping",pE)? 1:0); strcat(t,s);					// recommended:	1	
+	sprintf(s,"setboard=%d ",IsImplemented("setboard",pE)? 1:0); strcat(t,s);			// recommended: 1
+	sprintf(s,"playother=%d ",IsImplemented("playother",pE)? 1:0); strcat(t,s);		// recommended: 1
+	sprintf(s,"san=0 "); strcat(t,s);													// no recommendation
+	sprintf(s,"usermove=%d ",IsImplemented("usermove",pE)? 1:0); strcat(t,s);			// no recommendation
+	sprintf(s,"time=%d ",IsImplemented("time",pE)? 1:0); strcat(t,s);					// recommended: 1	
+	sprintf(s,"draw=%d ",IsImplemented("draw",pE)? 1:0); strcat(t,s);					// recommended: 1
 	//
-	sprintf_s(s,"\nfeature "); strcat(t,s);						
-	sprintf_s(s,"sigint=0 "); strcat(t,s);												// recommended: 1
-	sprintf_s(s,"sigterm=0 "); strcat(t,s);												// recommended: 1
-	sprintf_s(s,"reuse=1 "); strcat(t,s);												// recommended: 1
-	sprintf_s(s,"analyze=%d ",IsImplemented("analyze",pE)? 1:0); strcat(t,s);			// recommended: 1
-	sprintf_s(s,"myname=\"JuddChess v1.0\" "); strcat(t,s);								// no recommendation
+	sprintf(s,"\nfeature "); strcat(t,s);						
+	sprintf(s,"sigint=0 "); strcat(t,s);												// recommended: 1
+	sprintf(s,"sigterm=0 "); strcat(t,s);												// recommended: 1
+	sprintf(s,"reuse=1 "); strcat(t,s);												// recommended: 1
+	sprintf(s,"analyze=%d ",IsImplemented("analyze",pE)? 1:0); strcat(t,s);			// recommended: 1
+	sprintf(s,"myname=\"JuddChess v1.0\" "); strcat(t,s);								// no recommendation
 	//
-	sprintf_s(s,"\nfeature "); strcat(t,s);												
-	sprintf_s(s,"variants=\"normal\" "); strcat(t,s);									// recommended: "normal"
-	sprintf_s(s,"colors=0 "); strcat(t,s);												// recommended: 0
-	sprintf_s(s,"ics=0 "); strcat(t,s);													// no recommendation
-	sprintf_s(s,"name=%d ",IsImplemented("name",pE)? 1:0); strcat(t,s);					
-	sprintf_s(s,"pause=%d ",IsImplemented("pause",pE)? 1:0); strcat(t,s);
+	sprintf(s,"\nfeature "); strcat(t,s);												
+	sprintf(s,"variants=\"normal\" "); strcat(t,s);									// recommended: "normal"
+	sprintf(s,"colors=0 "); strcat(t,s);												// recommended: 0
+	sprintf(s,"ics=0 "); strcat(t,s);													// no recommendation
+	sprintf(s,"name=%d ",IsImplemented("name",pE)? 1:0); strcat(t,s);					
+	sprintf(s,"pause=%d ",IsImplemented("pause",pE)? 1:0); strcat(t,s);
 	//
-	sprintf_s(s, "\nfeature "); strcat(t, s);											
-	sprintf_s(s, "nps=%d ", IsImplemented("nps", pE) ? 1 : 0); strcat(t, s);
-	sprintf_s(s, "debug=0 "); strcat(t, s);
-	sprintf_s(s, "memory=%d ", IsImplemented("memory", pE) ? 1 : 0); strcat(t, s);
-	sprintf_s(s, "smp=%d ", IsImplemented("cores", pE) ? 1 : 0); strcat(t, s);
-	sprintf_s(s, "smp=0 "); strcat(t, s);	
+	sprintf(s, "\nfeature "); strcat(t, s);											
+	sprintf(s, "nps=%d ", IsImplemented("nps", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "debug=0 "); strcat(t, s);
+	sprintf(s, "memory=%d ", IsImplemented("memory", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "smp=%d ", IsImplemented("cores", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "smp=0 "); strcat(t, s);	
 	sprintf(s, "\nfeature done=1 "); strcat(t, s);
-	sprintf_s(s,"\n"); strcat(t,s);
+	sprintf(s,"\n"); strcat(t,s);
 	WinBoardOutput(t);
 }
 void  send_output_illegalmove(const char* s,Engine* pE){}
@@ -508,7 +508,7 @@ void  send_output_tellicsnoalias(const char* s,Engine* pE){}
 
 void WinBoardOutput(const char* s)
 {
-	printf_s(s);
+	printf(s);
 	LogOutput(logfile,s);
 }
 

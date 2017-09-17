@@ -9,8 +9,8 @@
 #define MINIMAL_HASHTABLE_SIZE 1000000
 #define _SQUEEZE_PERFT_COUNT_60BITS 1 // squeeze depth and count into single 64-bit integer (4:60 bits respectively) to make hash entries smaller.
 
-typedef unsigned __int64 HashKey;
-typedef unsigned __int64 ZobristKey;
+typedef uint64_t HashKey;
+typedef uint64_t ZobristKey;
 
 class ZobristKeySet
 {
@@ -40,21 +40,21 @@ template<class T> class HashTable
 public:
 	HashTable(char* pName = "Hash Table");
 	~HashTable();
-	bool SetSize(unsigned __int64 nBytes);
+	bool SetSize(uint64_t nBytes);
 	bool DeAllocate();
 	T* GetAddress(const HashKey& SearchHK) const;
-	unsigned __int64 GetSize() const;			// return currently-allocated size in bytes
-	unsigned __int64 GetRequestedSize() const;	// return what was originally requested in bytes
-	unsigned __int64 GetNumEntries() const;
+	uint64_t GetSize() const;			// return currently-allocated size in bytes
+	uint64_t GetRequestedSize() const;	// return what was originally requested in bytes
+	uint64_t GetNumEntries() const;
 	double GetLoadFactor() const;
 	void Clear();
 private:
 	T* m_pTable;
-	unsigned __int64 m_nEntries;
-	unsigned __int64 m_nIndexMask;
-	unsigned __int64 m_nRequestedSize;
-	unsigned __int64 m_nWrites;
-	unsigned __int64 m_nCollisions;
+	uint64_t m_nEntries;
+	uint64_t m_nIndexMask;
+	uint64_t m_nRequestedSize;
+	uint64_t m_nWrites;
+	uint64_t m_nCollisions;
 	std::string m_Name;
 };
 
@@ -62,28 +62,28 @@ template<class T>
 inline HashTable<T>::HashTable(char* pName) : m_Name(pName)
 {
 	m_pTable = nullptr;
-	m_nCollisions = 0i64;
-	m_nEntries = 0i64;
-	m_nIndexMask = 0i64;
-	m_nWrites = 0i64;
+	m_nCollisions = 0;
+	m_nEntries = 0;
+	m_nIndexMask = 0;
+	m_nWrites = 0;
 }
 
 template<class T>
 inline HashTable<T>::~HashTable()
 {
 	if (m_pTable != nullptr) {
-		printf_s("deallocating %s\n",m_Name.c_str());
+		printf("deallocating %s\n",m_Name.c_str());
 		delete[] m_pTable;
 		m_pTable = nullptr;
 	}
 }
 
 template<class T>
-inline bool HashTable<T>::SetSize(unsigned __int64 nBytes)
+inline bool HashTable<T>::SetSize(uint64_t nBytes)
 {
 	m_nRequestedSize = nBytes;
 
-	unsigned __int64 nNewNumEntries = 1i64;
+	uint64_t nNewNumEntries = 1LL;
 	// Make nNewSize a power of 2:
 	while (nNewNumEntries*sizeof(T) < nBytes) {
 		nNewNumEntries <<= 1;
@@ -104,13 +104,13 @@ inline bool HashTable<T>::SetSize(unsigned __int64 nBytes)
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
 	if (m_pTable == nullptr) {
-		printf_s("Failed to allocate %I64d bytes for %s !\n", nBytes,m_Name.c_str());
+		printf("Failed to allocate %I64d bytes for %s !\n", nBytes,m_Name.c_str());
 		return false;
 	}
 	else {
-		printf_s("Allocated %I64d bytes for %s\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
-		m_nCollisions = 0i64;
-		m_nWrites = 0i64;
+		printf("Allocated %I64d bytes for %s\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
+		m_nCollisions = 0;
+		m_nWrites = 0;
 		HashTable<T>::Clear();
 		return true;
 	}
@@ -121,7 +121,7 @@ inline bool HashTable<T>::DeAllocate()
 {
 	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
 	{
-		printf_s("deallocating %s\n",m_Name.c_str());
+		printf("deallocating %s\n",m_Name.c_str());
 		delete[] m_pTable;
 		m_pTable = nullptr;
 		return true;
@@ -138,19 +138,19 @@ inline T * HashTable<T>::GetAddress(const HashKey & SearchHK) const
 }
 
 template<class T>
-inline unsigned __int64 HashTable<T>::GetSize() const
+inline uint64_t HashTable<T>::GetSize() const
 {
 	return m_nEntries*sizeof(T);
 }
 
 template<class T>
-inline unsigned __int64 HashTable<T>::GetRequestedSize() const
+inline uint64_t HashTable<T>::GetRequestedSize() const
 {
 	return m_nRequestedSize;
 }
 
 template<class T>
-inline unsigned __int64 HashTable<T>::GetNumEntries() const
+inline uint64_t HashTable<T>::GetNumEntries() const
 {
 	return m_nEntries;
 }
