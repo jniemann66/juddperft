@@ -374,7 +374,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 			// upon wake-up:
 			PerftInfo T;
-			T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = 0i64;
+			T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = ZERO_64;
 			for (;;) // thread's event loop
 			{
 				if (!MoveQueue.empty()) {
@@ -425,7 +425,7 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 {
-	nNodes = 0i64;
+	nNodes = ZERO_64;
 
 	if (depth == 0) {
 		nNodes = 1;
@@ -448,7 +448,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 
 	unsigned int nThreads = min(std::thread::hardware_concurrency(), min(TheEngine.nNumCores, MAX_THREADS));
 	std::vector<std::thread> threads;
-	std::vector<__int64> subTotal(nThreads, 0i64);
+	std::vector<__int64> subTotal(nThreads, ZERO_64);
 	std::queue<ChessMove> MoveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
@@ -463,7 +463,7 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up:
-			__int64 s = 0i64; // local accumulator for thread
+			__int64 s = ZERO_64; // local accumulator for thread
 			for (;;) // thread's event loop
 			{
 				if (!MoveQueue.empty()) {
@@ -499,5 +499,5 @@ void PerftFastMT(ChessPosition P, int depth, __int64& nNodes)
 	}
 
 	// add up total:
-	nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0i64);
+	nNodes = std::accumulate(subTotal.begin(), subTotal.end(), ZERO_64);
 }
