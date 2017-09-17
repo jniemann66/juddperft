@@ -63,7 +63,7 @@ note: using dividefast instead of perftfast is often faster for large n, because
 
 ## Additional Information
 
-The known perft numbers up to 13 are as follows:
+The known perft numbers up to 15 are as follows:
 
 	0	1
 	1	20
@@ -76,9 +76,11 @@ The known perft numbers up to 13 are as follows:
 	8	84,998,978,956
 	9	2,439,530,234,167
 	10	69,352,859,712,417
-	11	2,097,651,003,696,800
-	12	62,854,969,236,701,700
-	13	1,981,066,775,000,390,000
+	11	2,097,651,003,696,806
+	12	62,854,969,236,701,747
+	13	1,981,066,775,000,396,239
+	14  61,885,021,521,585,529,237
+	15  2,015,099,950,053,364,471,960
 
 Note: The perft numbers have an entry in the [On-line Encycolpedia of Integer Sequences](https://oeis.org/A048987)
 
