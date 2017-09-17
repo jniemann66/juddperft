@@ -4,6 +4,7 @@
 #include "movegen.h"
 #include <atomic>
 #include <string>
+#include <cstring> // for std::memset
 
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000

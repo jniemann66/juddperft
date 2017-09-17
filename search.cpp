@@ -8,7 +8,7 @@
 #include <queue>
 #include <numeric>
 #include <condition_variable>
-
+#include <algorithm>
 
 // Globals
 extern Engine TheEngine;

@@ -2,7 +2,7 @@
 #include "fen.h"
 #include "search.h"
 #include "winboard.h"
-#include "Diagnostics.h"
+#include "diagnostics.h"
 #include "hashtable.h"
 
 #include <stdio.h>

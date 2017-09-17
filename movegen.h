@@ -18,6 +18,8 @@
 #include <x86intrin.h>
 #endif
 
+#include <cstdint>
+
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
 //
