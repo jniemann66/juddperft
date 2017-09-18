@@ -85,3 +85,10 @@ The known perft numbers up to 15 are as follows:
 Note: The perft numbers have an entry in the [On-line Encycolpedia of Integer Sequences](https://oeis.org/A048987)
 
 Additional information can be found on the [Chess Programming Wiki](https://chessprogramming.wikispaces.com/Perft "Chess Programming Wiki")
+
+## build commands
+
+*GCC 5.4 ; kubuntu 16.04*
+
+**g++ -pthread -std=c++11 *.cpp -o ./juddperft-gcc -latomic -O3**
+
