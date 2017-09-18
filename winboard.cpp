@@ -7,6 +7,7 @@
 #include "engine.h"
 #include "hashtable.h"
 #include "Juddperft.h"
+#include "raiitimer.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +19,8 @@
 #include <atomic>
 #include <vector>
 #include <numeric>
+#include <string>
+#include <iostream>
 
 std::ofstream logfile("perft.txt");
 
@@ -112,12 +115,20 @@ int WinBoard(Engine* pE)
 bool WaitForInput(Engine* pE)
 {
 	int nRecognizedCommands=sizeof(WinboardInputCommands)/sizeof(WinboardInputCommands[0]); 
-	char input[2048];
-	char* command;
-	char* args;
-	gets_s(input,2047);
+
+	char* input = NULL;
+	std::string inputStr;
+	std::getline(std::cin, inputStr);
+	if(inputStr.empty()) 
+		return true;
+	
+	input = strdup(inputStr.c_str()); // damn ugly. to-do: stop using strtok altogether
+
 	if(input != NULL)
 	{
+		char* command;
+		char* args;
+
 		// log input
 		LogInput(logfile,input);
 		command=strtok(input," \n");
@@ -143,6 +154,7 @@ bool WaitForInput(Engine* pE)
 			// still here ? OK, we interpret input as a move:
 			parse_input_usermove(command,pE);
 		}
+		free(input);
 	}
 	return true;
 }
@@ -294,23 +306,22 @@ void parse_input_perft(const char* s,Engine* pE)
 
 	for(int q=1; q<=atoi(s); q++)
 	{
-		START_TIMER();
-		PerftInfo T;
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
-		PerftMT
-		//Perft
-			(pE->CurrentPosition,q,1,&T);
-		printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
-			q,
-			T.nMoves,
-			T.nCapture,
-			T.nCastle,
-			T.nCastleLong,
-			T.nEPCapture,
-			T.nPromotion
-			);
-		STOP_TIMER();
-		printf("\n\n");
+		{
+			RaiiTimer timer;
+			PerftInfo T;
+			T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
+			PerftMT(pE->CurrentPosition,q,1,&T);
+			printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+				q,
+				T.nMoves,
+				T.nCapture,
+				T.nCastle,
+				T.nCastleLong,
+				T.nEPCapture,
+				T.nPromotion
+				);
+			printf("\n");
+		}
 	}
 }
 
@@ -321,15 +332,16 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 
 	for (int q = 1; q <= atoi(s); q++)
 	{
-		START_TIMER();
-		int64_t nNumPositions = 0;
-		
-		PerftFastMT(pE->CurrentPosition, q, nNumPositions);
-		printf("Perft %d: %I64d \n",
-			q,nNumPositions
-			);
-		STOP_TIMER();
-		printf("\n\n");
+		{
+			RaiiTimer timer;
+			int64_t nNumPositions = 0;
+			PerftFastMT(pE->CurrentPosition, q, nNumPositions);
+			printf("Perft %d: %I64d \n",
+				q,nNumPositions
+				);
+			printf("\n");
+			
+		}
 	}
 }
 
@@ -348,7 +360,8 @@ void parse_input_divide(const char* s, Engine* pE)
 	GT.nMoves = GT.nCapture = GT.nEPCapture = GT.nCastle = GT.nCastleLong = GT.nPromotion = 0;
 	PerftInfo T;
 	ChessPosition Q;
-	START_TIMER();
+	RaiiTimer timer;
+
 	while(pM->NoMoreMoves==0)
 	{ 
 		Q = pE->CurrentPosition;
@@ -380,7 +393,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		
 		pM++;
 	}
-	STOP_TIMER();
+
 	printf("Summary:\nPerft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
 		depth,
 		GT.nMoves,
@@ -405,7 +418,8 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
 	int64_t GrandTotal = 0;
-	START_TIMER();
+	RaiiTimer timer;
+	
 	while (pM->NoMoreMoves == 0)
 	{
 		Q = pE->CurrentPosition;
@@ -421,7 +435,6 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		pM++;
 	}
 	printf("\nPerft %d: %I64d\n",depth, GrandTotal);
-	STOP_TIMER();
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}

@@ -9,6 +9,13 @@
 #include "engine.h"
 #include <fstream>
 
+#ifndef MSC_VER
+#include <strings.h>
+#define _stricmp strcasecmp
+#include <stdlib.h>
+#define _atoi64 atoll
+#endif
+
 typedef struct WinboardInputCommandDefinition{
 	char* pzCommandString;
 	void (*pF)(const char*,Engine* pE);		// pointer to handler function. NULL if not implemented

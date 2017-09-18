@@ -1,4 +1,2 @@
-Received command: showposition
-Received command: perftfast 8
-Received command: showposition
-Received command: 
+Received command: perftfast 7
+Received command: quit
