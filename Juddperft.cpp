@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <x86intrin.h>
+#include <inttypes.h>
 
 #include <atomic>
 #include "Juddperft.h"
@@ -28,7 +29,7 @@ int main(int argc, char *argv[], char *envp[])
 	MEMORYSTATUSEX statex;
 	GlobalMemoryStatusEx(&statex);
 	nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
-	printf("Available Physical RAM: %I64d\n\n", nBytesToAllocate);
+	printf("Available Physical RAM: %lld\n\n", nBytesToAllocate);
 #endif
 
 	while (!SetMemory(nBytesToAllocate)) {

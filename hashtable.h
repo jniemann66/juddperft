@@ -105,11 +105,11 @@ inline bool HashTable<T>::SetSize(uint64_t nBytes)
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
 	if (m_pTable == nullptr) {
-		printf("Failed to allocate %I64d bytes for %s !\n", nBytes,m_Name.c_str());
+		printf("Failed to allocate %lld bytes for %s !\n", nBytes,m_Name.c_str());
 		return false;
 	}
 	else {
-		printf("Allocated %I64d bytes for %s\n(%I64d Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
+		printf("Allocated %lld bytes for %s\n(%lld Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
 		m_nCollisions = 0;
 		m_nWrites = 0;
 		HashTable<T>::Clear();

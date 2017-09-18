@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #include <cassert>
 #include <chrono>
@@ -21,6 +23,7 @@
 #include <numeric>
 #include <string>
 #include <iostream>
+
 
 std::ofstream logfile("perft.txt");
 
@@ -268,7 +271,7 @@ void parse_input_showposition(const char* s, Engine* pE)
 void parse_input_showhash(const char* s,Engine* pE)
 {
 #ifdef _USE_HASH
-	printf("Leaf Node Table Size: %I64d bytes\n", LeafTable.GetSize());
+	printf("Leaf Node Table Size: %lld bytes\n", LeafTable.GetSize());
 	int64_t numEntries = LeafTable.GetNumEntries();
 	int64_t nPopulatedLeafEntries = 0;
 	std::atomic<LeafEntry> *pLeafTableBaseAddress= LeafTable.GetAddress(0);
@@ -278,9 +281,9 @@ void parse_input_showhash(const char* s,Engine* pE)
 		if (LE.count != 0)
 			nPopulatedLeafEntries++;
 	}
-	printf("%I64d entries occupied out of %I64d (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
+	printf("%lld entries occupied out of %lld (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
 	//
-	printf("Perft Table Size: %I64d bytes\n", PerftTable.GetSize());
+	printf("Perft Table Size: %lld bytes\n", PerftTable.GetSize());
 	numEntries = PerftTable.GetNumEntries();
 	std::vector<int64_t> depthTally(16,0);
 	std::atomic<PerftTableEntry> *pBaseAddress = PerftTable.GetAddress(0);
@@ -293,9 +296,9 @@ void parse_input_showhash(const char* s,Engine* pE)
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-		printf("Depth %d: %I64d (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
+		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
 	}
-	printf("Total: %I64d\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
+	printf("Total: %lld\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
 #endif
 }
 
@@ -311,7 +314,7 @@ void parse_input_perft(const char* s,Engine* pE)
 			PerftInfo T;
 			T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 			PerftMT(pE->CurrentPosition,q,1,&T);
-			printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+			printf("Perft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 				q,
 				T.nMoves,
 				T.nCapture,
@@ -336,7 +339,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 			RaiiTimer timer;
 			int64_t nNumPositions = 0;
 			PerftFastMT(pE->CurrentPosition, q, nNumPositions);
-			printf("Perft %d: %I64d \n",
+			printf("Perft %d: %" PRIu64 "\n",
 				q,nNumPositions
 				);
 			printf("\n");
@@ -372,7 +375,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT(Q, depth-1, 1, &T);
-		printf("Perft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+		printf("Perft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 			depth-1,
 			T.nMoves,
 			T.nCapture,
@@ -394,7 +397,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		pM++;
 	}
 
-	printf("Summary:\nPerft %d: %I64d \nCaptures= %I64d Castles= %I64d CastleLongs= %I64d EPCaptures= %I64d Promotions= %I64d\n",
+	printf("Summary:\nPerft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 		depth,
 		GT.nMoves,
 		GT.nCapture,
@@ -428,13 +431,13 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		DumpMove(*pM, LongAlgebraicNoNewline);
 		int64_t nNumPositions = 0;
 		PerftFastMT(Q, depth-1, nNumPositions);
-		printf("Perft %d: %I64d \n",
+		printf("Perft %d: %lld \n",
 			depth-1, nNumPositions
 			);
 		GrandTotal += nNumPositions;
 		pM++;
 	}
-	printf("\nPerft %d: %I64d\n",depth, GrandTotal);
+	printf("\nPerft %d: %lld\n",depth, GrandTotal);
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}

@@ -3,7 +3,7 @@ juddperft is a "perft" (short for "PERF-ormance T-est") utility which is used to
 
 For example, from the normal starting position in chess, white has 20 available moves, resulting in 20 possible positions after white has made the first move. After Black replies, there are 400 possibilities, and after white replies again, there are 8902. We can use a type of short-hand notation to respresent this: **perft(1)=20, perft(2)=400, perft(3)=8902** and so on ... 
 
-The job of Juddperft is to calculate these perft numbers to an arbitrary depth, by counting all of the legal chess positions reached at a given depth. However, the perft numbers become very large, very quickly, making it a difficult to calculate the higher perft numbers within an acceptable timeframe. (As of this writing, the race is still on to calculate perft(14) ... )
+The job of Juddperft is to calculate these perft numbers to an arbitrary depth, by counting all of the legal chess positions reached at a given depth. However, the perft numbers become very large, very quickly, making it a difficult to calculate the higher perft numbers within an acceptable timeframe.
 
 ![JuddPerft Screenshot](https://github.com/jniemann66/juddperft/blob/master/screenshot.jpg)  
 *Screenshot of juddperft in action, showing the results for a search depth of 8*
@@ -12,7 +12,7 @@ The job of Juddperft is to calculate these perft numbers to an arbitrary depth, 
 Chess positions are represented internally as a set of four 64-bit "bitBoards", allowing each of the 64 squares on the chess board to be populated by one of 16 possible values, representing the piece (or absence of a piece) occupying each square, and it's colour. In dealing with bitboards, there is inevitably a large amount of "bit-twiddling" involved (lots of ANDs / ORs / XORs / ones-complements / bit-shifts etc). This is pretty standard for chess programs.  
 juddperft employs two global hashtables (one for leaf nodes, and the other for "branch" nodes), to accelerate the speed of the search, by storing previously reached positions. Since juddperft is multi-threaded, atomic operations are used on hash table entries to eliminate the possibility of race conditions. This is easily manageable using the **std::atomic** Atomic Operations library in the **C++11** standard. Currently, some experimentation with iterative functions, as opposed to recursive, is underway, which would pave the way for future implementation on a **GPU**.
 
-juddperft needs to be compiled on Visual C++ 2015, as it uses some C++11 features. (Porting to other environments is intended in the future)
+juddperft was originally compiled on Visual C++ 2015, but work is underway to get it performing well on gcc and clang.
 
 *note: Some of the source files in this project look a little bare, and this is because they have been stripped-down from the full chess-engine, leaving only the perft-related code.*
 

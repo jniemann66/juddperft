@@ -22,7 +22,7 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 	
 	int64_t n=0;
 	PerftFastMT(P, depth, n);
-	printf("Perft %d: %I64d (Correct Answer= %I64d)\n", depth, n, correctAnswer);
+	printf("Perft %d: %lld (Correct Answer= %lld)\n", depth, n, correctAnswer);
 		
 	if (n != correctAnswer)
 		printf("-== FAIL !!! ==-\n");
@@ -33,8 +33,8 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 int PerftValidateWithExternal(const char* const pzFENString, int depth, int64_t value)
 {
 	char command[1024];
-	//sprintf(command, "%s \"%s\" %d %I64d >>NULL", PerftValidatorPath, pzFENString, depth, value); // Hide output of external program
-	sprintf(command, "%s \"%s\" %d %I64d", PerftValidatorPath, pzFENString, depth, value); // Show Output of external program
+	//sprintf(command, "%s \"%s\" %d %lld >>NULL", PerftValidatorPath, pzFENString, depth, value); // Hide output of external program
+	sprintf(command, "%s \"%s\" %d %lld", PerftValidatorPath, pzFENString, depth, value); // Show Output of external program
 	return (system(command) == EXIT_SUCCESS) ? PERFTVALIDATE_TRUE : PERFTVALIDATE_FALSE;
 }
 
@@ -79,7 +79,7 @@ void FindPerftBug(const ChessPosition* pP, int depth)
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT(Q, depth - 1, 1, &T);
 
-		printf("Validating depth: %d positions: %I64d ", depth - 1, T.nMoves);
+		printf("Validating depth: %d positions: %lld ", depth - 1, T.nMoves);
 		int nResult = PerftValidateWithExternal(pzFENString, depth - 1, T.nMoves);
 		if (nResult == PERFTVALIDATE_FALSE)
 		{
