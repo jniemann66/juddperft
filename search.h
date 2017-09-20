@@ -6,7 +6,7 @@
 
 #define PV_SIZE 64
 #define MAX_THREADS 64 // Hard limit for number of threads to use
-#define ZERO_64 0
+#define ZERO_64 0ULL
 
 #define SEARCH_STOPPED 0x80000000
 
