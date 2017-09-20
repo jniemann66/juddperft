@@ -1783,7 +1783,8 @@ void DumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 	}
 	//
 	char s[SMALL_BUFFER_SIZE];  // output string
-	sprintf(s, "");
+	*s = 0;
+	
 	if((style == LongAlgebraic ) || (style == LongAlgebraicNoNewline))
 	{
 		// Determine if move is a capture
@@ -1807,8 +1808,8 @@ void DumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 		else
 			strcat(s," ");
 		//
-		if(pBuffer==NULL)
-			printf(s);
+		if(pBuffer == NULL)
+			printf("%s", s);
 		else
 			strcpy(pBuffer,s);
 	}
@@ -1827,8 +1828,8 @@ void DumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 			strcat(s,"q");
 		strcat(s,"\n");
 		//
-		if(pBuffer==NULL)
-			printf(s);
+		if(pBuffer == NULL)
+			printf("%s", s);
 		else
 			strcpy(pBuffer,s);
 	}

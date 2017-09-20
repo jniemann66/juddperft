@@ -40,7 +40,7 @@ public:
 template<class T> class HashTable
 {
 public:
-	HashTable(char* pName = "Hash Table");
+	HashTable(const std::string& name = std::string("Hash Table"));
 	~HashTable();
 	bool SetSize(uint64_t nBytes);
 	bool DeAllocate();
@@ -62,7 +62,7 @@ private:
 };
 
 template<class T>
-inline HashTable<T>::HashTable(char* pName) : m_Name(pName)
+inline HashTable<T>::HashTable(const std::string& name) : m_Name(name)
 {
 	m_pTable = nullptr;
 	m_nCollisions = 0;

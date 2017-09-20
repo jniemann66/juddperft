@@ -142,9 +142,9 @@ bool WaitForInput(Engine* pE)
 			// search for command
 			for(int i=0;i<nRecognizedCommands;i++)
 			{
-				if(_stricmp(command,WinboardInputCommands[i].pzCommandString)==NULL)
+				if(_stricmp(command,WinboardInputCommands[i].pzCommandString) == 0)
 				{
-					if(_stricmp(command,"quit")==NULL)
+					if(_stricmp(command,"quit") == 0)
 					{
 						pE->StopSignal = true;
 						return false;
@@ -176,9 +176,9 @@ bool IsImplemented(const char* s,Engine* pE)
 	if(s != NULL)
 	{
 		// search for command
-		for(int i=0;i<nRecognizedCommands;i++)
+		for(int i=0; i<nRecognizedCommands; i++)
 		{
-			if(_stricmp(s,WinboardInputCommands[i].pzCommandString)==NULL)
+			if(_stricmp(s,WinboardInputCommands[i].pzCommandString) == 0)
 			{
 				if(WinboardInputCommands[i].implemented)
 					bRetVal=true;
@@ -525,7 +525,7 @@ void  send_output_tellicsnoalias(const char* s,Engine* pE){}
 
 void WinBoardOutput(const char* s)
 {
-	printf(s);
+	printf("%s", s);
 	LogOutput(logfile,s);
 }
 
