@@ -43,7 +43,7 @@ Accepted commands are as follows:
 
 **memory &lt;bytes&gt;** - attempt to (re)allocate *bytes* bytes of memory for the hashtables
 
-**cores &lt;n&gt;**
+**cores &lt;n&gt;** - use n threads for calculations
 
 **movelist** - display a list of legal moves from the current position
 
