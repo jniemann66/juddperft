@@ -1,3 +1,4 @@
+#include "Juddperft.h"
 #include "movegen.h"
 #include "fen.h"
 #include "search.h"
@@ -5,17 +6,18 @@
 #include "diagnostics.h"
 #include "hashtable.h"
 
-#include <stdio.h>
+//#include <stdio.h>
+
 #ifdef _MSC_VER
 #include <intrin.h>
 #include <Windows.h>
 #else
 #include <x86intrin.h>
 #endif
-#include <inttypes.h>
 
+#include <cinttypes>
+#include <iostream>
 #include <atomic>
-#include "Juddperft.h"
 
 // Globals:
 Engine TheEngine;
@@ -23,19 +25,13 @@ Engine TheEngine;
 HashTable <std::atomic<PerftTableEntry>> PerftTable("Perft table");
 HashTable <std::atomic<LeafEntry>> LeafTable("Leaf Node Table");
 #endif
-//
 
 int main(int argc, char *argv[], char *envp[])
 {
+	std::cout.imbue(std::locale(""));
 
 #ifdef _USE_HASH
-	uint64_t nBytesToAllocate = 1000000000; // 6 GiBytes
-#ifdef _WIN64
-	MEMORYSTATUSEX statex;
-	GlobalMemoryStatusEx(&statex);
-	//nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
-	printf("Available Physical RAM: %lld\n\n", nBytesToAllocate);
-#endif
+	uint64_t nBytesToAllocate = 1000000000; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
 	while (!SetMemory(nBytesToAllocate)) {
 		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
@@ -63,6 +59,9 @@ int main(int argc, char *argv[], char *envp[])
 
 bool SetMemory(uint64_t nTotalBytes) {
 #ifdef _USE_HASH
+
+	std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
+
 	// constraint: Leaf Table should have 3 times as many Entries as PerftTable (ie 3:1 ratio)
 	
 	uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
@@ -84,7 +83,7 @@ void SetProcessPriority()
 
 	if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)){
 		dwError = GetLastError();
-		printf("Failed to set Process priority (%d)\n", dwError);
+		std::cout << "Failed to set Process priority: " << dwError << std::endl;
 	}
 #endif
 }

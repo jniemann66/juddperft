@@ -2,6 +2,7 @@
 #define _HASHTABLE_H 1
 
 #include "movegen.h"
+#include <iostream>
 #include <atomic>
 #include <string>
 #include <cstring> // for std::memset
@@ -49,6 +50,7 @@ public:
 	uint64_t GetNumEntries() const;
 	double GetLoadFactor() const;
 	void Clear();
+
 private:
 	T* m_pTable;
 	uint64_t m_nEntries;
@@ -73,7 +75,7 @@ template<class T>
 inline HashTable<T>::~HashTable()
 {
 	if (m_pTable != nullptr) {
-		printf("deallocating %s\n",m_Name.c_str());
+		std::cout << "deallocating " << m_Name << std::endl;
 		delete[] m_pTable;
 		m_pTable = nullptr;
 	}
@@ -105,11 +107,11 @@ inline bool HashTable<T>::SetSize(uint64_t nBytes)
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
 	if (m_pTable == nullptr) {
-		printf("Failed to allocate %lld bytes for %s !\n", nBytes,m_Name.c_str());
+		std::cout << "Failed to allocate " << nBytes << " bytes for " << m_Name << std::endl;
 		return false;
 	}
 	else {
-		printf("Allocated %lld bytes for %s\n(%lld Entries @ %zd bytes each)\n", m_nEntries*sizeof(T), m_Name.c_str(),m_nEntries, sizeof(T));
+		std::cout << "Allocated " << m_nEntries * sizeof(T) << " bytes for " << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
 		m_nCollisions = 0;
 		m_nWrites = 0;
 		HashTable<T>::Clear();
@@ -122,7 +124,7 @@ inline bool HashTable<T>::DeAllocate()
 {
 	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
 	{
-		printf("deallocating %s\n",m_Name.c_str());
+		std::cout << "deallocating " << m_Name << std::endl;
 		delete[] m_pTable;
 		m_pTable = nullptr;
 		return true;
@@ -194,7 +196,7 @@ struct PerftTableEntry
 		unsigned long long Data;
 	}; 
 #endif 
-	// Note: std::atomic<> version of this appears to add 8 bytes
+	// Note: std::atomic<> version of this appears to add 8 bytes on msvc
 };
 
 struct LeafEntry
