@@ -8,7 +8,7 @@
 #include "hashtable.h"
 #include "Juddperft.h"
 #include "raiitimer.h"
-#include "Diagnostics.h"
+#include "diagnostics.h"
 
 #include <stdio.h>
 #include <string.h>
