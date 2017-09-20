@@ -8,6 +8,7 @@
 #include "hashtable.h"
 #include "Juddperft.h"
 #include "raiitimer.h"
+#include "Diagnostics.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -24,6 +25,7 @@
 #include <numeric>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 
 std::ofstream logfile("perft.txt");
@@ -92,7 +94,8 @@ WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
 	{"divide",parse_input_divide,true},
 	{ "dividefast",parse_input_dividefast,true },
 	{"writehash",parse_input_writehash,false},
-	{"lookuphash",parse_input_lookuphash,false}
+	{"lookuphash",parse_input_lookuphash,false},
+	{"test-external", parse_input_testExternal,true}
 };
 
 int WinBoard(Engine* pE)
@@ -465,6 +468,39 @@ void parse_input_cores(const char* s, Engine* pE) {
 }
 void parse_input_egtpath(const char* s, Engine* pE) {}
 void parse_input_option(const char* s, Engine* pE) {}
+
+void parse_input_testExternal(const char* s, Engine* pE) {
+#ifdef INCLUDE_DIAGNOSTICS
+	bool badArgs = true; // anticipate the worst :-)
+	if (s != nullptr && strlen(s) != 0) {
+		std::string str(s);
+		std::istringstream iss(str);
+		std::vector<std::string> args;
+		std::string arg;
+		while (std::getline(iss, arg, ' ')) {
+			args.push_back(arg);
+		}
+
+		if (args.size() == 2) {
+			badArgs = false;
+			perftValidatorPath = args.at(0);
+			int depth = std::stoi(args.at(1));
+			std::cout << "\nTesting against external engine: " << perftValidatorPath;
+			std::cout << " to depth of " << depth;
+			std::cout << "\nPosition:\n" << std::endl;
+			ChessPosition currentPosition = pE->CurrentPosition;
+			DumpChessPosition(currentPosition);
+			std::cout << "Off we go ... " << std::endl;
+			//FindPerftBug(&currentPosition, depth);
+		}
+	}
+
+	if (badArgs) {
+		std::cout << "Usage: text-external <path to external app> <depth>" << std::endl;
+	}
+
+#endif
+}
 
 // ---------------- Output Functions -------------------------------
 void  send_output_feature(Engine* pE)

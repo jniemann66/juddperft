@@ -34,8 +34,8 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 int PerftValidateWithExternal(const char* const pzFENString, int depth, int64_t value)
 {
 	char command[1024];
-	//sprintf(command, "%s \"%s\" %d %lld >>NULL", PerftValidatorPath, pzFENString, depth, value); // Hide output of external program
-	sprintf(command, "%s \"%s\" %d %lld", PerftValidatorPath, pzFENString, depth, value); // Show Output of external program
+	//sprintf(command, "%s \"%s\" %d %lld >>NULL", perftValidatorPath.c_str(), pzFENString, depth, value); // Hide output of external program
+	sprintf(command, "%s \"%s\" %d %lld", perftValidatorPath.c_str(), pzFENString, depth, value); // Show Output of external program
 	return (system(command) == EXIT_SUCCESS) ? PERFTVALIDATE_TRUE : PERFTVALIDATE_FALSE;
 }
 

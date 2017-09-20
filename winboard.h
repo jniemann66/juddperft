@@ -86,6 +86,7 @@ void parse_input_cores(const char* s, Engine* pE);
 void parse_input_egtpath(const char* s, Engine* pE);
 void parse_input_option(const char* s, Engine* pE);
 
+
 // extended input commands (not part of winboard protocol)
 void parse_input_movelist(const char* s,Engine* pE);
 void parse_input_showposition(const char * s, Engine * pE);
@@ -96,6 +97,7 @@ void parse_input_divide(const char* s, Engine* pE);
 void parse_input_dividefast(const char * s, Engine * pE);
 void parse_input_writehash(const char* s, Engine* pE);
 void parse_input_lookuphash(const char* s, Engine* pE);
+void parse_input_testExternal(const char * s, Engine * pE);
 
 // functions for sending output commands
 void send_output_feature(Engine* pE);
