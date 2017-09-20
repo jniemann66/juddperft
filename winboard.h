@@ -9,7 +9,7 @@
 #include "engine.h"
 #include <fstream>
 
-#ifndef MSC_VER
+#ifndef _MSC_VER
 #include <strings.h>
 #define _stricmp strcasecmp
 #include <stdlib.h>

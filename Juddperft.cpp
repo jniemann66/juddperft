@@ -6,7 +6,12 @@
 #include "hashtable.h"
 
 #include <stdio.h>
+#ifdef _MSC_VER
+#include <intrin.h>
+#include <Windows.h>
+#else
 #include <x86intrin.h>
+#endif
 #include <inttypes.h>
 
 #include <atomic>
@@ -24,11 +29,11 @@ int main(int argc, char *argv[], char *envp[])
 {
 
 #ifdef _USE_HASH
-	uint64_t nBytesToAllocate = 6000000000; // 6 GiBytes
+	uint64_t nBytesToAllocate = 1000000000; // 6 GiBytes
 #ifdef _WIN64
 	MEMORYSTATUSEX statex;
 	GlobalMemoryStatusEx(&statex);
-	nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
+	//nBytesToAllocate = statex.ullAvailPhys; // Take all avail physical memory !
 	printf("Available Physical RAM: %lld\n\n", nBytesToAllocate);
 #endif
 
@@ -74,7 +79,7 @@ bool SetMemory(uint64_t nTotalBytes) {
 
 void SetProcessPriority()
 {
-#ifdef MSC_VER
+#ifdef _MSC_VER
 	DWORD dwError;
 
 	if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)){

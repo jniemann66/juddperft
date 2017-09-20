@@ -14,4 +14,3 @@ Engine::Engine()
 	Engine::nNumCores = MAX_THREADS;	// Hard maximum: 
 										// App should only ever dispatch std::min(concurrency, nNumCores, MAX_THREADS) threads
 }
-

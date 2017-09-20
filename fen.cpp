@@ -203,7 +203,7 @@ bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
 	unsigned int nBlanks = 0;
 	int EPSquare = 0;
 	char s[1024];
-	//sprintf(pzFENBuffer, 1023,"");
+	
 	for (int square = 63; square >= 0; --square)
 	{
 		piece = pP->GetPieceAtSquare(1LL << square);

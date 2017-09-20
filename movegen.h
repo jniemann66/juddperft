@@ -12,7 +12,7 @@
 #define _MOVEGEN 1
 #define _CRT_SECURE_NO_WARNINGS 1
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #include <intrin.h>
 #else
 #include <x86intrin.h>
@@ -26,9 +26,8 @@
 #define _USE_BITSCAN_INSTRUCTIONS 1				// if defined, use x86-64 BSR and BSF instructions (Only available on x86-64)
 #define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
-//
-//define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
-//
+// #define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -63,7 +62,7 @@ typedef uint64_t HashKey;
 
 
 // class Move: This is the Long-Format, in which to From and To squares are represented by Bitboards.
-// This is the format that is used throught my full chess engine. The downside is that for recursive functions like perft,
+// This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
 // an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
 
 class Move
@@ -753,20 +752,6 @@ const int  MoveKnight8SquareIndex[64] = {
 	56, 57, 58, 59, 60, 61, 62, 63
 };
 
-// Timer macros:
-#ifdef MSC_VER
-#define START_TIMER() LARGE_INTEGER starttime,finishtime,elapsed,frequency,timetaken; \
-	QueryPerformanceFrequency(&frequency); \
-	QueryPerformanceCounter(&starttime)
-#define STOP_TIMER() QueryPerformanceCounter(&finishtime); \
-	elapsed.QuadPart=finishtime.QuadPart-starttime.QuadPart; \
-	timetaken.QuadPart=((1000*elapsed.QuadPart)/frequency.QuadPart); \
-	printf("Time = %d ms\n",(long)timetaken.QuadPart)
-#else 
-#define START_TIMER()
-#define STOP_TIMER()
-#endif
-
 // Note : Inline Functions to follow
 inline unsigned long GetSquareIndex(BitBoard b);
 
@@ -779,7 +764,6 @@ inline unsigned long GetSquareIndex(BitBoard b);
 
 inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 {
-	// Original Function looked like this:
 
 	BitBoard a;
 	a =FillRightOccluded(g,p);
@@ -790,9 +774,7 @@ inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 	return a; 
 
 
-	// But, it will optimize much better if we break it up
-	// into a series of single instuctions, and let the compiler
-	// play around with the instruction scheduling: 
+	// (Broken into single operations):
 
 	//BitBoard a, b, c, d, e, f, i, j;
 	//BitBoard s, t, u, v, w, x, y, z;
@@ -830,6 +812,7 @@ inline BitBoard FillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 	a &= ~g; // exclude attacking pieces
 	return a;
 
+	// (Broken into single operations):
 
 	//BitBoard a, b, c, d, e, f, i, j;
 	//BitBoard s, t, u, v, w, x, y, z;
@@ -874,7 +857,7 @@ inline BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p)
 	return a; 
 #else
 	
-	// More efficient.
+	// Alternative:
 	//const BitBoard m1=0xfefefefefefefefe;
 	//const BitBoard m2=0x7f7f7f7f7f7f7f7f;
 /*	BitBoard a;

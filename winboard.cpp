@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <thread>

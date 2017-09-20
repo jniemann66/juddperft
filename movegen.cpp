@@ -8,9 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-//#include <windows.h>
-//#include <winnt.h>
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
 #include <x86intrin.h>
+#endif
 
 
 #include <cassert>

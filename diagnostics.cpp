@@ -2,6 +2,7 @@
 #include "search.h"
 #include "movegen.h"
 #include "fen.h"
+#include "raiitimer.h"
 
 #include <stdio.h>
 
@@ -15,10 +16,10 @@
 
 void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer)
 {
+	RaiiTimer timer;
 	ChessPosition P;
 	ReadFen(&P, pzFENstring);
 	DumpChessPosition(P);
-	START_TIMER();
 	
 	int64_t n=0;
 	PerftFastMT(P, depth, n);
@@ -26,7 +27,7 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 		
 	if (n != correctAnswer)
 		printf("-== FAIL !!! ==-\n");
-	STOP_TIMER();
+
 	printf("\n\n");
 }
 
@@ -110,7 +111,5 @@ void RunTestSuite()
 	DumpPerftScoreFfromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194);				// Position 5
 	DumpPerftScoreFfromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 7, 287188994746); // Position 6 28/1/2016: Correct (took 8454195 ms)
 }
-
-
 
 #endif // INCLUDE_DIAGNOSTICS
