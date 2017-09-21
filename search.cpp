@@ -9,6 +9,7 @@
 #include <numeric>
 #include <condition_variable>
 #include <algorithm>
+#include <chrono>
 
 // Globals
 extern Engine TheEngine;
@@ -452,35 +453,33 @@ void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 	std::queue<ChessMove> MoveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
-	bool bStart = false;
+	bool ready = false;
 
 	// Set up a simple Thread Pool:
 	for (unsigned int t = 0; t < std::min(nThreads,MoveList->MoveCount); t++) {
-		threads.emplace_back([&, depth, P] {
-			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
+		threads.emplace_back([&, depth, P, t] {
 
+			// Thread is to sleep until there is something to do ... and then wake up and do it.
 			std::unique_lock<std::mutex> lock(q_mutex);
-			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
-
-			// upon wake-up:
-			int64_t s = ZERO_64; // local accumulator for thread
-			for (;;) // thread's event loop
-			{
-				if (!MoveQueue.empty()) {
-					ChessPosition Q = P;							// Set up position
-					ChessMove M = MoveQueue.front();
-					MoveQueue.pop();								// remove ChessMove from queue:
-					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
-					Q.PerformMove(M).SwitchSides();					// make move
-					PerftFast(Q, depth - 1, s);						// Invoke PerftFast()		
-					printf(".");									// show progress
-					lock.lock();									// lock the queue again
-				}
-
-				if (MoveQueue.empty())
-					break;
+			//std::cout << "waiting..." << std::endl;
+			std::chrono::milliseconds startDelay(500);
+			//std::chrono::duration<int, std::chrono: milliseconds> startDelay(500);
+			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
+			
+			// upon wake-up (lock acquired):
+			
+			while (!MoveQueue.empty()) {
+				int64_t s = ZERO_64; 							// local accumulator for thread
+				ChessPosition Q = P;							// Set up position
+				ChessMove M = MoveQueue.front();				// Grab Move
+				MoveQueue.pop();								// remove Move from queue:
+				lock.unlock();									// yield usage of queue to other threads while busy processing perft												
+				Q.PerformMove(M).SwitchSides();					// make move
+				PerftFast(Q, depth - 1, s);						// Invoke PerftFast()
+				std::cout << ".";								// show progress
+				lock.lock();									// lock the queue again	for next iteration
+				subTotal.push_back(s);
 			}
-			subTotal.push_back(s);
 		});
 	}
 
@@ -490,8 +489,8 @@ void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 	}
 
 	// start the ball rolling:
-	bStart = true;
-	cv.notify_all();
+	ready = true;
+	//cv.notify_all();
 
 	//Join Threads:
 	for (auto & th : threads) {
