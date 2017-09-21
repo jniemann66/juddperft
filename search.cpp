@@ -245,6 +245,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
 	std::vector<int64_t> orig_nNodes(depth+1);
+	
 #ifdef _USE_HASH
 	std::vector<HashKey> HK(depth+1);
 	std::vector<std::atomic<PerftTableEntry>*> pAtomicRecord(depth + 1);
@@ -322,7 +323,6 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 	}
 }
 
-
 // PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
 
 void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
@@ -390,40 +390,6 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			}
 		});
 	}
-
-
-/*
-	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
-		threads.emplace_back([&, depth, P] {
-			// Thread's job is to sleep until there is something to do ... and then wake up and do it. (Repeat until nothing left to do)
-
-			std::unique_lock<std::mutex> lock(q_mutex);
-			cv.wait(lock, [&MoveQueue, bStart] {return (!MoveQueue.empty() || bStart); }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
-
-			// upon wake-up:
-			PerftInfo T;
-			T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = ZERO_64;
-			for (;;) // thread's event loop
-			{
-				if (!MoveQueue.empty()) {
-					ChessPosition Q = P;							// Set up position
-					ChessMove M = MoveQueue.front();
-					MoveQueue.pop();								// remove ChessMove from queue:
-					lock.unlock();									// yield usage of queue to other threads while busy processing perft												
-					Q.PerformMove(M).SwitchSides();					// make move
-					Perft(Q, maxdepth, depth + 1, &T);
-					printf(".");									// show progress
-					lock.lock();									// lock the queue again
-				}
-
-				if (MoveQueue.empty())
-					break;
-			}
-			PerftPartial.push_back(T);
-		});
-	}
-*/
 
 	// Put Moves into Queue for Thread pool to process:
 	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
