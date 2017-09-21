@@ -86,6 +86,9 @@ The known perft numbers up to 15 are as follows:
 	11	2,097,651,003,696,806
 	12	62,854,969,236,701,747
 	13	1,981,066,775,000,396,239
+
+*--- note: more than 64 bits needed beyond this point ---*
+
 	14	61,885,021,521,585,529,237
 	15	2,015,099,950,053,364,471,960
 
