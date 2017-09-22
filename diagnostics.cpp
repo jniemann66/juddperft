@@ -31,28 +31,30 @@ void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 	printf("\n\n");
 }
 
-int PerftValidateWithExternal(const char* const pzFENString, int depth, int64_t value)
+int PerftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value)
 {
-	char command[1024];
-	//sprintf(command, "%s \"%s\" %d %lld >>NULL", perftValidatorPath.c_str(), pzFENString, depth, value); // Hide output of external program
-	sprintf(command, "%s \"%s\" %d %lld", perftValidatorPath.c_str(), pzFENString, depth, value); // Show Output of external program
-	return (system(command) == EXIT_SUCCESS) ? PERFTVALIDATE_TRUE : PERFTVALIDATE_FALSE;
+	std::string command = validatorPath + " \"" + fenString + "\" " + std::to_string(depth) + " " + std::to_string(value);
+	
+	/* // mock
+	std::cout << command << std::endl;
+	return PERFTVALIDATE_TRUE;
+	*/
+
+	return (system(command.c_str()) == EXIT_SUCCESS) ? PERFTVALIDATE_TRUE : PERFTVALIDATE_FALSE;
 }
 
-void FindPerftBug(const ChessPosition* pP, int depth)
+void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth)
 {
-	char pzFENString[1024];
-
 	// Generate Move List
 	ChessMove MoveList[MOVELIST_SIZE];
 	GenerateMoves(*pP, MoveList);
 
 	if (depth <= 1)
 	{
-		printf("Found Bad Position! \n");
+		std::cout << "Found Bad Position!\n";
 		DumpChessPosition(*pP);
 		DumpMoveList(MoveList);
-		printf("Hit enter to continue\n");
+		std::cout << "Hit enter to continue" << std::endl;
 		getchar();
 		return;
 	}
@@ -60,6 +62,9 @@ void FindPerftBug(const ChessPosition* pP, int depth)
 	ChessMove* pM = MoveList;
 	PerftInfo T;
 	ChessPosition Q;
+
+	char fenBuffer[1024];
+	std::string fenString;
 
 	while (pM->NoMoreMoves == 0)
 	{
@@ -69,34 +74,36 @@ void FindPerftBug(const ChessPosition* pP, int depth)
 		Q.SwitchSides();
 
 		// generate FEN string
-		WriteFen(pzFENString, &Q);
+		memset(fenBuffer, 0, 1024);
+		WriteFen(fenBuffer, &Q);
+		fenString.assign(fenBuffer);
 
-		printf("After Move: ");
+		std::cout << "After Move: ";
 		if (pP->BlackToMove)
-			printf("... ");
+			std::cout << "... ";
 		DumpMove(*pM);
-		printf("Position: %s\n", pzFENString);
+		std::cout << "Position: " << fenString << std::endl;
 
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT(Q, depth - 1, 1, &T);
 
-		printf("Validating depth: %d positions: %lld ", depth - 1, T.nMoves);
-		int nResult = PerftValidateWithExternal(pzFENString, depth - 1, T.nMoves);
+		std::cout << "\nValidating depth: " << depth - 1 << " perft: " << T.nMoves << std::endl;
+		int nResult = PerftValidateWithExternal(validatorPath, fenString, depth - 1, T.nMoves);
 		if (nResult == PERFTVALIDATE_FALSE)
 		{
 			// Go Deeper ...
-			printf("WRONG !! Going deeper ...");
-			FindPerftBug(&Q, depth - 1);
+			std::cout << "WRONG !! Going deeper ..." << std::endl;
+			FindPerftBug(validatorPath, &Q, depth - 1);
 		}
 		else
 		{
-			printf("ok");
+			std::cout << "ok";
 		}
-		printf("\n\n");
+		std::cout << "\n" << std::endl;
 
 		pM++;
 	}
-	printf("FindPerftBug() finished\n\n");
+	std::cout << "FindPerftBug() finished\n\n";
 }
 
 void RunTestSuite() 

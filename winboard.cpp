@@ -483,7 +483,7 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 
 		if (args.size() == 2) {
 			badArgs = false;
-			perftValidatorPath = args.at(0);
+			std::string perftValidatorPath(args.at(0));
 			int depth = std::stoi(args.at(1));
 			std::cout << "\nTesting against external engine: " << perftValidatorPath;
 			std::cout << " to depth of " << depth;
@@ -491,12 +491,16 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 			ChessPosition currentPosition = pE->CurrentPosition;
 			DumpChessPosition(currentPosition);
 			std::cout << "Off we go ... " << std::endl;
-			//FindPerftBug(&currentPosition, depth);
+			FindPerftBug(perftValidatorPath, &currentPosition, depth);
 		}
 	}
 
 	if (badArgs) {
-		std::cout << "Usage: text-external <path to external app> <depth>" << std::endl;
+		std::cout << "\nUsage: text-external <path to external app> <depth>\n\n";
+		std::cout << "This will issue the following system command for each test position\n";
+		std::cout << "<external app> \"<Fen String>\" <depth> <perft value>\n";
+		std::cout << "external app is expected to terminate with EXIT_SUCCESS (0) if it agrees with\n";
+		std::cout << "the perft value for the given position\n" << std::endl;
 	}
 
 #endif

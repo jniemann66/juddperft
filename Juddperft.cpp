@@ -53,10 +53,6 @@ int main(int argc, char *argv[], char *envp[])
 	//P.SetupStartPosition();
 	//FindPerftBug(&P, 8);
 
-#ifdef INCLUDE_DIAGNOSTICS
-	perftValidatorPath = std::string("c:\\bin\\PerftValidate.exe");
-#endif 
-
 	WinBoard(&TheEngine);
 	return EXIT_SUCCESS;
 }

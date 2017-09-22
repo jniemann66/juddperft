@@ -14,12 +14,11 @@
 // Defines Path to external perft validation Program 
 // (which is expected to take 3 arguments: <FEN String> <depth> <value>)
 
-static std::string perftValidatorPath;
 //const char PerftValidatorPath[] = "c:\\bin\\PerftValidate.exe"; 
 
 // PerftValidateWithExternal() - validates perft calculation against external engine
-int PerftValidateWithExternal(const char* const pzFENString, int depth, int64_t value);
-void FindPerftBug(const ChessPosition* pP, int depth);
+int PerftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
+void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth);
 void RunTestSuite();
 void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
 
