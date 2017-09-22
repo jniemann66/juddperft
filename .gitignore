@@ -28,6 +28,14 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+x64/Debug
+x64/Instrument
+*.iobj
+*.tlog
+*.lastbuildstate
+*.ipdb
+
+
 
 # Visual Studio 2015 cache/options directory
 .vs/
