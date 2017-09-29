@@ -45,26 +45,44 @@ int PerftValidateWithExternal(const std::string& validatorPath, const std::strin
 
 void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth)
 {
+	// allocate fen buffer;
+	char fenBuffer[1024];
+	std::string fenString;
+
 	// Generate Move List
 	ChessMove MoveList[MOVELIST_SIZE];
 	GenerateMoves(*pP, MoveList);
+	
+	PerftInfo T;
 
-	if (depth <= 1)
-	{
-		std::cout << "Found Bad Position!\n";
+	if (depth <= 1) { // terminal node
+
+		// generate FEN string
+		memset(fenBuffer, 0, 1024);
+		WriteFen(fenBuffer, pP);
+		fenString.assign(fenBuffer);
+
+		std::cout << "Reached Single Position!\n";
+
 		DumpChessPosition(*pP);
 		DumpMoveList(MoveList);
+		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0LL;
+		PerftMT(*pP, 1, 1, &T);
+		int nResult = PerftValidateWithExternal(validatorPath, fenString, 1, T.nMoves);
+		if (nResult == PERFTVALIDATE_FALSE) {
+			std::cout << "Engines disagree on Number of moves from this position" << std::endl;
+		} else {
+			std::cout << "ok" << std::endl;
+		}
+
 		std::cout << "Hit enter to continue" << std::endl;
 		getchar();
+
 		return;
 	}
 
 	ChessMove* pM = MoveList;
-	PerftInfo T;
 	ChessPosition Q;
-
-	char fenBuffer[1024];
-	std::string fenString;
 
 	while (pM->NoMoreMoves == 0)
 	{
@@ -84,7 +102,7 @@ void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		DumpMove(*pM);
 		std::cout << "Position: " << fenString << std::endl;
 
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
+		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0LL;
 		PerftMT(Q, depth - 1, 1, &T);
 
 		std::cout << "\nValidating depth: " << depth - 1 << " perft: " << T.nMoves << std::endl;
