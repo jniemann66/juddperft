@@ -51,6 +51,8 @@ Accepted commands are as follows:
 
 **showhash** - display hash table statistics
 
+**text-external** &lt;path to external app&gt; &lt;depth&gt;
+
 **quit** - exit the app
 
 juddperft defaults to the normal chess starting position.
@@ -67,6 +69,50 @@ There are four variants on the perft function:
 * **dividefast** - splits position by legal move, and then does perftfast on each of those moves (uses Hash tables)
 
 note: using dividefast instead of perftfast is often faster for large n, because it puts less strain on the hash tables, by splitting the job into a number of perftfast(n-1) 's
+
+## Validating against an external engine
+
+juddperft can check its own calculations (from the current position) against another engine, to verify whether juddperft is wrong, or the other engine is wrong (or possibly both !)
+
+It uses an automated divide-and-conquer approach to attempt zoom-in on exactly where the engines disagree.
+
+The command is:
+
+**text-external** &lt;path to external app&gt; &lt;depth&gt;
+
+This will issue the following system command for each test position:
+**&lt;external app&gt; "&lt;Fen String&gt;" &lt;depth&gt; &lt;perft value&gt;**
+
+*external app* is expected to terminate with EXIT_SUCCESS (0) if it agrees with
+the perft value for the given position.
+
+It is up to the external engine to accept the 3 parameters (fen-string, depth, value) and return 0 if it agrees or any other value if it disagrees.
+
+### description of algorithm used for test-external
+
+Lets say you a position for which the two engines disagree on perft 5.
+The test-external process might proceed like this:
+
+~~~
+starting position: (we want to test test perft 5, white to move)
+    make white move 1 : get perft 4 (ok ; engines agree)
+    make white move 2 : get perft 4 (ok ; engines agree)
+    make white move 3 : get perft 4 (PROBLEM ! engines disagree )
+        make black move 1 : get perft 3 (ok ; engines agree)
+        make black move 2 : get perft 3 (ok ; engines agree)
+        make black move 3 : get perft 3 (ok ; engines agree)
+        ...
+        make black move 15: get perft 3 (PROBLEM ! engines disagree )
+            make white move 1: get perft 2 (ok ; engines agree)
+            make white move 2: get perft 2 (ok ; engines agree)
+            ...
+            make white move 5: get perft 2 (PROBLEM ! engines disagree )
+                make black move 1 : get perft 1 (ok ; engines agree)
+                ...
+                make black move 7 : get perft 1 (PROBLEM ! engines disagree) <= this is where the problem is - one (or both !) of the engines generated wrong number of moves
+
+~~~
+
 
 ## Additional Information
 
