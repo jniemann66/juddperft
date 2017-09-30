@@ -109,8 +109,8 @@ void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		int nResult = PerftValidateWithExternal(validatorPath, fenString, depth - 1, T.nMoves);
 		if (nResult == PERFTVALIDATE_FALSE)
 		{
-			// Go Deeper ...
-			std::cout << "WRONG !! Going deeper ..." << std::endl;
+			// Investigate further ...
+			std::cout << "WRONG !! Taking a closer look ..." << std::endl;
 			FindPerftBug(validatorPath, &Q, depth - 1);
 		}
 		else
@@ -128,7 +128,7 @@ void RunTestSuite()
 {
 	// see https://chessprogramming.wikispaces.com/Perft+Results
 	printf("Running Test Suite\n\n");
-	DumpPerftScoreFfromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860);				// Posotion 1: Initial Position
+	DumpPerftScoreFfromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860);				// Position 1: Initial Position
 	DumpPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25",5,193690690);	// Position 2: 'Kiwipete' position
 	DumpPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0",7, 178633661);								// Position 3
 	DumpPerftScoreFfromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",6, 706045033);		// Position 4
