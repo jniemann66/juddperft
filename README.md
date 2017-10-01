@@ -90,11 +90,11 @@ It is up to the external engine to accept the 3 parameters (fen-string, depth, v
 
 ### description of algorithm used for test-external
 
-Lets say you a position for which the two engines disagree on perft 5.
+Lets say you have a position for which the two engines disagree on perft 5.
 The test-external process might proceed like this:
 
 ~~~
-starting position: (we want to test test perft 5, white to move)
+starting position: (we want to test perft 5, white to move)
     make white move 1 : get perft 4 (ok ; engines agree)
     make white move 2 : get perft 4 (ok ; engines agree)
     make white move 3 : get perft 4 (PROBLEM ! engines disagree )
@@ -113,6 +113,7 @@ starting position: (we want to test test perft 5, white to move)
 
 ~~~
 
+Note: don't forget to set set the starting position with **setboard** *&lt;fen&gt;*
 
 ## Additional Information
 
