@@ -318,10 +318,10 @@ void parse_input_perft(const char* s,Engine* pE)
 			PerftInfo T;
 			T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 			PerftMT(pE->CurrentPosition,q,1,&T);
-			printf("Perft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
+			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 				q,
 				T.nMoves,
-				T.nCapture,
+				T.nCapture + T.nEPCapture,
 				T.nCastle,
 				T.nCastleLong,
 				T.nEPCapture,
@@ -379,10 +379,10 @@ void parse_input_divide(const char* s, Engine* pE)
 	
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		PerftMT(Q, depth-1, 1, &T);
-		printf("Perft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
+		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 			depth-1,
 			T.nMoves,
-			T.nCapture,
+			T.nCapture + T.nEPCapture,
 			T.nCastle,
 			T.nCastleLong,
 			T.nEPCapture,
@@ -401,10 +401,10 @@ void parse_input_divide(const char* s, Engine* pE)
 		pM++;
 	}
 
-	printf("Summary:\nPerft %d: %lld \nCaptures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
+	printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 		depth,
 		GT.nMoves,
-		GT.nCapture,
+		GT.nCapture + GT.nEPCapture,
 		GT.nCastle,
 		GT.nCastleLong,
 		GT.nEPCapture,
