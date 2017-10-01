@@ -16,8 +16,8 @@ extern Engine TheEngine;
 extern ZobristKeySet ZobristKeys;
 
 #ifdef _USE_HASH
-extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
-extern HashTable <std::atomic<LeafEntry>> LeafTable;
+extern HashTable <std::atomic<PerftTableEntry> > perftTable;
+extern HashTable <std::atomic<LeafEntry>> leafTable;
 #endif
 
 uint64_t nodecount;
@@ -113,7 +113,7 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 #ifdef _USE_HASH
 		// Consult the HashTable:
 		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
-		std::atomic<LeafEntry> *pAtomicRecord = LeafTable.GetAddress(HK);		// get address of atomic record
+		std::atomic<LeafEntry> *pAtomicRecord = leafTable.GetAddress(HK);		// get address of atomic record
 		LeafEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
 		if (RetrievedRecord.Hash == HK) {
 			nNodes += RetrievedRecord.count;
@@ -142,7 +142,7 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 		std::atomic<PerftTableEntry> *pAtomicRecord2;
 		PerftTableEntry RetrievedRecord2;
-		pAtomicRecord2 = PerftTable.GetAddress(HK);								// get address of atomic record
+		pAtomicRecord2 = perftTable.GetAddress(HK);								// get address of atomic record
 		RetrievedRecord2 = pAtomicRecord2->load();						// Load a non-atomic copy of the record
 		if (RetrievedRecord2.Hash == HK) {	
 			if (RetrievedRecord2.depth == depth) {
@@ -184,7 +184,7 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
 //	int64_t orig_nNodes = nNodes;
 //
-//	std::atomic<PerftTableEntry> *pAtomicRecord = PerftTable.GetAddress(HK);								// get address of atomic record
+//	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.GetAddress(HK);								// get address of atomic record
 //	PerftTableEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
 //	if (RetrievedRecord.Hash == HK) {
 //		if (RetrievedRecord.depth == depth) {
@@ -260,7 +260,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 #ifdef _USE_HASH
 		// Consult the HashTable:
 		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];	
-		pAtomicRecord[currentdepth] = PerftTable.GetAddress(HK[currentdepth]);	// get address of atomic record
+		pAtomicRecord[currentdepth] = perftTable.GetAddress(HK[currentdepth]);	// get address of atomic record
 		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();	// Load a non-atomic copy of the record
 
 		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {

@@ -16,11 +16,24 @@
 #define _atoi64 atoll
 #endif
 
+/*
 typedef struct WinboardInputCommandDefinition{
 	char* pzCommandString;
 	void (*pF)(const char*,Engine* pE);		// pointer to handler function. NULL if not implemented
 	bool implemented;						// set to true if command is implemented
 } WINBOARD_INPUT_COMMAND_DEFINITION;
+*/
+
+struct WinboardInputCommandDefinition {
+	WinboardInputCommandDefinition(const char*commandString, void(*pF)(const char*, Engine*), bool isImplemented) 
+		: pF(pF), implemented(isImplemented) {
+		strcpy(pzCommandString, commandString);
+	};
+
+	char* pzCommandString;
+	void(*pF)(const char*, Engine*);		// pointer to handler function. NULL if not implemented
+	bool implemented;						// set to true if command is implemented
+};
 
 //typedef struct ThinkInfo
 //{
@@ -30,13 +43,13 @@ typedef struct WinboardInputCommandDefinition{
 //} THINKINFO;
 
 // Winboard Input/Output ///////////////
-// WinBoardOutput
+// winBoardOutput
 // -- all Winboard output should be via this function !! --
-void WinBoardOutput(const char* s);
+void winBoardOutput(const char* s);
 
 // functions for dumping output to log file
-void LogInput(std::ofstream& logfile,const char* s);
-void LogOutput(std::ofstream& logfile,const char* s);
+void logInput(std::ofstream& logfile,const char* s);
+void logOutput(std::ofstream& logfile,const char* s);
 
 // functions for parsing input commands
 void parse_input_xboard(const char* s,Engine* pE);
@@ -86,7 +99,6 @@ void parse_input_cores(const char* s, Engine* pE);
 void parse_input_egtpath(const char* s, Engine* pE);
 void parse_input_option(const char* s, Engine* pE);
 
-
 // extended input commands (not part of winboard protocol)
 void parse_input_movelist(const char* s,Engine* pE);
 void parse_input_showposition(const char * s, Engine * pE);
@@ -117,9 +129,9 @@ void send_output_askuser(char* r, const char* s,Engine* pE);
 void send_output_tellics(const char* s,Engine* pE);
 void send_output_tellicsnoalias(const char* s,Engine* pE);
 //
-int WinBoard(Engine* pE);
-bool WaitForInput(Engine* pE);
-bool IsImplemented(const char* s,Engine* pE);
-void SendReplyMove(const char* s,Engine* pE);
-void SendReplyMoveAndPonder(const char * s, Engine * pE);
+int winBoard(Engine* pE);
+bool waitForInput(Engine* pE);
+bool isImplemented(const char* s,Engine* pE);
+void sendReplyMove(const char* s,Engine* pE);
+void sendReplyMoveAndPonder(const char * s, Engine * pE);
 #endif

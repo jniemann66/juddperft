@@ -22,8 +22,8 @@
 // Globals:
 Engine TheEngine;
 #ifdef _USE_HASH
-HashTable <std::atomic<PerftTableEntry>> PerftTable("Perft table");
-HashTable <std::atomic<LeafEntry>> LeafTable("Leaf Node Table");
+HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
+HashTable <std::atomic<LeafEntry>> leafTable("Leaf Node Table");
 #endif
 
 int main(int argc, char *argv[], char *envp[])
@@ -53,7 +53,7 @@ int main(int argc, char *argv[], char *envp[])
 	//P.SetupStartPosition();
 	//FindPerftBug(&P, 8);
 
-	WinBoard(&TheEngine);
+	winBoard(&TheEngine);
 	return EXIT_SUCCESS;
 }
 
@@ -62,7 +62,7 @@ bool SetMemory(uint64_t nTotalBytes) {
 
 	std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
-	// constraint: Leaf Table should have 3 times as many Entries as PerftTable (ie 3:1 ratio)
+	// constraint: Leaf Table should have 3 times as many Entries as perftTable (ie 3:1 ratio)
 	
 	uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
 		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
@@ -70,7 +70,7 @@ bool SetMemory(uint64_t nTotalBytes) {
 	uint64_t BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
 		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
-	return	(PerftTable.SetSize(BytesForPerftTable) && LeafTable.SetSize(BytesForLeafTable));
+	return	(perftTable.SetSize(BytesForPerftTable) && leafTable.SetSize(BytesForLeafTable));
 #else
 	return false;
 #endif

@@ -27,15 +27,14 @@
 #include <iostream>
 #include <sstream>
 
-
 std::ofstream logfile("perft.txt");
 
 #ifdef _USE_HASH
-extern HashTable <std::atomic<PerftTableEntry> > PerftTable;
-extern HashTable <std::atomic<LeafEntry>> LeafTable;
+extern HashTable <std::atomic<PerftTableEntry> > perftTable;
+extern HashTable <std::atomic<LeafEntry>> leafTable;
 #endif
 
-WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
+WinboardInputCommandDefinition winboardInputCommands[]=
 {
 	{"xboard",parse_input_xboard,false},
 	{"protover",parse_input_protover,false},						/* N */
@@ -98,30 +97,30 @@ WINBOARD_INPUT_COMMAND_DEFINITION WinboardInputCommands[]=
 	{"test-external", parse_input_testExternal,true}
 };
 
-int WinBoard(Engine* pE)
+int winBoard(Engine* pE)
 {
 	// turn off output buffering
 	setbuf(stdout,NULL);
 	pE->CurrentPosition.SetupStartPosition();
 	printf("\nSupported Commands:\n");
-	for (int i = 0; i < (sizeof(WinboardInputCommands) / sizeof(WINBOARD_INPUT_COMMAND_DEFINITION)); i++)
+	for (int i = 0; i < (sizeof(winboardInputCommands) / sizeof(WinboardInputCommandDefinition)); i++)
 	{
-		if (WinboardInputCommands[i].implemented)
-			printf("   %s\n", WinboardInputCommands[i].pzCommandString);
+		if (winboardInputCommands[i].implemented)
+			printf("   %s\n", winboardInputCommands[i].pzCommandString);
 	}
 	printf("\n");
-	while(WaitForInput(pE));
+	while(waitForInput(pE));
 	return 0;
 }
 
 /////////////////////////////////////////////////////
-// WaitForInput()
+// waitForInput()
 // Wait for an incoming command and then process it
 /////////////////////////////////////////////////////
 
-bool WaitForInput(Engine* pE)
+bool waitForInput(Engine* pE)
 {
-	int nRecognizedCommands=sizeof(WinboardInputCommands)/sizeof(WinboardInputCommands[0]); 
+	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]); 
 
 	char* input = NULL;
 	std::string inputStr;
@@ -137,7 +136,7 @@ bool WaitForInput(Engine* pE)
 		char* args;
 
 		// log input
-		LogInput(logfile,input);
+		logInput(logfile,input);
 		command=strtok(input," \n");
 		if(command!=NULL)
 		{
@@ -145,7 +144,7 @@ bool WaitForInput(Engine* pE)
 			// search for command
 			for(int i=0;i<nRecognizedCommands;i++)
 			{
-				if(_stricmp(command,WinboardInputCommands[i].pzCommandString) == 0)
+				if(_stricmp(command,winboardInputCommands[i].pzCommandString) == 0)
 				{
 					if(_stricmp(command,"quit") == 0)
 					{
@@ -154,7 +153,7 @@ bool WaitForInput(Engine* pE)
 					}
 					// separate command from remainder of string
 					args=strtok(NULL,"\n" /* note: deliberately ignore spaces */);
-					WinboardInputCommands[i].pF(args,pE); // invoke handler for function
+					winboardInputCommands[i].pF(args,pE); // invoke handler for function
 					return true;
 				}
 			}
@@ -167,23 +166,23 @@ bool WaitForInput(Engine* pE)
 }
 
 /////////////////////////////////////
-// IsImplemented() - returns true if 
+// isImplemented() - returns true if 
 // ascii command pointed to by s 
 // is recognized AND implemented
 /////////////////////////////////////
 
-bool IsImplemented(const char* s,Engine* pE)
+bool isImplemented(const char* s,Engine* pE)
 {
 	bool bRetVal = false;
-	int nRecognizedCommands=sizeof(WinboardInputCommands)/sizeof(WinboardInputCommands[0]); 
+	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]); 
 	if(s != NULL)
 	{
 		// search for command
 		for(int i=0; i<nRecognizedCommands; i++)
 		{
-			if(_stricmp(s,WinboardInputCommands[i].pzCommandString) == 0)
+			if(_stricmp(s,winboardInputCommands[i].pzCommandString) == 0)
 			{
-				if(WinboardInputCommands[i].implemented)
+				if(winboardInputCommands[i].implemented)
 					bRetVal=true;
 				break;
 			}
@@ -195,7 +194,7 @@ bool IsImplemented(const char* s,Engine* pE)
 // Handler functions for incoming commands:
 void parse_input_xboard(const char* s,Engine* pE)
 {
-	WinBoardOutput("\n");
+	winBoardOutput("\n");
 }
 void parse_input_protover(const char* s,Engine* pE)
 {	
@@ -275,10 +274,10 @@ void parse_input_showposition(const char* s, Engine* pE)
 void parse_input_showhash(const char* s,Engine* pE)
 {
 #ifdef _USE_HASH
-	printf("Leaf Node Table Size: %lld bytes\n", LeafTable.GetSize());
-	int64_t numEntries = LeafTable.GetNumEntries();
+	printf("Leaf Node Table Size: %lld bytes\n", leafTable.GetSize());
+	int64_t numEntries = leafTable.GetNumEntries();
 	int64_t nPopulatedLeafEntries = 0;
-	std::atomic<LeafEntry> *pLeafTableBaseAddress= LeafTable.GetAddress(0);
+	std::atomic<LeafEntry> *pLeafTableBaseAddress= leafTable.GetAddress(0);
 	LeafEntry LE;
 	for (int64_t w = 0; w < numEntries; w++) {
 		LE = (pLeafTableBaseAddress + w)->load();
@@ -287,10 +286,10 @@ void parse_input_showhash(const char* s,Engine* pE)
 	}
 	printf("%lld entries occupied out of %lld (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
 	//
-	printf("Perft Table Size: %lld bytes\n", PerftTable.GetSize());
-	numEntries = PerftTable.GetNumEntries();
+	printf("Perft Table Size: %lld bytes\n", perftTable.GetSize());
+	numEntries = perftTable.GetNumEntries();
 	std::vector<int64_t> depthTally(16,0);
-	std::atomic<PerftTableEntry> *pBaseAddress = PerftTable.GetAddress(0);
+	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.GetAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 	
 	for (int64_t x = 0; x < numEntries; x++) {
@@ -515,37 +514,37 @@ void  send_output_feature(Engine* pE)
 	sprintf(s, "done=0 "); strcat(t, s);
 	//
 	sprintf(s, "\nfeature "); strcat(t, s);
-	sprintf(s,"ping=%d ",IsImplemented("ping",pE)? 1:0); strcat(t,s);					// recommended:	1	
-	sprintf(s,"setboard=%d ",IsImplemented("setboard",pE)? 1:0); strcat(t,s);			// recommended: 1
-	sprintf(s,"playother=%d ",IsImplemented("playother",pE)? 1:0); strcat(t,s);		// recommended: 1
+	sprintf(s,"ping=%d ",isImplemented("ping",pE)? 1:0); strcat(t,s);					// recommended:	1	
+	sprintf(s,"setboard=%d ",isImplemented("setboard",pE)? 1:0); strcat(t,s);			// recommended: 1
+	sprintf(s,"playother=%d ",isImplemented("playother",pE)? 1:0); strcat(t,s);		// recommended: 1
 	sprintf(s,"san=0 "); strcat(t,s);													// no recommendation
-	sprintf(s,"usermove=%d ",IsImplemented("usermove",pE)? 1:0); strcat(t,s);			// no recommendation
-	sprintf(s,"time=%d ",IsImplemented("time",pE)? 1:0); strcat(t,s);					// recommended: 1	
-	sprintf(s,"draw=%d ",IsImplemented("draw",pE)? 1:0); strcat(t,s);					// recommended: 1
+	sprintf(s,"usermove=%d ",isImplemented("usermove",pE)? 1:0); strcat(t,s);			// no recommendation
+	sprintf(s,"time=%d ",isImplemented("time",pE)? 1:0); strcat(t,s);					// recommended: 1	
+	sprintf(s,"draw=%d ",isImplemented("draw",pE)? 1:0); strcat(t,s);					// recommended: 1
 	//
 	sprintf(s,"\nfeature "); strcat(t,s);						
 	sprintf(s,"sigint=0 "); strcat(t,s);												// recommended: 1
 	sprintf(s,"sigterm=0 "); strcat(t,s);												// recommended: 1
 	sprintf(s,"reuse=1 "); strcat(t,s);												// recommended: 1
-	sprintf(s,"analyze=%d ",IsImplemented("analyze",pE)? 1:0); strcat(t,s);			// recommended: 1
+	sprintf(s,"analyze=%d ",isImplemented("analyze",pE)? 1:0); strcat(t,s);			// recommended: 1
 	sprintf(s,"myname=\"JuddChess v1.0\" "); strcat(t,s);								// no recommendation
 	//
 	sprintf(s,"\nfeature "); strcat(t,s);												
 	sprintf(s,"variants=\"normal\" "); strcat(t,s);									// recommended: "normal"
 	sprintf(s,"colors=0 "); strcat(t,s);												// recommended: 0
 	sprintf(s,"ics=0 "); strcat(t,s);													// no recommendation
-	sprintf(s,"name=%d ",IsImplemented("name",pE)? 1:0); strcat(t,s);					
-	sprintf(s,"pause=%d ",IsImplemented("pause",pE)? 1:0); strcat(t,s);
+	sprintf(s,"name=%d ",isImplemented("name",pE)? 1:0); strcat(t,s);					
+	sprintf(s,"pause=%d ",isImplemented("pause",pE)? 1:0); strcat(t,s);
 	//
 	sprintf(s, "\nfeature "); strcat(t, s);											
-	sprintf(s, "nps=%d ", IsImplemented("nps", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "nps=%d ", isImplemented("nps", pE) ? 1 : 0); strcat(t, s);
 	sprintf(s, "debug=0 "); strcat(t, s);
-	sprintf(s, "memory=%d ", IsImplemented("memory", pE) ? 1 : 0); strcat(t, s);
-	sprintf(s, "smp=%d ", IsImplemented("cores", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "memory=%d ", isImplemented("memory", pE) ? 1 : 0); strcat(t, s);
+	sprintf(s, "smp=%d ", isImplemented("cores", pE) ? 1 : 0); strcat(t, s);
 	sprintf(s, "smp=0 "); strcat(t, s);	
 	sprintf(s, "\nfeature done=1 "); strcat(t, s);
 	sprintf(s,"\n"); strcat(t,s);
-	WinBoardOutput(t);
+	winBoardOutput(t);
 }
 void  send_output_illegalmove(const char* s,Engine* pE){}
 void  send_output_error(const char* s,Engine* pE){}
@@ -563,25 +562,25 @@ void  send_output_askuser(char* r, const char* s,Engine* pE){}
 void  send_output_tellics(const char* s,Engine* pE){}
 void  send_output_tellicsnoalias(const char* s,Engine* pE){}
 
-void WinBoardOutput(const char* s)
+void winBoardOutput(const char* s)
 {
 	printf("%s", s);
-	LogOutput(logfile,s);
+	logOutput(logfile,s);
 }
 
-void LogInput(std::ofstream& logfile, const char* s)
+void logInput(std::ofstream& logfile, const char* s)
 {
 	if(logfile)
 		logfile << "Received command: " << s << std::endl;
 }
 
-void LogOutput(std::ofstream& logfile,const char* s)
+void logOutput(std::ofstream& logfile,const char* s)
 {
 	if(logfile)
 		logfile << "Sent command: " << s << std::endl;
 }
 
-void SendReplyMove(const char* s,Engine* pE){}	
+void sendReplyMove(const char* s,Engine* pE){}	
 
 
-void SendReplyMoveAndPonder(const char* s, Engine* pE) {}
+void sendReplyMoveAndPonder(const char* s, Engine* pE) {}
