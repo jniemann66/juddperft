@@ -16,14 +16,14 @@
 #define _atoi64 atoll
 #endif
 
-/*
 typedef struct WinboardInputCommandDefinition{
 	char* pzCommandString;
 	void (*pF)(const char*,Engine* pE);		// pointer to handler function. NULL if not implemented
 	bool implemented;						// set to true if command is implemented
 } WINBOARD_INPUT_COMMAND_DEFINITION;
-*/
 
+
+/*
 struct WinboardInputCommandDefinition {
 	WinboardInputCommandDefinition(const char*commandString, void(*pF)(const char*, Engine*), bool isImplemented) 
 		: pF(pF), implemented(isImplemented) {
@@ -34,6 +34,7 @@ struct WinboardInputCommandDefinition {
 	void(*pF)(const char*, Engine*);		// pointer to handler function. NULL if not implemented
 	bool implemented;						// set to true if command is implemented
 };
+*/
 
 //typedef struct ThinkInfo
 //{
