@@ -10,11 +10,6 @@
 #define PERFTVALIDATE_FAILEDTOSTART -1
 
 #ifdef INCLUDE_DIAGNOSTICS
-// PerftValidatorPath[]: 
-// Defines Path to external perft validation Program 
-// (which is expected to take 3 arguments: <FEN String> <depth> <value>)
-
-//const char PerftValidatorPath[] = "c:\\bin\\PerftValidate.exe"; 
 
 // PerftValidateWithExternal() - validates perft calculation against external engine
 int PerftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
