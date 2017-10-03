@@ -1,3 +1,29 @@
+/*
+
+MIT License
+
+Copyright(c) 2016-2017 Judd Niemann
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 #include "Juddperft.h"
 #include "movegen.h"
 #include "fen.h"
@@ -5,8 +31,6 @@
 #include "winboard.h"
 #include "diagnostics.h"
 #include "hashtable.h"
-
-//#include <stdio.h>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -19,16 +43,11 @@
 #include <iostream>
 #include <atomic>
 
-// Globals:
-Engine TheEngine;
-#ifdef _USE_HASH
-HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
-HashTable <std::atomic<LeafEntry>> leafTable("Leaf Node Table");
-#endif
+using namespace juddperft;
 
 int main(int argc, char *argv[], char *envp[])
 {
-//	std::cout.imbue(std::locale(""));
+	//	std::cout.imbue(std::locale(""));
 
 #ifdef _USE_HASH
 	uint64_t nBytesToAllocate = 1000000000; // <-- Set how much RAM to use here (more RAM -> faster !!!)
@@ -43,47 +62,42 @@ int main(int argc, char *argv[], char *envp[])
 
 	// RunTestSuite();
 
-	/*printf("sizeof(PerftTableEntry) == %zd\n", sizeof(PerftTableEntry));
-	printf("sizeof(std::atomic<PerftTableEntry>) == %zd\n", sizeof(std::atomic<PerftTableEntry>));
-	printf("sizeof(ChessMove) == %zd\n", sizeof(ChessMove));
-	printf("sizeof(std::atomic<LeafEntry>) == %zd\n", sizeof(std::atomic<LeafEntry>));*/
-
-	//ChessPosition P;
-	//DumpChessPosition(P);
-	//P.SetupStartPosition();
-	//FindPerftBug(&P, 8);
-
-	winBoard(&TheEngine);
+	winBoard(&theEngine);
 	return EXIT_SUCCESS;
 }
 
-bool SetMemory(uint64_t nTotalBytes) {
+namespace juddperft {
+
+	bool SetMemory(uint64_t nTotalBytes) {
+
 #ifdef _USE_HASH
 
-	std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
+		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
-	// constraint: Leaf Table should have 3 times as many Entries as perftTable (ie 3:1 ratio)
-	
-	uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
-		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
+		// constraint: Leaf Table should have 3 times as many Entries as perftTable (ie 3:1 ratio)
 
-	uint64_t BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
-		(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
+		uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
+			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
-	return	(perftTable.SetSize(BytesForPerftTable) && leafTable.SetSize(BytesForLeafTable));
+		uint64_t BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
+			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
+
+		return	(perftTable.SetSize(BytesForPerftTable) && leafTable.SetSize(BytesForLeafTable));
 #else
-	return false;
+		return false;
 #endif
-}
-
-void SetProcessPriority()
-{
-#ifdef _MSC_VER
-	DWORD dwError;
-
-	if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)){
-		dwError = GetLastError();
-		std::cout << "Failed to set Process priority: " << dwError << std::endl;
 	}
+
+	void SetProcessPriority()
+	{
+#ifdef _MSC_VER
+		DWORD dwError;
+
+		if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)) {
+			dwError = GetLastError();
+			std::cout << "Failed to set Process priority: " << dwError << std::endl;
+		}
 #endif
-}
+	}
+
+} // namespace juddperft

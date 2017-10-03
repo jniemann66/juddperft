@@ -1,3 +1,29 @@
+/*
+
+MIT License
+
+Copyright(c) 2016-2017 Judd Niemann
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
 //////////////////////////////////////////////
 // movegen.h								//
 // Defines:									//
@@ -19,6 +45,8 @@
 #endif
 
 #include <cstdint>
+
+namespace juddperft {
 
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
@@ -245,14 +273,14 @@ bool IsInCheck(const ChessPosition& P, bool bIsBlack);
 
 // White Move-Generation Functions:
 void GenWhiteMoves(const ChessPosition& P, ChessMove*);
-extern inline BitBoard GenBlackAttacks(const ChessPosition& Z);
+inline BitBoard GenBlackAttacks(const ChessPosition& Z);
 BitBoard IsWhiteInCheck(const ChessPosition & Z);
 void AddWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 void AddWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 
 // Black Move-Generation Functions:
 void GenBlackMoves(const ChessPosition& P, ChessMove*);
-extern inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
+inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
 BitBoard IsBlackInCheck(const ChessPosition & Z);
 void AddBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 void AddBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
@@ -1242,4 +1270,5 @@ inline void ChessMove2Move(const ChessMove& m, Move& M) {
 	M.To = 1LL << m.ToSquare;
 }
 
+} // namespace juddperft
 #endif // _MOVEGEN
