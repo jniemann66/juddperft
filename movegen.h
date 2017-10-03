@@ -89,7 +89,7 @@ typedef uint64_t BitBoard;
 typedef uint64_t HashKey;
 
 
-// class Move: This is the Long-Format, in which to From and To squares are represented by Bitboards.
+// class Move: This is the Long-Format, in which the From and To squares are represented by Bitboards.
 // This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
 // an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
 
