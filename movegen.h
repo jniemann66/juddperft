@@ -125,7 +125,7 @@ public:
 	bool operator==(const Move & B) const;
 //	Move & operator=(const Move & M);
 
-	Move& Format(
+	Move& format(
 		BitBoard From,
 		BitBoard To,
 		uint32_t BlackToMove=0,
@@ -236,16 +236,16 @@ public:
 		
 public:
 	ChessPosition();
-	ChessPosition& SetupStartPosition();
+	ChessPosition& setupStartPosition();
 #ifdef _USE_HASH
-	ChessPosition& CalculateHash();
+	ChessPosition& calculateHash();
 #endif
-	ChessPosition & SetPieceAtSquare(const unsigned int & piece, BitBoard square);
-	uint32_t GetPieceAtSquare(const BitBoard & square) const;
-	ChessPosition& CalculateMaterial();
-	ChessPosition& PerformMove(ChessMove M);
-	void SwitchSides();
-	void Clear(void);
+	ChessPosition & setPieceAtSquare(const unsigned int & piece, BitBoard square);
+	uint32_t getPieceAtSquare(const BitBoard & square) const;
+	ChessPosition& calculateMaterial();
+	ChessPosition& performMove(ChessMove M);
+	void switchSides();
+	void clear(void);
 	//	ChessPosition& operator=(const ChessPosition& P);
 private:
 };
@@ -268,70 +268,70 @@ enum MoveNotationStyle{
 };
 
 // Move-Generation (and verification)
-void GenerateMoves(const ChessPosition & P, ChessMove * pM);
-bool IsInCheck(const ChessPosition& P, bool bIsBlack);
+void generateMoves(const ChessPosition & P, ChessMove * pM);
+bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
 // White Move-Generation Functions:
-void GenWhiteMoves(const ChessPosition& P, ChessMove*);
-inline BitBoard GenBlackAttacks(const ChessPosition& Z);
-BitBoard IsWhiteInCheck(const ChessPosition & Z);
-void AddWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
-void AddWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void genWhiteMoves(const ChessPosition& P, ChessMove*);
+inline BitBoard genBlackAttacks(const ChessPosition& Z);
+BitBoard isWhiteInCheck(const ChessPosition & Z);
+void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 
 // Black Move-Generation Functions:
-void GenBlackMoves(const ChessPosition& P, ChessMove*);
-inline BitBoard GenWhiteAttacks(const ChessPosition& Z);
-BitBoard IsBlackInCheck(const ChessPosition & Z);
-void AddBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
-void AddBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void genBlackMoves(const ChessPosition& P, ChessMove*);
+inline BitBoard genWhiteAttacks(const ChessPosition& Z);
+BitBoard isBlackInCheck(const ChessPosition & Z);
+void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
 
 // Dump I/O functions:
-void DumpBitBoard(BitBoard b);
-void DumpChessPosition(ChessPosition p);
-void DumpMove(ChessMove M, MoveNotationStyle style = LongAlgebraic, char* pBuffer = NULL);
-void DumpMoveList(ChessMove * pMoveList, MoveNotationStyle style=LongAlgebraic, char * pBuffer=NULL);
+void dumpBitBoard(BitBoard b);
+void dumpChessPosition(ChessPosition p);
+void dumpMove(ChessMove M, MoveNotationStyle style = LongAlgebraic, char* pBuffer = NULL);
+void dumpMoveList(ChessMove * pMoveList, MoveNotationStyle style=LongAlgebraic, char * pBuffer=NULL);
 
 // Compound Bitboard Fill operations:
-BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard FillDiagonalAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard FillKingAttacks(BitBoard g);
-BitBoard FillKnightAttacksOccluded(BitBoard g, BitBoard p);
+BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p);
+BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p);
+BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p);
+BitBoard fillKingAttacks(BitBoard g);
+BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p);
 
 // Fill and Move Bitboard Operations:
-BitBoard FillRightOccluded(BitBoard g, BitBoard p);
-BitBoard FillLeftOccluded(BitBoard g, BitBoard p);
-BitBoard FillUpOccluded(BitBoard g, BitBoard p);
-BitBoard FillDownOccluded(BitBoard g, BitBoard p);
+BitBoard fillRightOccluded(BitBoard g, BitBoard p);
+BitBoard fillLeftOccluded(BitBoard g, BitBoard p);
+BitBoard fillUpOccluded(BitBoard g, BitBoard p);
+BitBoard fillDownOccluded(BitBoard g, BitBoard p);
 
-BitBoard FillUpRightOccluded(BitBoard g, BitBoard p);
-BitBoard FillDownRightOccluded(BitBoard g, BitBoard p);
-BitBoard FillDownLeftOccluded(BitBoard g, BitBoard p);
-BitBoard FillUpLeftOccluded(BitBoard g, BitBoard p);
+BitBoard fillUpRightOccluded(BitBoard g, BitBoard p);
+BitBoard fillDownRightOccluded(BitBoard g, BitBoard p);
+BitBoard fillDownLeftOccluded(BitBoard g, BitBoard p);
+BitBoard fillUpLeftOccluded(BitBoard g, BitBoard p);
 
-BitBoard MoveUpSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveUpRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveDownRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveDownSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveDownLeftSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveLeftSingleOccluded(BitBoard g, BitBoard p);
-BitBoard MoveUpLeftSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveUpSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveUpRightSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveRightSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveDownRightSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveDownSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveDownLeftSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveLeftSingleOccluded(BitBoard g, BitBoard p);
+BitBoard moveUpLeftSingleOccluded(BitBoard g, BitBoard p);
 
-BitBoard MoveKnight1Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight2Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight3Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight4Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight5Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight6Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight7Occluded(BitBoard g, BitBoard p);
-BitBoard MoveKnight8Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight1Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight2Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight3Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight4Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight5Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight6Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight7Occluded(BitBoard g, BitBoard p);
+BitBoard moveKnight8Occluded(BitBoard g, BitBoard p);
 
 /* --------------------------------------------------------------
 Deafault material values of Pieces:
 ---------------------------------------------------------------*/
 
-const int PieceMaterialValue[16] =
+const int pieceMaterialValue[16] =
 {	
 	0,			// Empty Square
 	100,		// White pawn
@@ -781,7 +781,7 @@ const int  MoveKnight8SquareIndex[64] = {
 };
 
 // Note : Inline Functions to follow
-inline unsigned long GetSquareIndex(BitBoard b);
+inline unsigned long getSquareIndex(BitBoard b);
 
 //////// Fill Functions ////////////////////
 
@@ -790,14 +790,14 @@ inline unsigned long GetSquareIndex(BitBoard b);
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
 
-inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 {
 
 	BitBoard a;
-	a =FillRightOccluded(g,p);
-	a |= FillLeftOccluded(g,p);
-	a |= FillUpOccluded(g,p);
-	a |= FillDownOccluded(g,p);
+	a =fillRightOccluded(g,p);
+	a |= fillLeftOccluded(g,p);
+	a |= fillUpOccluded(g,p);
+	a |= fillDownOccluded(g,p);
 	a &= ~g; // exclude attacking pieces 
 	return a; 
 
@@ -829,14 +829,14 @@ inline BitBoard FillStraightAttacksOccluded(BitBoard g, BitBoard p)
 // Fill in diagonal attacks               //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard FillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 {
 
 	BitBoard a;
-	a =  FillUpRightOccluded(g,p);
-	a |= FillDownRightOccluded(g,p);
-	a |= FillDownLeftOccluded(g,p);
-	a |= FillUpLeftOccluded(g,p);
+	a =  fillUpRightOccluded(g,p);
+	a |= fillDownRightOccluded(g,p);
+	a |= fillDownLeftOccluded(g,p);
+	a |= fillUpLeftOccluded(g,p);
 	a &= ~g; // exclude attacking pieces
 	return a;
 
@@ -868,19 +868,19 @@ inline BitBoard FillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 // Fill in king attacks                   //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
 {
 #ifdef V1
 	BitBoard a;
-	a =  MoveUpSingleOccluded(g,p);
-	a |= MoveUpRightSingleOccluded(g,p);
-	a |= MoveRightSingleOccluded(g,p);
-	a |= MoveDownRightSingleOccluded(g,p);
+	a =  moveUpSingleOccluded(g,p);
+	a |= moveUpRightSingleOccluded(g,p);
+	a |= moveRightSingleOccluded(g,p);
+	a |= moveDownRightSingleOccluded(g,p);
 
-	a |= MoveDownSingleOccluded(g,p);
-	a |= MoveDownLeftSingleOccluded(g,p);
-	a |= MoveLeftSingleOccluded(g,p);
-	a |= MoveUpLeftSingleOccluded(g,p);
+	a |= moveDownSingleOccluded(g,p);
+	a |= moveDownLeftSingleOccluded(g,p);
+	a |= moveLeftSingleOccluded(g,p);
+	a |= moveUpLeftSingleOccluded(g,p);
 	//a &= ~g; // exclude attacking pieces
 	return a; 
 #else
@@ -906,7 +906,7 @@ inline BitBoard FillKingAttacksOccluded(BitBoard g, BitBoard p)
 #endif
 }
 
-inline BitBoard FillKingAttacks(BitBoard g)
+inline BitBoard fillKingAttacks(BitBoard g)
 {
 	BitBoard a, b;
 	BitBoard t, u;
@@ -920,19 +920,19 @@ inline BitBoard FillKingAttacks(BitBoard g)
 // Fill in knight attacks                 //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard FillKnightAttacksOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p)
 {
 	/*
 	BitBoard a;
-	a =  MoveKnight1Occluded(g,p);
-	a |= MoveKnight2Occluded(g,p);
-	a |= MoveKnight3Occluded(g,p);
-	a |= MoveKnight4Occluded(g,p);
+	a =  moveKnight1Occluded(g,p);
+	a |= moveKnight2Occluded(g,p);
+	a |= moveKnight3Occluded(g,p);
+	a |= moveKnight4Occluded(g,p);
 
-	a |= MoveKnight5Occluded(g,p);
-	a |= MoveKnight6Occluded(g,p);
-	a |= MoveKnight7Occluded(g,p);
-	a |= MoveKnight8Occluded(g,p);
+	a |= moveKnight5Occluded(g,p);
+	a |= moveKnight6Occluded(g,p);
+	a |= moveKnight7Occluded(g,p);
+	a |= moveKnight8Occluded(g,p);
 	//a &= ~g; // exclude attacking pieces
 	return a; 
 	*/
@@ -958,7 +958,7 @@ inline BitBoard FillKnightAttacks(BitBoard g)
 	return (h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8);
 }
 
-inline BitBoard FillUpOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillUpOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
     g |= p & (g <<  8);
@@ -969,7 +969,7 @@ inline BitBoard FillUpOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillDownOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillDownOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
     g |= p & (g >>  8);
@@ -980,7 +980,7 @@ inline BitBoard FillDownOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillLeftOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillLeftOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
     p &= 0xfefefefefefefefe;
@@ -992,7 +992,7 @@ inline BitBoard FillLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillRightOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
     p &= 0x7f7f7f7f7f7f7f7f;
@@ -1004,7 +1004,7 @@ inline BitBoard FillRightOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillUpRightOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillUpRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
@@ -1016,7 +1016,7 @@ inline BitBoard FillUpRightOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillDownRightOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillDownRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
@@ -1029,7 +1029,7 @@ inline BitBoard FillDownRightOccluded(BitBoard g, BitBoard p)
 }
 
 
-inline BitBoard FillDownLeftOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillDownLeftOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0xfefefefefefefefe; // right wall
@@ -1041,7 +1041,7 @@ inline BitBoard FillDownLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard FillUpLeftOccluded(BitBoard g, BitBoard p)
+inline BitBoard fillUpLeftOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0xfefefefefefefefe; // right wall
@@ -1053,47 +1053,47 @@ inline BitBoard FillUpLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard MoveUpSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveUpSingleOccluded(BitBoard g, BitBoard p)
 {
 	return (p & (g << 8));
 }
 
-inline BitBoard MoveUpRightSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveUpRightSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g << 7));
 }
 
-inline BitBoard MoveRightSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveRightSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 1));
 }
 
-inline BitBoard MoveDownRightSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveDownRightSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 9));
 }
 
-inline BitBoard MoveDownSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveDownSingleOccluded(BitBoard g, BitBoard p)
 {
 	return (p & (g >> 8));
 }
 
-inline BitBoard MoveDownLeftSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveDownLeftSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g >> 7));
 }
 
-inline BitBoard MoveLeftSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveLeftSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g << 1));
 }
 
-inline BitBoard MoveUpLeftSingleOccluded(BitBoard g, BitBoard p)
+inline BitBoard moveUpLeftSingleOccluded(BitBoard g, BitBoard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g << 9));
@@ -1110,55 +1110,55 @@ inline BitBoard MoveUpLeftRightSingle(BitBoard g) {
 			(0x7f7f7f7f7f7f7f7f & (g << 7));		// UpRight
 }
 
-inline BitBoard MoveKnight1Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight1Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x8080808080808000;
 	return (p & (g << 15));
 }
 
-inline BitBoard MoveKnight2Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight2Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0xC0C0C0C0C0C0C0C0;
 	return (p & (g << 6));
 }
 
-inline BitBoard MoveKnight3Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight3Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0000C0C0C0C0C0C0;
 	return (p & (g >> 10));
 }
 
-inline BitBoard MoveKnight4Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight4Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0000008080808080;
 	return (p & (g >> 17));
 }
 
-inline BitBoard MoveKnight5Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight5Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0001010101010101;
 	return (p & (g >> 15));
 }
 
-inline BitBoard MoveKnight6Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight6Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0303030303030303;
 	return (p & (g >> 6));
 }
 
-inline BitBoard MoveKnight7Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight7Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0303030303030000;
 	return (p & (g << 10));
 }
 
-inline BitBoard MoveKnight8Occluded(BitBoard g, BitBoard p)
+inline BitBoard moveKnight8Occluded(BitBoard g, BitBoard p)
 {
 	p &= ~0x0101010101000000;
 	return (p & (g << 17));
 }
 
-inline int PopCount(const BitBoard & B)
+inline int popCount(const BitBoard & B)
 {
 #if defined( _USE_POPCNT_INSTRUCTION) && defined(_WIN64)
 	return static_cast<int>(__popcnt64(B));
@@ -1174,7 +1174,7 @@ inline int PopCount(const BitBoard & B)
 #endif
 }
 
-inline unsigned long GetSquareIndex(BitBoard b)
+inline unsigned long getSquareIndex(BitBoard b)
 {
 	unsigned long n = 0;
 
@@ -1207,9 +1207,9 @@ inline unsigned long GetSquareIndex(BitBoard b)
 	return n;
 }
 
-// GetFirstAndLastPiece()
+// getFirstAndLastPiece()
 // Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
-inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& Last)
+inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& Last)
 {	
 	unsigned long a = 63;
 	unsigned long b = 0;
@@ -1258,13 +1258,13 @@ inline void GetFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 }
 
 // Conversion functions for the different Move formats:
-inline void Move2ChessMove(ChessMove& m, const Move& M) {
+inline void move2ChessMove(ChessMove& m, const Move& M) {
 	m.Flags = M.Flags;
-	m.FromSquare =	static_cast<unsigned char>(GetSquareIndex(M.From));
-	m.ToSquare =	static_cast<unsigned char>(GetSquareIndex(M.To));
+	m.FromSquare =	static_cast<unsigned char>(getSquareIndex(M.From));
+	m.ToSquare =	static_cast<unsigned char>(getSquareIndex(M.To));
 }
 
-inline void ChessMove2Move(const ChessMove& m, Move& M) {
+inline void chessMove2Move(const ChessMove& m, Move& M) {
 	M.Flags = m.Flags;
 	M.From = 1LL << m.FromSquare;
 	M.To = 1LL << m.ToSquare;

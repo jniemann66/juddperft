@@ -36,8 +36,8 @@ SOFTWARE.
 
 namespace juddperft {
 
-bool ReadFen(ChessPosition* pP, const char* pzFENString);
-bool WriteFen(char* pzFENBuffer, const ChessPosition* pP);
+bool readFen(ChessPosition* pP, const char* pzFENString);
+bool writeFen(char* pzFENBuffer, const ChessPosition* pP);
 
 } // namespace juddperft
 #endif // __FEN_H

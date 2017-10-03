@@ -62,7 +62,7 @@ public:
 	ZobristKey zkDoWhiteCastleLong;
 	//
 
-	bool Generate();
+	bool generate();
 };
 
 // generic Hashtable template:
@@ -71,14 +71,14 @@ template<class T> class HashTable
 public:
 	HashTable(const std::string& name = std::string("Hash Table"));
 	~HashTable();
-	bool SetSize(uint64_t nBytes);
-	bool DeAllocate();
-	T* GetAddress(const HashKey& SearchHK) const;
-	uint64_t GetSize() const;			// return currently-allocated size in bytes
-	uint64_t GetRequestedSize() const;	// return what was originally requested in bytes
-	uint64_t GetNumEntries() const;
-	double GetLoadFactor() const;
-	void Clear();
+	bool setSize(uint64_t nBytes);
+	bool deAllocate();
+	T* getAddress(const HashKey& SearchHK) const;
+	uint64_t getSize() const;			// return currently-allocated size in bytes
+	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
+	uint64_t getNumEntries() const;
+	double getLoadFactor() const;
+	void clear();
 
 private:
 	T* m_pTable;
@@ -111,7 +111,7 @@ inline HashTable<T>::~HashTable()
 }
 
 template<class T>
-inline bool HashTable<T>::SetSize(uint64_t nBytes)
+inline bool HashTable<T>::setSize(uint64_t nBytes)
 {
 	m_nRequestedSize = nBytes;
 
@@ -131,7 +131,7 @@ inline bool HashTable<T>::SetSize(uint64_t nBytes)
 	m_nEntries = nNewNumEntries;
 	// create a mask with all 1's (2^n - 1) for address calculation:
 	HashTable::m_nIndexMask = m_nEntries - 1;
-	HashTable::DeAllocate();
+	HashTable::deAllocate();
 
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
@@ -143,13 +143,13 @@ inline bool HashTable<T>::SetSize(uint64_t nBytes)
 		std::cout << "Allocated " << m_nEntries * sizeof(T) << " bytes for " << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
 		m_nCollisions = 0;
 		m_nWrites = 0;
-		HashTable<T>::Clear();
+		HashTable<T>::clear();
 		return true;
 	}
 }
 
 template<class T>
-inline bool HashTable<T>::DeAllocate()
+inline bool HashTable<T>::deAllocate()
 {
 	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
 	{
@@ -164,38 +164,38 @@ inline bool HashTable<T>::DeAllocate()
 }
 
 template<class T>
-inline T * HashTable<T>::GetAddress(const HashKey & SearchHK) const
+inline T * HashTable<T>::getAddress(const HashKey & SearchHK) const
 {
 	return m_pTable + (SearchHK & m_nIndexMask);
 }
 
 template<class T>
-inline uint64_t HashTable<T>::GetSize() const
+inline uint64_t HashTable<T>::getSize() const
 {
 	return m_nEntries*sizeof(T);
 }
 
 template<class T>
-inline uint64_t HashTable<T>::GetRequestedSize() const
+inline uint64_t HashTable<T>::getRequestedSize() const
 {
 	return m_nRequestedSize;
 }
 
 template<class T>
-inline uint64_t HashTable<T>::GetNumEntries() const
+inline uint64_t HashTable<T>::getNumEntries() const
 {
 	return m_nEntries;
 }
 
 template<class T>
-inline double HashTable<T>::GetLoadFactor() const
+inline double HashTable<T>::getLoadFactor() const
 {
 	return
 		static_cast<double>((1000 * m_nWrites) / m_nEntries) / 1000;
 }
 
 template<class T>
-inline void HashTable<T>::Clear()
+inline void HashTable<T>::clear()
 {
 	if (m_pTable != nullptr)
 		std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
@@ -222,7 +222,7 @@ struct PerftTableEntry
 	// which only allows up to perft 12 from start position
 
 		};
-		unsigned long long Data;
+		unsigned long long data;
 	}; 
 #endif 
 	// Note: std::atomic<> version of this appears to add 8 bytes on msvc
@@ -236,7 +236,7 @@ struct LeafEntry
 
 #ifdef _USE_HASH
 // Global instances:
-extern ZobristKeySet ZobristKeys;
+extern ZobristKeySet zobristKeys;
 extern HashTable <std::atomic<PerftTableEntry>> perftTable;
 extern HashTable <std::atomic<LeafEntry>> leafTable;
 #endif

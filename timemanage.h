@@ -35,7 +35,7 @@ public:
 	double m_fCurrentTimeControl;
 	int m_nMoveNumber;
 	TimeManager();
-	double GetTimeForMove();
+	double getTimeForMove();
 };
 
 #define UNLIMITED_TIME -1

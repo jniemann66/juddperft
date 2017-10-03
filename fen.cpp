@@ -27,20 +27,20 @@ SOFTWARE.
 #include "fen.h"
 
 /////////////////////////////////////////////////////////	
-// ReadFen() - Reads a FEN string and sets up position
+// readFen() - Reads a FEN string and sets up position
 // Accordingly..
 /////////////////////////////////////////////////////////
 
 namespace juddperft {
 
-	bool ReadFen(ChessPosition* pP, const char* pzFENString)
+	bool readFen(ChessPosition* pP, const char* pzFENString)
 	{
 		const char* s = pzFENString;
 		char* token;
 		char t[1024];
 		unsigned int piece;
 		unsigned int shift;
-		pP->Clear();
+		pP->clear();
 		// Read Field 1: Piece Positions
 		int Square = 63;
 
@@ -137,7 +137,7 @@ namespace juddperft {
 				shift = 0;
 			}
 
-			pP->SetPieceAtSquare(piece, 1LL << Square);
+			pP->setPieceAtSquare(piece, 1LL << Square);
 			Square -= shift;
 			s++;
 		} // ends while((s != NULL) && (Square >= 0))
@@ -198,7 +198,7 @@ namespace juddperft {
 			}
 			if (((iSquare >= 16) && (iSquare <= 24)) ||
 				((iSquare >= 40) && (iSquare <= 48)))
-				pP->SetPieceAtSquare(piece, 1LL << (iSquare));
+				pP->setPieceAtSquare(piece, 1LL << (iSquare));
 			token = strtok(NULL, " ");
 		}
 		// Read Field 5: Halfmove clock (number of half moves since last capture or pawn advance)
@@ -214,17 +214,17 @@ namespace juddperft {
 		}
 
 #ifdef _USE_HASH
-		pP->CalculateHash(); // Important: always do this after setting up a position ! 
+		pP->calculateHash(); // Important: always do this after setting up a position ! 
 #endif
 
 		return true;
 	}
 
 	/////////////////////////////////////////////////////////	
-	// WriteFen() - Generates a FEN string from a Position
+	// writeFen() - Generates a FEN string from a Position
 	/////////////////////////////////////////////////////////
 
-	bool WriteFen(char* pzFENBuffer, const ChessPosition* pP)
+	bool writeFen(char* pzFENBuffer, const ChessPosition* pP)
 	{
 		unsigned int piece;
 		unsigned int nBlanks = 0;
@@ -233,7 +233,7 @@ namespace juddperft {
 
 		for (int square = 63; square >= 0; --square)
 		{
-			piece = pP->GetPieceAtSquare(1LL << square);
+			piece = pP->getPieceAtSquare(1LL << square);
 			if ((piece & 0x07) == 0) // Blank
 				nBlanks++;
 			else

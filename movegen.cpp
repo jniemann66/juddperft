@@ -68,7 +68,7 @@ bool Move::operator==(const Move& B) const
 	// on both sides.
 }
 
-Move& Move::Format(
+Move& Move::format(
 		BitBoard From /*=0*/,
 		BitBoard To /*=0*/,
 		uint32_t BlackToMove /*=0*/,
@@ -101,7 +101,7 @@ ChessPosition::ChessPosition()
 #endif
 }
 
-ChessPosition& ChessPosition::SetupStartPosition()
+ChessPosition& ChessPosition::setupStartPosition()
 {
 	ChessPosition::Flags = 0;
 	ChessPosition::A = 0x4Aff00000000ff4A;
@@ -122,37 +122,37 @@ ChessPosition& ChessPosition::SetupStartPosition()
 	ChessPosition::WhiteDidCastleLong=0;
 	ChessPosition::MoveNumber=1;
 	ChessPosition::HalfMoves=0;
-	ChessPosition::CalculateMaterial();
+	ChessPosition::calculateMaterial();
 #ifdef _USE_HASH
-	ChessPosition::CalculateHash();
+	ChessPosition::calculateHash();
 #endif
 	return *this;
 }
 
 #ifdef _USE_HASH
-ChessPosition & ChessPosition::CalculateHash()
+ChessPosition & ChessPosition::calculateHash()
 {
 	ChessPosition::HK = 0;
 	
 	// Scan the squares:
 	for (int q = 0; q < 64; q++)
 	{
-		unsigned int piece = GetPieceAtSquare(1LL<<q);
+		unsigned int piece = getPieceAtSquare(1LL<<q);
 		//assert(piece != 0x08);
 		if(piece & 0x7)
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[piece][q];
+			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[piece][q];
 	}
-	if (ChessPosition::BlackToMove)	ChessPosition::HK ^= ZobristKeys.zkBlackToMove;
-	if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;
-	if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;
-	if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;
-	if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;  
+	if (ChessPosition::BlackToMove)	ChessPosition::HK ^= zobristKeys.zkBlackToMove;
+	if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;
+	if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;
+	if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;
+	if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;  
 	
 	return *this;
 }
 #endif
 
-ChessPosition& ChessPosition::SetPieceAtSquare(const unsigned int& piece /*=0*/, BitBoard square)
+ChessPosition& ChessPosition::setPieceAtSquare(const unsigned int& piece /*=0*/, BitBoard square)
 {
 	// clear the square
 	ChessPosition::A &= ~square;
@@ -176,14 +176,14 @@ ChessPosition& ChessPosition::SetPieceAtSquare(const unsigned int& piece /*=0*/,
 	{
 		ChessPosition::D |= square;
 	}
-	ChessPosition::CalculateMaterial();
+	ChessPosition::calculateMaterial();
 #ifdef _USE_HASH
-	ChessPosition::CalculateHash();
+	ChessPosition::calculateHash();
 #endif
 	return *this;
 }
 
-uint32_t ChessPosition::GetPieceAtSquare(const BitBoard& square) const
+uint32_t ChessPosition::getPieceAtSquare(const BitBoard& square) const
 {
 	uint32_t V;
 	V = (ChessPosition::D & square)?8:0;
@@ -193,7 +193,7 @@ uint32_t ChessPosition::GetPieceAtSquare(const BitBoard& square) const
 	return V;
 }
 
-ChessPosition& ChessPosition::CalculateMaterial()
+ChessPosition& ChessPosition::calculateMaterial()
 {
 	ChessPosition::material=0;
 	BitBoard M;
@@ -246,7 +246,7 @@ ChessPosition& ChessPosition::CalculateMaterial()
 	return *this;
 }
 
-ChessPosition& ChessPosition::PerformMove(ChessMove M)
+ChessPosition& ChessPosition::performMove(ChessMove M)
 {
 	BitBoard O, To;
 	To = 1LL << M.ToSquare;
@@ -265,8 +265,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 #ifdef _USE_HASH
 	unsigned long nEPSquare;
-	nEPSquare = GetSquareIndex(EnPassant);
-	ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
+	nEPSquare = getSquareIndex(EnPassant);
+	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
 #endif // _USE_HASH
 
 	// APPLY CASTLING MOVES:
@@ -281,7 +281,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	// For Black:
 	// D: 1001 ^ 1111 = 0110
 	// For White:
-	// D &= 0xfffffffffffffff0 (ie Clear colour of affected squares from K to KR)
+	// D &= 0xfffffffffffffff0 (ie clear colour of affected squares from K to KR)
 
 	// The following is for O-O-O:
 	//
@@ -292,7 +292,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	// For Black:
 	// D: 1000 1000 ^ 1011 1000 (0xB8) = 0011 0000
 	// For White:
-	// D &= 0xffffffffffffff07 (ie Clear colour of affected squares from QR to K) 
+	// D &= 0xffffffffffffff07 (ie clear colour of affected squares from QR to K) 
 
 	if(M.Piece == BKING)
 	{
@@ -303,8 +303,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0x0f00000000000000;
 			ChessPosition::D ^= 0x0f00000000000000;
 #ifdef _USE_HASH
-			HK ^= ZobristKeys.zkDoBlackCastle;
-			if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
+			HK ^= zobristKeys.zkDoBlackCastle;
+			if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 			ChessPosition::BlackDidCastle = 1;
 			ChessPosition::BlackCanCastle = 0;
@@ -318,8 +318,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0xb800000000000000;
 			ChessPosition::D ^= 0xb800000000000000;
 #ifdef _USE_HASH
-			HK ^= ZobristKeys.zkDoBlackCastleLong;
-			if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+			HK ^= zobristKeys.zkDoBlackCastleLong;
+			if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
 #endif
 			ChessPosition::BlackDidCastleLong = 1;
 			ChessPosition::BlackCanCastle = 0;
@@ -333,8 +333,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			{
 				// Black could have castled, but chose to move the King in a non-castling move
 #ifdef _USE_HASH
-				if(ChessPosition::BlackCanCastle) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-				if(ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
+				if(ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+				if(ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif		
 				ChessPosition::BlackForfeitedCastle = 1;
 				ChessPosition::BlackForfeitedCastleLong = 1;
@@ -354,8 +354,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0x000000000000000f;
 			ChessPosition::D &= 0xfffffffffffffff0;	// clear colour of e1,f1,g1,h1 (make white)
 #ifdef _USE_HASH
-			HK^=ZobristKeys.zkDoWhiteCastle;
-			if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
+			HK^=zobristKeys.zkDoWhiteCastle;
+			if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
 #endif
 			ChessPosition::WhiteDidCastle = 1;
 			ChessPosition::WhiteCanCastle = 0;
@@ -371,8 +371,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::C ^= 0x00000000000000b8;
 			ChessPosition::D &= 0xffffffffffffff07;	// clear colour of a1,b1,c1,d1,e1 (make white)
 #ifdef _USE_HASH
-			HK^=ZobristKeys.zkDoWhiteCastleLong;
-			if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
+			HK^=zobristKeys.zkDoWhiteCastleLong;
+			if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
 			
 #endif
 			ChessPosition::WhiteDidCastleLong = 1;
@@ -386,7 +386,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			// ordinary king move
 			if (ChessPosition::WhiteCanCastle) {
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// flip white castling
+				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
 #endif					
 				ChessPosition::WhiteForfeitedCastle = 1;
 				ChessPosition::WhiteCanCastle = 0;
@@ -394,7 +394,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			}
 			if (ChessPosition::WhiteCanCastleLong) {
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
 #endif
 				ChessPosition::WhiteForfeitedCastleLong = 1;
 				ChessPosition::WhiteCanCastleLong = 0;
@@ -412,7 +412,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			if(ChessPosition::BlackCanCastle){
 				ChessPosition::BlackForfeitedCastle=1;
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkBlackCanCastle;	// flip black castling		
+				ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// flip black castling		
 #endif
 				ChessPosition::BlackCanCastle=0;
 			}
@@ -424,7 +424,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			if (ChessPosition::BlackCanCastleLong) {
 				ChessPosition::BlackForfeitedCastleLong = 1;
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkBlackCanCastleLong;	// flip black castling long
+				ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
 #endif
 				ChessPosition::BlackCanCastleLong=0;
 			}
@@ -440,7 +440,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			if (ChessPosition::WhiteCanCastle) {
 				ChessPosition::WhiteForfeitedCastle = 1;
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
+				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
 #endif
 				ChessPosition::WhiteCanCastle=0;
 			}
@@ -452,7 +452,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			if (ChessPosition::WhiteCanCastleLong) {
 				ChessPosition::WhiteForfeitedCastleLong = 1;
 #ifdef _USE_HASH
-				ChessPosition::HK ^= ZobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
 #endif
 				ChessPosition::WhiteCanCastleLong=0;
 			}
@@ -493,7 +493,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 #ifdef _USE_HASH
 		// Update Hash
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
 #endif
 	}
 	
@@ -527,8 +527,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 
 #ifdef _USE_HASH
 	// Update Hash
-	ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
-	ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
+	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
+	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
 #endif
 
 	// Promotions - Change the piece:
@@ -538,8 +538,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		ChessPosition::A &= ~To;
 		ChessPosition::B |= To;	
 #ifdef _USE_HASH
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BBISHOP : WBISHOP][nToSquare]; // place Bishop at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BBISHOP : WBISHOP][nToSquare]; // place Bishop at To square
 #endif
 		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
 	//
@@ -550,8 +550,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	{
 		ChessPosition::C |= To;
 #ifdef _USE_HASH
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BKNIGHT : WKNIGHT][nToSquare];// place Knight at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BKNIGHT : WKNIGHT][nToSquare];// place Knight at To square
 #endif
 		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
 	//
@@ -563,8 +563,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		ChessPosition::A &= ~To;
 		ChessPosition::C |= To;
 #ifdef _USE_HASH
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BROOK : WROOK][nToSquare];	// place Rook at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BROOK : WROOK][nToSquare];	// place Rook at To square
 #endif
 		M.Piece = M.BlackToMove ? BROOK : WROOK;
 		//
@@ -577,8 +577,8 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 		ChessPosition::B |= To;
 		ChessPosition::C |= To;
 #ifdef _USE_HASH
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[M.BlackToMove ? BQUEEN : WQUEEN][nToSquare];	// place Queen at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BPAWN : WPAWN][nToSquare]; // Remove pawn at To square
+		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.BlackToMove ? BQUEEN : WQUEEN][nToSquare];	// place Queen at To square
 #endif
 		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
 		//
@@ -598,7 +598,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D |= To;
 
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
+			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
 #endif
 		}
 		else
@@ -610,7 +610,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D &= ~To;
 		
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
+			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
 #endif
 		}
 		//
@@ -630,7 +630,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D &= ~To;
 		//	ChessPosition::material -= 100; // perft doesn't care
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
+			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
 #endif
 		}
 		else
@@ -642,7 +642,7 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 			ChessPosition::D &= ~To;
 		//	ChessPosition::material += 100; // perft doesn't care
 #ifdef _USE_HASH
-			ChessPosition::HK ^= ZobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
+			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
 #endif
 		}
 	}
@@ -650,16 +650,16 @@ ChessPosition& ChessPosition::PerformMove(ChessMove M)
 	return *this;
 }
 
-void ChessPosition::SwitchSides()
+void ChessPosition::switchSides()
 {
 	ChessPosition::BlackToMove ^= 1;
 #ifdef _USE_HASH
-	ChessPosition::HK ^= ZobristKeys.zkBlackToMove;
+	ChessPosition::HK ^= zobristKeys.zkBlackToMove;
 #endif
 	return;
 }
 
-void ChessPosition::Clear(void)
+void ChessPosition::clear(void)
 {
 	A=B=C=D=0;
 	Flags=0;
@@ -671,32 +671,32 @@ void ChessPosition::Clear(void)
 
 ////////////////////////////////////////////
 // Move Generation Functions 
-// GenerateMoves()
+// generateMoves()
 ////////////////////////////////////////////
 
-void GenerateMoves(const ChessPosition& P, ChessMove* pM)
+void generateMoves(const ChessPosition& P, ChessMove* pM)
 {
 	
 	assert((~(P.A | P.B | P.C) & P.D)==0); // Should not be any "black" empty squares
 		
 	if(P.BlackToMove)
 	{
-		GenBlackMoves(P,pM);
+		genBlackMoves(P,pM);
 	}
 	else
 	{
-		GenWhiteMoves(P,pM);
+		genWhiteMoves(P,pM);
 	}
 }
 
 //////////////////////////////////////////
 // White Move Generation Functions:		//	
-// GenWhiteMoves(),						//
-// AddWhiteMoveToListIfLegal(),			//
-// GenBlackAttacks()					//
+// genWhiteMoves(),						//
+// addWhiteMoveToListIfLegal(),			//
+// genBlackAttacks()					//
 //////////////////////////////////////////
 
-void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
+void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
 	BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
@@ -748,36 +748,36 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					// single move forward 
 					Square = MoveUp[q] & WhiteFree & ~BlackOccupied /* pawns can't capture in forward moves */;
 					if((Square & RANK8) != 0)
-						AddWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
+						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Advance
-						AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+						addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 						/* double move forward (only available from 2nd Rank */
 						if ((CurrentSquare & RANK2)!=0)
 						{
-							Square = MoveUpSingleOccluded(Square,WhiteFree) & ~BlackOccupied;
+							Square = moveUpSingleOccluded(Square,WhiteFree) & ~BlackOccupied;
 							M.ClearFlags();
-							M.DoublePawnMove=1; // this flag will cause ChessPosition::PerformMove() to set an ep square in the position
-							AddWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
+							M.DoublePawnMove=1; // this flag will cause ChessPosition::performMove() to set an ep square in the position
+							addWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
 						}
 					}
-					// Generate Pawn Captures:
+					// generate Pawn Captures:
 					Square=MoveUpLeft[q] & WhiteFree & BlackOccupied;
 					if((Square & RANK8) != 0)
-						AddWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
+						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Capture to Left
-						AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+						addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					}
 					Square = MoveUpRight[q] & WhiteFree & BlackOccupied;
 					if((Square & RANK8) != 0)
-						AddWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
+						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Capture to right
-						AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+						addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					}
 					continue;
 				}
@@ -785,21 +785,21 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 				{
 					piece = WKNIGHT;
 					Square=MoveKnight8[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight7[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight1[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight2[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight3[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight4[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight5[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight6[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);		
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);		
 					continue;
 				}
 			}	// Ends if (B == 0)
@@ -810,57 +810,57 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 				{
 					piece = WKING;
 					Square=MoveUp[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 						
 					Square=MoveRight[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 
-					// Conditionally Generate O-O move:
+					// Conditionally generate O-O move:
 					if ((P.WhiteCanCastle) &&								// White still has castle rights AND
 						(CurrentSquare==WHITEKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & ~P.D & WHITEKRPOS) != 0) &&	// KRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to right) was legal AND
 						(WHITECASTLEZONE & Occupied) == 0 &&				// Castle Zone (f1,g1) is clear AND
-						!IsWhiteInCheck(P)									// King is not in Check
+						!isWhiteInCheck(P)									// King is not in Check
 						)
 					{
 						// OK to Castle
 						Square = G1;										// Move King to g1
 						M.ClearFlags();
 						M.Castle=1;
-						AddWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
+						addWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
 					}
 
 					Square=MoveDown[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					
 					Square=MoveLeft[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 
-					// Conditionally Generate O-O-O move:
+					// Conditionally generate O-O-O move:
 					if((P.WhiteCanCastleLong)	&&							// White still has castle-long rights AND
 						(CurrentSquare==WHITEKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & ~P.D & WHITEQRPOS) != 0) &&	// QRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
 						(WHITECASTLELONGZONE & Occupied) == 0 &&	 		// Castle Long Zone (b1,c1,d1) is clear AND	
-						!IsWhiteInCheck(P)									// King is not in Check
+						!isWhiteInCheck(P)									// King is not in Check
 						)
 					{
 						// Ok to Castle Long
 						Square = C1;										// Move King to c1
 						M.ClearFlags();
 						M.CastleLong=1;
-						AddWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
+						addWhiteMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
 					}
 
 					Square=MoveUpRight[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveDownRight[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveDownLeft[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveUpLeft[q] & WhiteFree;
-					AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+					addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 
 					continue;
 				} // ENDS if (C != 0)
@@ -881,26 +881,26 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 			Square=CurrentSquare;
 			do{ /* Diagonal UpRight */
-				Square=MoveUpRightSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveUpRightSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 			
 			Square=CurrentSquare;
 			do{ /* Diagonal DownRight */
-				Square=MoveDownRightSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownRightSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 
 			Square=CurrentSquare;
 			do{ /* Diagonal DownLeft */
-				Square=MoveDownLeftSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownLeftSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 			
 			Square=CurrentSquare;
 			do{ /* Diagonal UpLeft */
-				Square=MoveUpLeftSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveUpLeftSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 		}
 
@@ -911,26 +911,26 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 			Square=CurrentSquare;
 			do{ /* Up */
-				Square=MoveUpSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveUpSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 
 			Square=CurrentSquare;
 			do{ /* Right */
-				Square=MoveRightSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveRightSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 
 			Square=CurrentSquare;
 			do{ /*Down */
-				Square=MoveDownSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 
 			Square=CurrentSquare;
 			do{ /*Left*/
-				Square=MoveLeftSingleOccluded(Square,WhiteFree);
-				AddWhiteMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveLeftSingleOccluded(Square,WhiteFree);
+				addWhiteMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidBlackPiece);
 		}
 	} // ends loop over q;
@@ -945,13 +945,13 @@ void GenWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->NoMoreMoves=1;
 }
 
-inline void AddWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
+inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
 {
 	if (to != 0)
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
+		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		assert((1LL << pM->ToSquare) == to);
 		pM->Flags = flags;
 		pM->Piece = piece;
@@ -1005,10 +1005,10 @@ inline void AddWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			}
 		}
 			
-		if (!IsWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
+		if (!isWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
 		{
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION		
-			if (IsBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
+			if (isBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
 				pM->Check = 1;
 #endif
 			pM++;			// Advancing the pointer means that the 
@@ -1022,13 +1022,13 @@ inline void AddWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 	}
 }
 
-inline void AddWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags /*=0*/)
+inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags /*=0*/)
 {
 	if (to != 0)
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
+		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		assert((1LL << pM->ToSquare) == to);
 		pM->Flags = flags;
 		pM->Piece = piece;
@@ -1049,11 +1049,11 @@ inline void AddWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
 		pM->Capture = (to & P.D & ~PAB) ? 1 : 0;
 
-		if (!IsWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
+		if (!isWhiteInCheck(Q))										// Does proposed move put our (white) king in Check ?
 		{
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION	
 			// To-do: Promote to new piece (can potentially check opponent)
-			if (IsBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
+			if (isBlackInCheck(Q))									// Does the move put enemy (black) king in Check ?
 				pM->Check = 1;
 #endif
 			// make an additional 3 copies (there are four promotions)
@@ -1077,7 +1077,7 @@ inline void AddWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 	}
 }
 
-inline BitBoard GenBlackAttacks(const ChessPosition& Z)
+inline BitBoard genBlackAttacks(const ChessPosition& Z)
 {	
 	BitBoard Occupied = Z.A | Z.B | Z.C;
 	BitBoard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -1095,24 +1095,24 @@ inline BitBoard GenBlackAttacks(const ChessPosition& Z)
 	BitBoard P = A & ~B & ~C;			// Pawns
 	BitBoard N = A & ~B & C;			// Knights
 
-	BitBoard StraightAttacks = MoveUpSingleOccluded(FillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= MoveRightSingleOccluded(FillRightOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= MoveDownSingleOccluded(FillDownOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= MoveLeftSingleOccluded(FillLeftOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	BitBoard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 	
-	BitBoard DiagonalAttacks = MoveUpRightSingleOccluded(FillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= MoveDownRightSingleOccluded(FillDownRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= MoveDownLeftSingleOccluded(FillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= MoveUpLeftSingleOccluded(FillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	BitBoard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 	
-	BitBoard KingAttacks = FillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
-	BitBoard KnightAttacks = FillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
+	BitBoard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
+	BitBoard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
 	BitBoard PawnAttacks = MoveDownLeftRightSingle(P) & (Empty | PotentialCapturesForBlack);
 
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-inline BitBoard IsWhiteInCheck(const ChessPosition& Z)
+inline BitBoard isWhiteInCheck(const ChessPosition& Z)
 {
 	BitBoard WhiteKing = Z.A & Z.B & Z.C & ~Z.D;
 	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -1129,9 +1129,9 @@ inline BitBoard IsWhiteInCheck(const ChessPosition& Z)
 	BitBoard P = A & ~B & ~C;			// Pawns
 	BitBoard N = A & ~B & C;			// Knights
 
-	BitBoard X = FillStraightAttacksOccluded(S, V);
-	X |= FillDiagonalAttacksOccluded(D, V);
-	X |= FillKingAttacks(K);
+	BitBoard X = fillStraightAttacksOccluded(S, V);
+	X |= fillDiagonalAttacksOccluded(D, V);
+	X |= fillKingAttacks(K);
 	X |= FillKnightAttacks(N);
 	X |= MoveDownLeftRightSingle(P);
 	return X & WhiteKing;
@@ -1139,12 +1139,12 @@ inline BitBoard IsWhiteInCheck(const ChessPosition& Z)
 
 //////////////////////////////////////////
 // Black Move Generation Functions:		//	
-// GenBlackMoves(),						//
-// AddBlackMoveToListIfLegal(),			//
-// GenWhiteAttacks()					//
+// genBlackMoves(),						//
+// addBlackMoveToListIfLegal(),			//
+// genWhiteAttacks()					//
 //////////////////////////////////////////
 
-void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
+void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	ChessMove* pFirstMove = pM;
 	BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
@@ -1199,36 +1199,36 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 					// single move forward 
 					Square = MoveDown[q] & BlackFree & ~WhiteOccupied /* pawns can't capture in forward moves */;
 					if((Square & RANK1) != 0)
-						AddBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
+						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Advance
-						AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+						addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 						/* double move forward (only available from 7th Rank */
 						if ((CurrentSquare & RANK7)!=0)
 						{
-							Square=MoveDownSingleOccluded(Square,BlackFree)&~WhiteOccupied;
+							Square=moveDownSingleOccluded(Square,BlackFree)&~WhiteOccupied;
 							M.ClearFlags();
-							M.DoublePawnMove=1; // this flag will cause ChessPosition::PerformMove() to set an ep square in the position
-							AddBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
+							M.DoublePawnMove=1; // this flag will cause ChessPosition::performMove() to set an ep square in the position
+							addBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
 						}
 					}
-					// Generate Pawn Captures:
+					// generate Pawn Captures:
 					Square=MoveDownLeft[q] & BlackFree & WhiteOccupied;
 					if((Square & RANK1) != 0)
-						AddBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
+						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Capture to Left
-						AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+						addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					}
 					Square = MoveDownRight[q] & BlackFree & WhiteOccupied;
 					if((Square & RANK1) != 0)
-						AddBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
+						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
 						// Ordinary Pawn Capture to right
-						AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+						addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					}
 					continue;
 				}
@@ -1236,21 +1236,21 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 				{
 					piece=BKNIGHT;
 					Square=MoveKnight1[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight2[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight3[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight4[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight5[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight6[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight7[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveKnight8[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					continue;
 				}
 			}	// ENDS if (B ==0)
@@ -1261,57 +1261,57 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 				{
 					piece = BKING;
 					Square=MoveUp[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 						
 					Square=MoveRight[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 
-					// Conditionally Generate O-O move:
+					// Conditionally generate O-O move:
 					if((P.BlackCanCastle) &&								// Black still has castle rights AND
 						(CurrentSquare==BLACKKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & P.D & BLACKKRPOS) != 0) &&	// KRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to right) was legal AND
 						(BLACKCASTLEZONE & Occupied) == 0 &&				// Castle Zone (f8,g8) is clear	AND
-						!IsBlackInCheck(P)									// King is not in Check
+						!isBlackInCheck(P)									// King is not in Check
 						)
 					{
 						// OK to Castle
 						Square = G8;										// Move King to g8
 						M.ClearFlags();
 						M.Castle=1;
-						AddBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);	
+						addBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);	
 					}
 
 					Square=MoveDown[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					
 					Square=MoveLeft[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 
-					// Conditionally Generate O-O-O move:
+					// Conditionally generate O-O-O move:
 					if((P.BlackCanCastleLong) &&							// Black still has castle-long rights AND
 						(CurrentSquare==BLACKKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & P.D & BLACKQRPOS) != 0) &&	// QRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
 						(BLACKCASTLELONGZONE & Occupied) == 0 &&			// Castle Long Zone (b8,c8,d8) is clear
-						!IsBlackInCheck(P)									// King is not in Check
+						!isBlackInCheck(P)									// King is not in Check
 						)
 					{
 						// OK to castle Long
 						Square = C8;										// Move King to c8
 						M.ClearFlags();
 						M.CastleLong=1;
-						AddBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
+						addBlackMoveToListIfLegal(P,pM,q,Square,piece,M.Flags);
 					}
 
 					Square=MoveUpRight[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveDownRight[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveDownLeft[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					Square=MoveUpLeft[q] & BlackFree;
-					AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+					addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 					continue;
 				} // ENDS if (C != 0)
 				else
@@ -1331,26 +1331,26 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 			Square=CurrentSquare;
 			do{ /* Diagonal UpRight */
-				Square=MoveUpRightSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P, pM, q, Square, piece);
+				Square=moveUpRightSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P, pM, q, Square, piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /* Diagonal DownRight */
-				Square=MoveDownRightSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownRightSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /* Diagonal DownLeft */
-				Square=MoveDownLeftSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownLeftSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /* Diagonal UpLeft */
-				Square=MoveUpLeftSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveUpLeftSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 		}
 
@@ -1361,26 +1361,26 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 			Square=CurrentSquare;
 			do{ /* Up */
-				Square=MoveUpSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveUpSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /* Right */
-				Square=MoveRightSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveRightSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /*Down */
-				Square=MoveDownSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveDownSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 
 			Square=CurrentSquare;
 			do{ /*Left*/
-				Square=MoveLeftSingleOccluded(Square,BlackFree);
-				AddBlackMoveToListIfLegal(P,pM,q,Square,piece);
+				Square=moveLeftSingleOccluded(Square,BlackFree);
+				addBlackMoveToListIfLegal(P,pM,q,Square,piece);
 			} while (Square & ~SolidWhitePiece);
 		}
 	} // ends loop over q;
@@ -1395,13 +1395,13 @@ void GenBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->NoMoreMoves=1;
 }
 
-inline void AddBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
 {
 	if (to != 0)
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
+		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
@@ -1457,10 +1457,10 @@ inline void AddBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			}
 		}
 	
-		if (!IsBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
+		if (!isBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
 		{
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
-			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
+			if (isWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
 
@@ -1474,13 +1474,13 @@ inline void AddBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 	}
 }
 
-inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
 {
 	if (to != 0)
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = static_cast<unsigned char>(GetSquareIndex(to));
+		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
@@ -1503,7 +1503,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		BitBoard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
 		pM->Capture = (to & WhiteOccupied & ~PAB) ? 1 : 0;
 
-		if (!IsBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
+		if (!isBlackInCheck(Q))	// Does proposed move put our (black) king in Check ?
 		{
 			// make an additional 3 copies for underpromotions
 			*(pM + 1) = *pM;
@@ -1513,7 +1513,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			// set Promotion flags accordingly:
 			pM->PromoteQueen = 1;
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
-			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
+			if (isWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
 			pM++;
@@ -1521,7 +1521,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			pM->PromoteRook = 1;
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
 			// Promote to Rook (take away B)
-			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
+			if (isWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
 			pM++;
@@ -1529,7 +1529,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			pM->PromoteBishop = 1;
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
 			// Promote to Bishop (take away C, add B)
-			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
+			if (isWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
 			pM++;
@@ -1537,7 +1537,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			pM->PromoteKnight = 1;
 #ifdef _FLAG_CHECKS_IN_MOVE_GENERATION
 			// Promote to Knight (take away B, add C, add A)
-			if (IsWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
+			if (isWhiteInCheck(Q))	// Does the move put enemy (white) king in Check ?
 				pM->Check = 1;
 #endif
 			pM++;
@@ -1549,7 +1549,7 @@ inline void AddBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 	}
 }
 
-inline BitBoard GenWhiteAttacks(const ChessPosition& Z)
+inline BitBoard genWhiteAttacks(const ChessPosition& Z)
 {
 	BitBoard Occupied = Z.A | Z.B | Z.C;
 	BitBoard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -1567,25 +1567,25 @@ inline BitBoard GenWhiteAttacks(const ChessPosition& Z)
 	BitBoard P = A & ~B & ~C;			// Pawns
 	BitBoard N = A & ~B & C;			// Knights
 	
-	BitBoard StraightAttacks = MoveUpSingleOccluded(FillUpOccluded(S, Empty), Empty | PotentialCapturesForWhite);
-	StraightAttacks |= MoveRightSingleOccluded(FillRightOccluded(S, Empty), Empty | PotentialCapturesForWhite);
-	StraightAttacks |= MoveDownSingleOccluded(FillDownOccluded(S, Empty), Empty | PotentialCapturesForWhite);
-	StraightAttacks |= MoveLeftSingleOccluded(FillLeftOccluded(S, Empty), Empty | PotentialCapturesForWhite);
+	BitBoard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForWhite);
+	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForWhite);
+	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForWhite);
+	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForWhite);
 
-	BitBoard DiagonalAttacks = MoveUpRightSingleOccluded(FillUpRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
-	DiagonalAttacks |= MoveDownRightSingleOccluded(FillDownRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
-	DiagonalAttacks |= MoveDownLeftSingleOccluded(FillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
-	DiagonalAttacks |= MoveUpLeftSingleOccluded(FillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
+	BitBoard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
+	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
+	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
+	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
 
-	BitBoard KingAttacks = FillKingAttacksOccluded(K, Empty | PotentialCapturesForWhite);
-	BitBoard KnightAttacks = FillKnightAttacksOccluded(N, Empty | PotentialCapturesForWhite);
+	BitBoard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForWhite);
+	BitBoard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForWhite);
 	BitBoard PawnAttacks = MoveUpLeftRightSingle(P) & (Empty | PotentialCapturesForWhite);
 
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
 
-inline BitBoard IsBlackInCheck(const ChessPosition& Z)
+inline BitBoard isBlackInCheck(const ChessPosition& Z)
 {
 	BitBoard BlackKing = Z.A & Z.B & Z.C & Z.D;
 	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -1602,27 +1602,27 @@ inline BitBoard IsBlackInCheck(const ChessPosition& Z)
 	BitBoard P = A & ~B & ~C;			// Pawns
 	BitBoard N = A & ~B & C;			// Knights
 
-	BitBoard X = FillStraightAttacksOccluded(S, V);
-	X |= FillDiagonalAttacksOccluded(D, V);
-	X |= FillKingAttacks(K);
+	BitBoard X = fillStraightAttacksOccluded(S, V);
+	X |= fillDiagonalAttacksOccluded(D, V);
+	X |= fillKingAttacks(K);
 	X |= FillKnightAttacks(N);
 	X |= MoveUpLeftRightSingle(P);
 	
 	return X & BlackKing;
 }
 
-// IsInCheck() - Given a position, determines if player is in check - 
+// isInCheck() - Given a position, determines if player is in check - 
 // set IsBlack to true to test if Black is in check
 // set IsBlack to false to test if White is in check.
 
-inline bool IsInCheck(const ChessPosition& P, bool bIsBlack)
+inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
 {
-	return bIsBlack ? IsBlackInCheck(P)!=0 : IsWhiteInCheck(P)!=0;
+	return bIsBlack ? isBlackInCheck(P)!=0 : isWhiteInCheck(P)!=0;
 }
 
 // Text Dump functions //////////////////
 
-void DumpBitBoard(BitBoard b)
+void dumpBitBoard(BitBoard b)
 {
 	printf("\n");
 	for (int q=63;q>=0;q--)
@@ -1642,7 +1642,7 @@ void DumpBitBoard(BitBoard b)
 	}
 }
 
-void DumpChessPosition(ChessPosition p)
+void dumpChessPosition(ChessPosition p)
 {
 	printf("\n---------------------------------\n");
 	int64_t M;
@@ -1724,12 +1724,12 @@ void DumpChessPosition(ChessPosition p)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// DumpMove() - Converts a move to ascii and dumps it to stdout, unless a character 
+// dumpMove() - Converts a move to ascii and dumps it to stdout, unless a character 
 // buffer is supplied, in which case the ascii is written to pBuffer instead.
 // A number of notation styles are supported. Usually CoOrdinate should be used
 // for WinBoard.
 //////////////////////////////////////////////////////////////////////////////////
-void DumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer /*= NULL */)
+void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer /*= NULL */)
 {
 	int from=0, to=0;
 	BitBoard bbFrom,bbTo;
@@ -1858,13 +1858,13 @@ void DumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 	}
 }
 
-void DumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer /*=NULL*/)
+void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer /*=NULL*/)
 {
 	ChessMove* pM=pMoveList;
 	unsigned int i=0;
 	do{
 		if (pM->ToSquare != pM->FromSquare)
-			DumpMove(*pM,style,pBuffer);
+			dumpMove(*pM,style,pBuffer);
 		if (pM->NoMoreMoves!=0)
 		{
 			// No more moves

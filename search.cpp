@@ -42,7 +42,7 @@ namespace juddperft {
 uint64_t nodecount;
 //
 
-int64_t Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
+int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {	
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
@@ -52,7 +52,7 @@ int64_t Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	// Hash not used in this version (Table Entries with struct PerftInfo{} deemed too large ... )
 #endif
 	
-	GenerateMoves(P,MoveList);
+	generateMoves(P,MoveList);
 	int movecount = MoveList->MoveCount;
 
 	if (depth == maxdepth)
@@ -82,35 +82,35 @@ int64_t Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 		pM = MoveList;
 		for (int i = 0; i<movecount; i++, pM++)
 		{
-			Q.PerformMove(*pM).SwitchSides();
+			Q.performMove(*pM).switchSides();
 			//// ---------------------------------------------------
 			//// Do this to trap bugs with incremental Hash updates:
 			//
 			//ChessPosition Q2;
 			//Q2 = Q;
-			//Q2.CalculateHash();
+			//Q2.calculateHash();
 			////assert (Q2.HK == Q.HK);
 			//if (Q2.HK != Q.HK)
 			//{
 			//	printf("keys Don't match!\n ");
 			//	printf("before:\n");
-			//	DumpChessPosition(P);
+			//	dumpChessPosition(P);
 			//	printf("after:\n");
-			//	DumpMove(*pM);
-			//	DumpChessPosition(Q);
+			//	dumpMove(*pM);
+			//	dumpChessPosition(Q);
 			//	printf("\n\n");
 			//	getchar();
-			//	Q.CalculateHash(); // Repair the bad hash Key
+			//	Q.calculateHash(); // Repair the bad hash Key
 			//}
 			//else
 			//{
 			//	//	printf( "keys Match: " );
-			//	//	DumpMove(*pM);
+			//	//	dumpMove(*pM);
 			//	//	getchar();
 			//}
 			//// ---------------------------------------------------
 
-			Perft(Q, maxdepth, depth + 1, pI);
+			perft(Q, maxdepth, depth + 1, pI);
 			Q = P; // unmake move
 		}
 	}
@@ -120,8 +120,8 @@ int64_t Perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	return pI->nMoves;
 }
 
-// PerftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
-void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
+// perftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
+void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
@@ -131,8 +131,8 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
-		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
-		std::atomic<LeafEntry> *pAtomicRecord = leafTable.GetAddress(HK);		// get address of atomic record
+		HashKey HK = Q.HK^zobristKeys.zkPerftDepth[depth];
+		std::atomic<LeafEntry> *pAtomicRecord = leafTable.getAddress(HK);		// get address of atomic record
 		LeafEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
 		if (RetrievedRecord.Hash == HK) {
 			nNodes += RetrievedRecord.count;
@@ -140,7 +140,7 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 		}
 #endif // _USE_HASH
 
-		GenerateMoves(P, MoveList);
+		generateMoves(P, MoveList);
 		int movecount = MoveList->MoveCount;
 		nNodes += movecount;
 
@@ -158,10 +158,10 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
-		HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
+		HashKey HK = Q.HK^zobristKeys.zkPerftDepth[depth];
 		std::atomic<PerftTableEntry> *pAtomicRecord2;
 		PerftTableEntry RetrievedRecord2;
-		pAtomicRecord2 = perftTable.GetAddress(HK);								// get address of atomic record
+		pAtomicRecord2 = perftTable.getAddress(HK);								// get address of atomic record
 		RetrievedRecord2 = pAtomicRecord2->load();						// Load a non-atomic copy of the record
 		if (RetrievedRecord2.Hash == HK) {	
 			if (RetrievedRecord2.depth == depth) {
@@ -170,13 +170,13 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 			}
 		}
 #endif
-		GenerateMoves(P, MoveList);
+		generateMoves(P, MoveList);
 		int movecount = MoveList->MoveCount;
 		for (int i=0; i<movecount; i++) {
 
 			Q = P;								// unmake move
-			Q.PerformMove(MoveList[i]).SwitchSides();			// make move
-			PerftFast(Q, depth - 1, nNodes);
+			Q.performMove(MoveList[i]).switchSides();			// make move
+			perftFast(Q, depth - 1, nNodes);
 		}
 
 #ifdef _USE_HASH
@@ -192,18 +192,18 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 	}
 }
 
-// PerftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
-//void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
+// perftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
+//void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //{
 //	ChessMove MoveList[MOVELIST_SIZE];
 //	ChessPosition Q = P;
 //
 //#ifdef _USE_HASH
 //	// Consult the HashTable:
-//	HashKey HK = Q.HK^ZobristKeys.zkPerftDepth[depth];
+//	HashKey HK = Q.HK^zobristKeys.zkPerftDepth[depth];
 //	int64_t orig_nNodes = nNodes;
 //
-//	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.GetAddress(HK);								// get address of atomic record
+//	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(HK);								// get address of atomic record
 //	PerftTableEntry RetrievedRecord = pAtomicRecord->load();						// Load a non-atomic copy of the record
 //	if (RetrievedRecord.Hash == HK) {
 //		if (RetrievedRecord.depth == depth) {
@@ -213,7 +213,7 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //	}
 //#endif
 //
-//	GenerateMoves(P, MoveList);
+//	generateMoves(P, MoveList);
 //	int movecount = MoveList[0].MoveCount;
 //	if (depth == 1)
 //		nNodes += movecount;
@@ -222,8 +222,8 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //		for (int i = 0; i<movecount; i++) {
 //
 //			Q = P;								// unmake move
-//			Q.PerformMove(MoveList[i]).SwitchSides();			// make move
-//			PerftFast(Q, depth - 1, nNodes);
+//			Q.performMove(MoveList[i]).switchSides();			// make move
+//			perftFast(Q, depth - 1, nNodes);
 //		}
 //	}
 //
@@ -241,8 +241,8 @@ void PerftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 //#endif
 //}
 
-// PerftFastIterative() - Iterative version of perft.
-void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
+// perftFastIterative() - Iterative version of perft.
+void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 {
 	if (depth==0){
 		nNodes = 1LL;
@@ -253,7 +253,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 		ChessPosition Q;
 		Q = P;
 		ChessMove ML[MOVELIST_SIZE];
-		GenerateMoves(Q, ML);
+		generateMoves(Q, ML);
 		nNodes = ML->MoveCount;
 		return;
 	}
@@ -278,8 +278,8 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
-		HK[currentdepth] = Q[currentdepth].HK^ZobristKeys.zkPerftDepth[currentdepth];	
-		pAtomicRecord[currentdepth] = perftTable.GetAddress(HK[currentdepth]);	// get address of atomic record
+		HK[currentdepth] = Q[currentdepth].HK^zobristKeys.zkPerftDepth[currentdepth];	
+		pAtomicRecord[currentdepth] = perftTable.getAddress(HK[currentdepth]);	// get address of atomic record
 		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();	// Load a non-atomic copy of the record
 
 		if (RetrievedRecord[currentdepth].Hash == HK[currentdepth]) {
@@ -297,7 +297,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 		// conditionally generate move list:
 		if (pMovePtr[currentdepth] == nullptr) {
 			orig_nNodes[currentdepth] = nNodes;
-			GenerateMoves(Q[currentdepth], MoveList[currentdepth]);
+			generateMoves(Q[currentdepth], MoveList[currentdepth]);
 			pMovePtr[currentdepth] = MoveList[currentdepth];
 		}
 
@@ -318,7 +318,7 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 
 		if (!pMovePtr[currentdepth]->NoMoreMoves) {
 			Q[currentdepth - 1] = Q[currentdepth];
-			Q[currentdepth - 1].PerformMove(*pMovePtr[currentdepth]).SwitchSides();
+			Q[currentdepth - 1].performMove(*pMovePtr[currentdepth]).switchSides();
 			++pMovePtr[currentdepth];
 			pMovePtr[currentdepth - 1] = nullptr;
 			--currentdepth; // step into
@@ -342,12 +342,12 @@ void PerftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 	}
 }
 
-// PerftMT() : Multi-threaded version of Perft(), which depends on Perft()
+// perftMT() : Multi-threaded version of perft(), which depends on perft()
 
-void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
+void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
-	GenerateMoves(P, MoveList);
+	generateMoves(P, MoveList);
 
 	if (depth == maxdepth) {
 		for (ChessMove* pM = MoveList; pM->NoMoreMoves == 0; pM++)
@@ -401,8 +401,8 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
 				lock.unlock();									// yield usage of queue to other threads while busy processing perft												
-				Q.PerformMove(M).SwitchSides();					// make move
-				Perft(Q, maxdepth, depth + 1, &T);				// Invoke Perft()
+				Q.performMove(M).switchSides();					// make move
+				perft(Q, maxdepth, depth + 1, &T);				// Invoke perft()
 				std::cout << ".";								// show progress
 				lock.lock();									// lock the queue again	for next iteration
 				PerftPartial.push_back(T);						// record subtotals
@@ -435,10 +435,10 @@ void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	});
 }
 
-// PerftFastMT() - Multi-threaded PerftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
+// perftFastMT() - Multi-threaded perftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
 // 01/03/2016: (working ok)
 
-void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
+void perftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 {
 	nNodes = ZERO_64;
 
@@ -448,7 +448,7 @@ void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 	}
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	GenerateMoves(P, MoveList);
+	generateMoves(P, MoveList);
 
 	if (depth == 1) {
 		nNodes = MoveList->MoveCount;
@@ -485,8 +485,8 @@ void PerftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
 				lock.unlock();									// yield usage of queue to other threads while busy processing perft												
-				Q.PerformMove(M).SwitchSides();					// make move
-				PerftFast(Q, depth - 1, s);						// Invoke PerftFast()
+				Q.performMove(M).switchSides();					// make move
+				perftFast(Q, depth - 1, s);						// Invoke perftFast()
 				std::cout << ".";								// show progress
 				lock.lock();									// lock the queue again	for next iteration
 				subTotal.push_back(s);							// record subtotal

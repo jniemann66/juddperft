@@ -35,10 +35,10 @@ namespace juddperft {
 
 	ZobristKeySet::ZobristKeySet()
 	{
-		ZobristKeySet::Generate();
+		ZobristKeySet::generate();
 	}
 
-	bool ZobristKeySet::Generate()
+	bool ZobristKeySet::generate()
 	{
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
 		// with a uniform distribution of ints 
@@ -95,7 +95,7 @@ namespace juddperft {
 	}
 
 #ifdef _USE_HASH
-	ZobristKeySet ZobristKeys;
+	ZobristKeySet zobristKeys;
 	HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
 	HashTable <std::atomic<LeafEntry>> leafTable("Leaf Node Table");
 #endif

@@ -39,11 +39,11 @@ namespace juddperft {
 
 #ifdef INCLUDE_DIAGNOSTICS
 
-// PerftValidateWithExternal() - validates perft calculation against external engine:
-int PerftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
-void FindPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth);
-void RunTestSuite();
-void DumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
+// perftValidateWithExternal() - validates perft calculation against external engine:
+int perftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
+void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth);
+void runTestSuite();
+void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
 
 #endif // INCLUDE_DIAGNOSTICS
 }

@@ -47,11 +47,11 @@ struct PerftInfo{
 	int64_t nPromotion;
 };
 
-int64_t Perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded		
-void PerftFast(const ChessPosition & P, int depth, int64_t & nNodes);		// Simple, Hash-Table-using perft
-void PerftFastIterative(const ChessPosition & P, int depth, int64_t & nNodes);	// Iterative version - Hash Table functionality still broken
-void PerftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Multi-Threaded driver for Perft()
-void PerftFastMT(ChessPosition P, int depth, int64_t & nNodes);				// Multi-Threaded driver for PerftFast()
+int64_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded		
+void perftFast(const ChessPosition & P, int depth, int64_t & nNodes);		// Simple, Hash-Table-using perft
+void perftFastIterative(const ChessPosition & P, int depth, int64_t & nNodes);	// Iterative version - Hash Table functionality still broken
+void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Multi-Threaded driver for perft()
+void perftFastMT(ChessPosition P, int depth, int64_t & nNodes);				// Multi-Threaded driver for perftFast()
 
 #ifndef NULL
 #define NULL nullptr

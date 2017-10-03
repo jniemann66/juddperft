@@ -52,15 +52,15 @@ int main(int argc, char *argv[], char *envp[])
 #ifdef _USE_HASH
 	uint64_t nBytesToAllocate = 1000000000; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
-	while (!SetMemory(nBytesToAllocate)) {
+	while (!setMemory(nBytesToAllocate)) {
 		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
 		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
 			return EXIT_FAILURE;	// not going to end well ...
 	}
 #endif
-	SetProcessPriority();
+	setProcessPriority();
 
-	// RunTestSuite();
+	// runTestSuite();
 
 	winBoard(&theEngine);
 	return EXIT_SUCCESS;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[], char *envp[])
 
 namespace juddperft {
 
-	bool SetMemory(uint64_t nTotalBytes) {
+	bool setMemory(uint64_t nTotalBytes) {
 
 #ifdef _USE_HASH
 
@@ -76,19 +76,19 @@ namespace juddperft {
 
 		// constraint: Leaf Table should have 3 times as many Entries as perftTable (ie 3:1 ratio)
 
-		uint64_t BytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
+		uint64_t bytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
 			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
-		uint64_t BytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
+		uint64_t bytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
 			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
 
-		return	(perftTable.SetSize(BytesForPerftTable) && leafTable.SetSize(BytesForLeafTable));
+		return	(perftTable.setSize(bytesForPerftTable) && leafTable.setSize(bytesForLeafTable));
 #else
 		return false;
 #endif
 	}
 
-	void SetProcessPriority()
+	void setProcessPriority()
 	{
 #ifdef _MSC_VER
 		DWORD dwError;

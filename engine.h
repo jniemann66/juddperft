@@ -41,15 +41,15 @@ public:
 	Engine();
 	bool isThinking;
 	bool isPondering;
-	bool PonderingActivated;
-	ChessPosition CurrentPosition;
-	unsigned int FullMove;
-	bool StopSignal;
+	bool ponderingActivated;
+	ChessPosition currentPosition;
+	unsigned int fullMove;
+	bool stopSignal;
 	unsigned int depth;
-	bool ForceMode;
-	bool ShowThinking;
+	bool forceMode;
+	bool showThinking;
 	unsigned int nNumCores;
-	TimeManager TM;
+	TimeManager tm;
 private:
 };
 

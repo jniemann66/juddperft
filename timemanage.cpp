@@ -35,7 +35,7 @@ TimeManager::TimeManager()
 	m_nMoveNumber = 0;
 }
 
-double TimeManager::GetTimeForMove()
+double TimeManager::getTimeForMove()
 {
 	return m_fTimeRemaining / 15.0;	// to-do: Obviously, this needs more work :-)
 }

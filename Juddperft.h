@@ -33,7 +33,7 @@ SOFTWARE.
 
 namespace juddperft {
 
-bool SetMemory(uint64_t nTotalBytes);
-void SetProcessPriority();
+bool setMemory(uint64_t nTotalBytes);
+void setProcessPriority();
 
 } // namespace juddperft

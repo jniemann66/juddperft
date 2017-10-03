@@ -124,7 +124,7 @@ int winBoard(Engine* pE)
 {
 	// turn off output buffering
 	setbuf(stdout,NULL);
-	pE->CurrentPosition.SetupStartPosition();
+	pE->currentPosition.setupStartPosition();
 	printf("\nSupported Commands:\n");
 	for (int i = 0; i < (sizeof(winboardInputCommands) / sizeof(WinboardInputCommandDefinition)); i++)
 	{
@@ -171,7 +171,7 @@ bool waitForInput(Engine* pE)
 				{
 					if(_stricmp(command,"quit") == 0)
 					{
-						pE->StopSignal = true;
+						pE->stopSignal = true;
 						return false;
 					}
 					// separate command from remainder of string
@@ -262,7 +262,7 @@ void parse_input_setboard(const char* s,Engine* pE)
 	if (s == NULL)
 		return;
 
-	if(!ReadFen(&pE->CurrentPosition,s))
+	if(!readFen(&pE->currentPosition,s))
 		send_output_tellusererror("Illegal Position",pE);
 }			
 void parse_input_edit(const char* s,Engine* pE){} 
@@ -286,21 +286,21 @@ void parse_input_resume(const char* s,Engine* pE){}
 void parse_input_movelist(const char* s,Engine* pE)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
-	GenerateMoves(pE->CurrentPosition,MoveList);
-	DumpMoveList(MoveList,CoOrdinate);
+	generateMoves(pE->currentPosition,MoveList);
+	dumpMoveList(MoveList,CoOrdinate);
 }
 
 void parse_input_showposition(const char* s, Engine* pE)
 {
-	DumpChessPosition(pE->CurrentPosition);
+	dumpChessPosition(pE->currentPosition);
 }
 void parse_input_showhash(const char* s,Engine* pE)
 {
 #ifdef _USE_HASH
-	printf("Leaf Node Table Size: %lld bytes\n", leafTable.GetSize());
-	int64_t numEntries = leafTable.GetNumEntries();
+	printf("Leaf Node Table Size: %lld bytes\n", leafTable.getSize());
+	int64_t numEntries = leafTable.getNumEntries();
 	int64_t nPopulatedLeafEntries = 0;
-	std::atomic<LeafEntry> *pLeafTableBaseAddress= leafTable.GetAddress(0);
+	std::atomic<LeafEntry> *pLeafTableBaseAddress= leafTable.getAddress(0);
 	LeafEntry LE;
 	for (int64_t w = 0; w < numEntries; w++) {
 		LE = (pLeafTableBaseAddress + w)->load();
@@ -309,10 +309,10 @@ void parse_input_showhash(const char* s,Engine* pE)
 	}
 	printf("%lld entries occupied out of %lld (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
 	//
-	printf("Perft Table Size: %lld bytes\n", perftTable.GetSize());
-	numEntries = perftTable.GetNumEntries();
+	printf("Perft Table Size: %lld bytes\n", perftTable.getSize());
+	numEntries = perftTable.getNumEntries();
 	std::vector<int64_t> depthTally(16,0);
-	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.GetAddress(0);
+	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 	
 	for (int64_t x = 0; x < numEntries; x++) {
@@ -339,7 +339,7 @@ void parse_input_perft(const char* s,Engine* pE)
 			RaiiTimer timer;
 			PerftInfo T;
 			T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
-			PerftMT(pE->CurrentPosition,q,1,&T);
+			perftMT(pE->currentPosition,q,1,&T);
 			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 				q,
 				T.nMoves,
@@ -364,7 +364,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 		{
 			RaiiTimer timer;
 			int64_t nNumPositions = 0;
-			PerftFastMT(pE->CurrentPosition, q, nNumPositions);
+			perftFastMT(pE->currentPosition, q, nNumPositions);
 			printf("Perft %d: %" PRIu64 "\n",
 				q,nNumPositions
 				);
@@ -383,7 +383,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	depth = std::max(2,atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	GenerateMoves(pE->CurrentPosition, MoveList);
+	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	PerftInfo GT;
 	GT.nMoves = GT.nCapture = GT.nEPCapture = GT.nCastle = GT.nCastleLong = GT.nPromotion = 0;
@@ -393,14 +393,14 @@ void parse_input_divide(const char* s, Engine* pE)
 
 	while(pM->NoMoreMoves==0)
 	{ 
-		Q = pE->CurrentPosition;
-		Q.PerformMove(*pM);
-		Q.SwitchSides();
+		Q = pE->currentPosition;
+		Q.performMove(*pM);
+		Q.switchSides();
 	
-		DumpMove(*pM,LongAlgebraicNoNewline);
+		dumpMove(*pM,LongAlgebraicNoNewline);
 	
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
-		PerftMT(Q, depth-1, 1, &T);
+		perftMT(Q, depth-1, 1, &T);
 		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 			depth-1,
 			T.nMoves,
@@ -443,7 +443,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	depth = std::max(2, atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	GenerateMoves(pE->CurrentPosition, MoveList);
+	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
 	int64_t GrandTotal = 0;
@@ -451,12 +451,12 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	
 	while (pM->NoMoreMoves == 0)
 	{
-		Q = pE->CurrentPosition;
-		Q.PerformMove(*pM).SwitchSides();
+		Q = pE->currentPosition;
+		Q.performMove(*pM).switchSides();
 		
-		DumpMove(*pM, LongAlgebraicNoNewline);
+		dumpMove(*pM, LongAlgebraicNoNewline);
 		int64_t nNumPositions = 0;
-		PerftFastMT(Q, depth-1, nNumPositions);
+		perftFastMT(Q, depth-1, nNumPositions);
 		printf("Perft %d: %lld \n",
 			depth-1, nNumPositions
 			);
@@ -479,7 +479,7 @@ void parse_input_memory(const char* s, Engine* pE) {
 	if (s == NULL)
 		return; 
 
-	SetMemory(BytesRequested);
+	setMemory(BytesRequested);
 }
 void parse_input_cores(const char* s, Engine* pE) {
 	
@@ -510,10 +510,10 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 			std::cout << "\nTesting against external engine: " << perftValidatorPath;
 			std::cout << " to depth of " << depth;
 			std::cout << "\nPosition:\n" << std::endl;
-			ChessPosition currentPosition = pE->CurrentPosition;
-			DumpChessPosition(currentPosition);
+			ChessPosition currentPosition = pE->currentPosition;
+			dumpChessPosition(currentPosition);
 			std::cout << "Off we go ... " << std::endl;
-			FindPerftBug(perftValidatorPath, &currentPosition, depth);
+			findPerftBug(perftValidatorPath, &currentPosition, depth);
 		}
 	}
 
