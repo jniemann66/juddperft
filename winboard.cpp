@@ -59,71 +59,71 @@ std::ofstream logfile("perft.txt");
 
 WinboardInputCommandDefinition winboardInputCommands[]=
 {
-	{"xboard",parse_input_xboard,false},
-	{"protover",parse_input_protover,false},						/* N */
-	{"accepted",parse_input_accepted,false},
-	{"rejected",parse_input_rejected,false},
-	{"new",parse_input_new,false},
-	{"variant",parse_input_variant,false},						/* VARNAME */
-	{"quit",parse_input_quit,true},
-	{"random",parse_input_random,false},
-	{"force",parse_input_force,false},
-	{"go",parse_input_go,false},
-	{"playother",parse_input_playother,false},
-	{"white",parse_input_white,false},
-	{"black",parse_input_black,false},
-	{"level",parse_input_level,false},							/* MPS BASE INC */
-	{"st",parse_input_st,false},								/* TIME */
-	{"sd",parse_input_sd,false},									/* DEPTH */
-	{"nps",parse_input_nps,false},								/* NODE_RATE */
-	{"time",parse_input_time,false},							/* N */
-	{"otim",parse_input_otim,false},							/* N */
-	{"MOVE",parse_input_move,false},
-	{"usermove",parse_input_usermove,false},						/* MOVE */
-	{"?",parse_input_movenow,false},
-	{"ping",parse_input_ping,false},							/* N */
-	{"draw",parse_input_draw,false},
-	{"result",parse_input_result,false},						/* RESULT {COMMENT} */
-	{"setboard",parse_input_setboard,true},						/* FEN */
-	{"edit",parse_input_edit,false},
-	{"hint",parse_input_hint,false},
-	{"bk",parse_input_bk,false},
-	{"undo",parse_input_undo,false},
-	{"remove",parse_input_remove,false},
-	{"hard",parse_input_hard,false},
-	{"easy",parse_input_easy,false},
-	{"post",parse_input_post,false},
-	{"nopost",parse_input_nopost,false},
-	{"analyze",parse_input_analyze,false},
-	{"name",parse_input_name,false},							/* X */
-	{"rating",parse_input_rating,false},
-	{"ics",parse_input_ics,false},								/* HOSTNAME */
-	{"computer",parse_input_computer,false},
-	{"pause",parse_input_pause,false},
-	{"resume",parse_input_resume,false},
+	{"xboard", parse_input_xboard, false},
+	{"protover", parse_input_protover, false}, 						/* N */
+	{"accepted", parse_input_accepted, false},
+	{"rejected", parse_input_rejected, false},
+	{"new", parse_input_new, false},
+	{"variant", parse_input_variant, false}, 						/* VARNAME */
+	{"quit", parse_input_quit, true},
+	{"random", parse_input_random, false},
+	{"force", parse_input_force, false},
+	{"go", parse_input_go, false},
+	{"playother", parse_input_playother, false},
+	{"white", parse_input_white, false},
+	{"black", parse_input_black, false},
+	{"level", parse_input_level, false}, 							/* MPS BASE INC */
+	{"st", parse_input_st, false},									/* TIME */
+	{"sd", parse_input_sd, false}, 									/* DEPTH */
+	{"nps", parse_input_nps, false}, 								/* NODE_RATE */
+	{"time", parse_input_time, false},								/* N */
+	{"otim", parse_input_otim, false},								/* N */
+	{"MOVE", parse_input_move, false},
+	{"usermove", parse_input_usermove, false}, 						/* MOVE */
+	{"?", parse_input_movenow, false},
+	{"ping", parse_input_ping, false},								/* N */
+	{"draw", parse_input_draw, false},
+	{"result", parse_input_result, false},							/* RESULT {COMMENT} */
+	{"setboard", parse_input_setboard, true}, 						/* FEN */
+	{"edit", parse_input_edit, false},
+	{"hint", parse_input_hint, false},
+	{"bk", parse_input_bk, false},
+	{"undo", parse_input_undo, false},
+	{"remove", parse_input_remove, false},
+	{"hard", parse_input_hard, false},
+	{"easy", parse_input_easy, false},
+	{"post", parse_input_post, false},
+	{"nopost", parse_input_nopost, false},
+	{"analyze", parse_input_analyze, false},
+	{"name", parse_input_name, false},								/* X */
+	{"rating", parse_input_rating, false},
+	{"ics", parse_input_ics, false}, 								/* HOSTNAME */
+	{"computer", parse_input_computer, false},
+	{"pause", parse_input_pause, false},
+	{"resume", parse_input_resume, false},
 	// New in WinBoard 4.4:
-	{"memory",parse_input_memory,true },
-	{"cores",parse_input_cores,true},
-	{"egtpath",parse_input_egtpath,false},
+	{"memory", parse_input_memory, true },
+	{"cores", parse_input_cores, true},
+	{"egtpath", parse_input_egtpath, false},
 	//
-	{"option",parse_input_option,false},
+	{"option", parse_input_option, false},
 	// extended commands
-	{"movelist",parse_input_movelist,true},
-	{"showposition",parse_input_showposition,true},
-	{"showhash",parse_input_showhash,true},
-	{"perft",parse_input_perft,true},
-	{"perftfast",parse_input_perftfast,true},
-	{"divide",parse_input_divide,true},
-	{ "dividefast",parse_input_dividefast,true },
-	{"writehash",parse_input_writehash,false},
-	{"lookuphash",parse_input_lookuphash,false},
-	{"test-external", parse_input_testExternal,true}
+	{"movelist", parse_input_movelist, true},
+	{"showposition", parse_input_showposition, true},
+	{"showhash", parse_input_showhash, true},
+	{"perft", parse_input_perft, true},
+	{"perftfast", parse_input_perftfast, true},
+	{"divide", parse_input_divide, true},
+	{ "dividefast", parse_input_dividefast, true },
+	{"writehash", parse_input_writehash, false},
+	{"lookuphash", parse_input_lookuphash, false},
+	{"test-external", parse_input_testExternal, true}
 };
 
 int winBoard(Engine* pE)
 {
 	// turn off output buffering
-	setbuf(stdout,NULL);
+	setbuf(stdout, NULL);
 	pE->currentPosition.setupStartPosition();
 	printf("\nSupported Commands:\n");
 	for (int i = 0; i < (sizeof(winboardInputCommands) / sizeof(WinboardInputCommandDefinition)); i++)
@@ -159,29 +159,29 @@ bool waitForInput(Engine* pE)
 		char* args;
 
 		// log input
-		logInput(logfile,input);
-		command=strtok(input," \n");
+		logInput(logfile, input);
+		command=strtok(input, " \n");
 		if (command!=NULL)
 		{
 
 			// search for command
 			for (int i=0;i<nRecognizedCommands;i++)
 			{
-				if (_stricmp(command,winboardInputCommands[i].pzCommandString) == 0)
+				if (_stricmp(command, winboardInputCommands[i].pzCommandString) == 0)
 				{
-					if (_stricmp(command,"quit") == 0)
+					if (_stricmp(command, "quit") == 0)
 					{
 						pE->stopSignal = true;
 						return false;
 					}
 					// separate command from remainder of string
-					args=strtok(NULL,"\n" /* note: deliberately ignore spaces */);
-					winboardInputCommands[i].pF(args,pE); // invoke handler for function
+					args=strtok(NULL, "\n" /* note: deliberately ignore spaces */);
+					winboardInputCommands[i].pF(args, pE); // invoke handler for function
 					return true;
 				}
 			}
 			// still here ? OK, we interpret input as a move:
-			parse_input_usermove(command,pE);
+			parse_input_usermove(command, pE);
 		}
 		free(input);
 	}
@@ -194,7 +194,7 @@ bool waitForInput(Engine* pE)
 // is recognized AND implemented
 /////////////////////////////////////
 
-bool isImplemented(const char* s,Engine* pE)
+bool isImplemented(const char* s, Engine* pE)
 {
 	bool bRetVal = false;
 	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
@@ -203,7 +203,7 @@ bool isImplemented(const char* s,Engine* pE)
 		// search for command
 		for (int i=0; i<nRecognizedCommands; i++)
 		{
-			if (_stricmp(s,winboardInputCommands[i].pzCommandString) == 0)
+			if (_stricmp(s, winboardInputCommands[i].pzCommandString) == 0)
 			{
 				if (winboardInputCommands[i].implemented)
 					bRetVal=true;
@@ -215,11 +215,11 @@ bool isImplemented(const char* s,Engine* pE)
 }
 
 // Handler functions for incoming commands:
-void parse_input_xboard(const char* s,Engine* pE)
+void parse_input_xboard(const char* s, Engine* pE)
 {
 	winBoardOutput("\n");
 }
-void parse_input_protover(const char* s,Engine* pE)
+void parse_input_protover(const char* s, Engine* pE)
 {
 	if (s != NULL)
 	{
@@ -233,68 +233,68 @@ void parse_input_protover(const char* s,Engine* pE)
 		}
 	}
 }
-void parse_input_accepted(const char* s,Engine* pE){}
-void parse_input_rejected(const char* s,Engine* pE){}
-void parse_input_new(const char* s,Engine* pE){}
-void parse_input_variant(const char* s,Engine* pE){}
-void parse_input_quit(const char* s,Engine* pE){}
-void parse_input_random(const char* s,Engine* pE){}
-void parse_input_force(const char* s,Engine* pE){}
-void parse_input_go(const char* s,Engine* pE){}
-void parse_input_playother(const char* s,Engine* pE){}
-void parse_input_white(const char* s,Engine* pE){}
-void parse_input_black(const char* s,Engine* pE){}
-void parse_input_level(const char* s,Engine* pE){}
-void parse_input_st(const char* s,Engine* pE){}
-void parse_input_sd(const char* s,Engine* pE){}
+void parse_input_accepted(const char* s, Engine* pE){}
+void parse_input_rejected(const char* s, Engine* pE){}
+void parse_input_new(const char* s, Engine* pE){}
+void parse_input_variant(const char* s, Engine* pE){}
+void parse_input_quit(const char* s, Engine* pE){}
+void parse_input_random(const char* s, Engine* pE){}
+void parse_input_force(const char* s, Engine* pE){}
+void parse_input_go(const char* s, Engine* pE){}
+void parse_input_playother(const char* s, Engine* pE){}
+void parse_input_white(const char* s, Engine* pE){}
+void parse_input_black(const char* s, Engine* pE){}
+void parse_input_level(const char* s, Engine* pE){}
+void parse_input_st(const char* s, Engine* pE){}
+void parse_input_sd(const char* s, Engine* pE){}
 
 void parse_input_nps(const char* s, Engine* pE) {}
-void parse_input_time(const char* s,Engine* pE){}
-void parse_input_otim(const char* s,Engine* pE){}
-void parse_input_move(const char* s,Engine* pE){}
-void parse_input_usermove(const char* s,Engine* const pE){}
-void parse_input_movenow(const char* s,Engine* pE){}
-void parse_input_ping(const char* s,Engine* pE){}
-void parse_input_draw(const char* s,Engine* pE){}
-void parse_input_result(const char* s,Engine* pE){}
-void parse_input_setboard(const char* s,Engine* pE)
+void parse_input_time(const char* s, Engine* pE){}
+void parse_input_otim(const char* s, Engine* pE){}
+void parse_input_move(const char* s, Engine* pE){}
+void parse_input_usermove(const char* s, Engine* const pE){}
+void parse_input_movenow(const char* s, Engine* pE){}
+void parse_input_ping(const char* s, Engine* pE){}
+void parse_input_draw(const char* s, Engine* pE){}
+void parse_input_result(const char* s, Engine* pE){}
+void parse_input_setboard(const char* s, Engine* pE)
 {
 	if (s == NULL)
 		return;
 
-	if (!readFen(&pE->currentPosition,s))
-		send_output_tellusererror("Illegal Position",pE);
+	if (!readFen(&pE->currentPosition, s))
+		send_output_tellusererror("Illegal Position", pE);
 }
-void parse_input_edit(const char* s,Engine* pE){}
-void parse_input_hint(const char* s,Engine* pE){}
-void parse_input_bk(const char* s,Engine* pE){}
-void parse_input_undo(const char* s,Engine* pE){}
-void parse_input_remove(const char* s,Engine* pE){}
-void parse_input_hard(const char* s,Engine* pE){ }
+void parse_input_edit(const char* s, Engine* pE){}
+void parse_input_hint(const char* s, Engine* pE){}
+void parse_input_bk(const char* s, Engine* pE){}
+void parse_input_undo(const char* s, Engine* pE){}
+void parse_input_remove(const char* s, Engine* pE){}
+void parse_input_hard(const char* s, Engine* pE){ }
 void parse_input_easy(const char* s, Engine* pE) {}
-void parse_input_post(const char* s,Engine* pE){}
-void parse_input_nopost(const char* s,Engine* pE){}
-void parse_input_analyze(const char* s,Engine* pE){}
-void parse_input_name(const char* s,Engine* pE){}
-void parse_input_rating(const char* s,Engine* pE){}
-void parse_input_ics(const char* s,Engine* pE){}
-void parse_input_computer(const char* s,Engine* pE){}
-void parse_input_pause(const char* s,Engine* pE){}
-void parse_input_resume(const char* s,Engine* pE){}
+void parse_input_post(const char* s, Engine* pE){}
+void parse_input_nopost(const char* s, Engine* pE){}
+void parse_input_analyze(const char* s, Engine* pE){}
+void parse_input_name(const char* s, Engine* pE){}
+void parse_input_rating(const char* s, Engine* pE){}
+void parse_input_ics(const char* s, Engine* pE){}
+void parse_input_computer(const char* s, Engine* pE){}
+void parse_input_pause(const char* s, Engine* pE){}
+void parse_input_resume(const char* s, Engine* pE){}
 
 // extended input commands
-void parse_input_movelist(const char* s,Engine* pE)
+void parse_input_movelist(const char* s, Engine* pE)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(pE->currentPosition,MoveList);
-	dumpMoveList(MoveList,CoOrdinate);
+	generateMoves(pE->currentPosition, MoveList);
+	dumpMoveList(MoveList, CoOrdinate);
 }
 
 void parse_input_showposition(const char* s, Engine* pE)
 {
 	dumpChessPosition(pE->currentPosition);
 }
-void parse_input_showhash(const char* s,Engine* pE)
+void parse_input_showhash(const char* s, Engine* pE)
 {
 #ifdef _USE_HASH
 	printf("Leaf Node Table Size: %lld bytes\n", leafTable.getSize());
@@ -311,7 +311,7 @@ void parse_input_showhash(const char* s,Engine* pE)
 	//
 	printf("Perft Table Size: %lld bytes\n", perftTable.getSize());
 	numEntries = perftTable.getNumEntries();
-	std::vector<int64_t> depthTally(16,0);
+	std::vector<int64_t> depthTally(16, 0);
 	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 
@@ -322,13 +322,13 @@ void parse_input_showhash(const char* s,Engine* pE)
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d],100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
+		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
 	}
 	printf("Total: %lld\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
 #endif
 }
 
-void parse_input_perft(const char* s,Engine* pE)
+void parse_input_perft(const char* s, Engine* pE)
 {
 	if (s == NULL)
 		return;
@@ -339,7 +339,7 @@ void parse_input_perft(const char* s,Engine* pE)
 			RaiiTimer timer;
 			PerftInfo T;
 			T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
-			perftMT(pE->currentPosition,q,1,&T);
+			perftMT(pE->currentPosition, q, 1, &T);
 			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld\n",
 				q,
 				T.nMoves,
@@ -366,7 +366,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 			int64_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
 			printf("Perft %d: %" PRIu64 "\n",
-				q,nNumPositions
+				q, nNumPositions
 				);
 			printf("\n");
 
@@ -380,7 +380,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		return;
 
 	int depth;
-	depth = std::max(2,atoi(s));
+	depth = std::max(2, atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
 	generateMoves(pE->currentPosition, MoveList);
@@ -397,7 +397,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		Q.performMove(*pM);
 		Q.switchSides();
 
-		dumpMove(*pM,LongAlgebraicNoNewline);
+		dumpMove(*pM, LongAlgebraicNoNewline);
 
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0;
 		perftMT(Q, depth-1, 1, &T);
@@ -463,7 +463,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		GrandTotal += nNumPositions;
 		pM++;
 	}
-	printf("\nPerft %d: %lld\n",depth, GrandTotal);
+	printf("\nPerft %d: %lld\n", depth, GrandTotal);
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}
@@ -531,33 +531,33 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 // ---------------- Output Functions -------------------------------
 void  send_output_feature(Engine* pE)
 {
-	char t[4096],s[1024];
+	char t[4096], s[1024];
 
-	sprintf(t,"feature ");
+	sprintf(t, "feature ");
 	sprintf(s, "done=0 "); strcat(t, s);
 	//
 	sprintf(s, "\nfeature "); strcat(t, s);
-	sprintf(s,"ping=%d ",isImplemented("ping",pE)? 1:0); strcat(t,s);					// recommended:	1
-	sprintf(s,"setboard=%d ",isImplemented("setboard",pE)? 1:0); strcat(t,s);			// recommended: 1
-	sprintf(s,"playother=%d ",isImplemented("playother",pE)? 1:0); strcat(t,s);		// recommended: 1
-	sprintf(s,"san=0 "); strcat(t,s);													// no recommendation
-	sprintf(s,"usermove=%d ",isImplemented("usermove",pE)? 1:0); strcat(t,s);			// no recommendation
-	sprintf(s,"time=%d ",isImplemented("time",pE)? 1:0); strcat(t,s);					// recommended: 1
-	sprintf(s,"draw=%d ",isImplemented("draw",pE)? 1:0); strcat(t,s);					// recommended: 1
+	sprintf(s, "ping=%d ", isImplemented("ping", pE)? 1:0); strcat(t, s);					// recommended:	1
+	sprintf(s, "setboard=%d ", isImplemented("setboard", pE)? 1:0); strcat(t, s);			// recommended: 1
+	sprintf(s, "playother=%d ", isImplemented("playother", pE)? 1:0); strcat(t, s);		// recommended: 1
+	sprintf(s, "san=0 "); strcat(t, s);													// no recommendation
+	sprintf(s, "usermove=%d ", isImplemented("usermove", pE)? 1:0); strcat(t, s);			// no recommendation
+	sprintf(s, "time=%d ", isImplemented("time", pE)? 1:0); strcat(t, s);					// recommended: 1
+	sprintf(s, "draw=%d ", isImplemented("draw", pE)? 1:0); strcat(t, s);					// recommended: 1
 	//
-	sprintf(s,"\nfeature "); strcat(t,s);
-	sprintf(s,"sigint=0 "); strcat(t,s);												// recommended: 1
-	sprintf(s,"sigterm=0 "); strcat(t,s);												// recommended: 1
-	sprintf(s,"reuse=1 "); strcat(t,s);												// recommended: 1
-	sprintf(s,"analyze=%d ",isImplemented("analyze",pE)? 1:0); strcat(t,s);			// recommended: 1
-	sprintf(s,"myname=\"JuddChess v1.0\" "); strcat(t,s);								// no recommendation
+	sprintf(s, "\nfeature "); strcat(t, s);
+	sprintf(s, "sigint=0 "); strcat(t, s);												// recommended: 1
+	sprintf(s, "sigterm=0 "); strcat(t, s);												// recommended: 1
+	sprintf(s, "reuse=1 "); strcat(t, s);												// recommended: 1
+	sprintf(s, "analyze=%d ", isImplemented("analyze", pE)? 1:0); strcat(t, s);			// recommended: 1
+	sprintf(s, "myname=\"JuddChess v1.0\" "); strcat(t, s);								// no recommendation
 	//
-	sprintf(s,"\nfeature "); strcat(t,s);
-	sprintf(s,"variants=\"normal\" "); strcat(t,s);									// recommended: "normal"
-	sprintf(s,"colors=0 "); strcat(t,s);												// recommended: 0
-	sprintf(s,"ics=0 "); strcat(t,s);													// no recommendation
-	sprintf(s,"name=%d ",isImplemented("name",pE)? 1:0); strcat(t,s);
-	sprintf(s,"pause=%d ",isImplemented("pause",pE)? 1:0); strcat(t,s);
+	sprintf(s, "\nfeature "); strcat(t, s);
+	sprintf(s, "variants=\"normal\" "); strcat(t, s);									// recommended: "normal"
+	sprintf(s, "colors=0 "); strcat(t, s);												// recommended: 0
+	sprintf(s, "ics=0 "); strcat(t, s);													// no recommendation
+	sprintf(s, "name=%d ", isImplemented("name", pE)? 1:0); strcat(t, s);
+	sprintf(s, "pause=%d ", isImplemented("pause", pE)? 1:0); strcat(t, s);
 	//
 	sprintf(s, "\nfeature "); strcat(t, s);
 	sprintf(s, "nps=%d ", isImplemented("nps", pE) ? 1 : 0); strcat(t, s);
@@ -566,29 +566,29 @@ void  send_output_feature(Engine* pE)
 	sprintf(s, "smp=%d ", isImplemented("cores", pE) ? 1 : 0); strcat(t, s);
 	sprintf(s, "smp=0 "); strcat(t, s);
 	sprintf(s, "\nfeature done=1 "); strcat(t, s);
-	sprintf(s,"\n"); strcat(t,s);
+	sprintf(s, "\n"); strcat(t, s);
 	winBoardOutput(t);
 }
-void  send_output_illegalmove(const char* s,Engine* pE){}
-void  send_output_error(const char* s,Engine* pE){}
+void  send_output_illegalmove(const char* s, Engine* pE){}
+void  send_output_error(const char* s, Engine* pE){}
 void  send_output_move(Move M){}
 void  send_output_hint(Move M){}
-void  send_output_result(const char* s,Engine* pE){}
+void  send_output_result(const char* s, Engine* pE){}
 void  send_output_resign(Engine* pE){}
 void  send_output_offerdraw(Engine* pE){}
-void  send_output_tellopponent(const char* s,Engine* pE){}
-void  send_output_tellothers(const char* s,Engine* pE){}
-void  send_output_tellall(const char* s,Engine* pE){}
-void  send_output_telluser(const char* s,Engine* pE){}
-void  send_output_tellusererror(const char* s,Engine* pE){}
-void  send_output_askuser(char* r, const char* s,Engine* pE){}
-void  send_output_tellics(const char* s,Engine* pE){}
-void  send_output_tellicsnoalias(const char* s,Engine* pE){}
+void  send_output_tellopponent(const char* s, Engine* pE){}
+void  send_output_tellothers(const char* s, Engine* pE){}
+void  send_output_tellall(const char* s, Engine* pE){}
+void  send_output_telluser(const char* s, Engine* pE){}
+void  send_output_tellusererror(const char* s, Engine* pE){}
+void  send_output_askuser(char* r, const char* s, Engine* pE){}
+void  send_output_tellics(const char* s, Engine* pE){}
+void  send_output_tellicsnoalias(const char* s, Engine* pE){}
 
 void winBoardOutput(const char* s)
 {
 	printf("%s", s);
-	logOutput(logfile,s);
+	logOutput(logfile, s);
 }
 
 void logInput(std::ofstream& logfile, const char* s)
@@ -597,13 +597,13 @@ void logInput(std::ofstream& logfile, const char* s)
 		logfile << "Received command: " << s << std::endl;
 }
 
-void logOutput(std::ofstream& logfile,const char* s)
+void logOutput(std::ofstream& logfile, const char* s)
 {
 	if (logfile)
 		logfile << "Sent command: " << s << std::endl;
 }
 
-void sendReplyMove(const char* s,Engine* pE){}
+void sendReplyMove(const char* s, Engine* pE){}
 
 
 void sendReplyMoveAndPonder(const char* s, Engine* pE) {}
