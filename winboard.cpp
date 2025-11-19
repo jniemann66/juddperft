@@ -143,7 +143,7 @@ int winBoard(Engine* pE)
 
 bool waitForInput(Engine* pE)
 {
-	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
+    int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
 
 	char* input = NULL;
 	std::string inputStr;
@@ -160,12 +160,12 @@ bool waitForInput(Engine* pE)
 
 		// log input
 		logInput(logfile, input);
-		command=strtok(input, " \n");
-		if (command!=NULL)
+        command = strtok(input, " \n");
+        if (command != NULL)
 		{
 
 			// search for command
-			for (int i=0;i<nRecognizedCommands;i++)
+            for (int i = 0; i < nRecognizedCommands; i++)
 			{
 				if (_stricmp(command, winboardInputCommands[i].pzCommandString) == 0)
 				{
@@ -175,7 +175,7 @@ bool waitForInput(Engine* pE)
 						return false;
 					}
 					// separate command from remainder of string
-					args=strtok(NULL, "\n" /* note: deliberately ignore spaces */);
+                    args = strtok(NULL, "\n" /* note: deliberately ignore spaces */);
 					winboardInputCommands[i].pF(args, pE); // invoke handler for function
 					return true;
 				}
@@ -197,16 +197,16 @@ bool waitForInput(Engine* pE)
 bool isImplemented(const char* s, Engine* pE)
 {
 	bool bRetVal = false;
-	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
+    int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
 	if (s != NULL)
 	{
 		// search for command
-		for (int i=0; i<nRecognizedCommands; i++)
+        for (int i = 0; i<nRecognizedCommands; i++)
 		{
 			if (_stricmp(s, winboardInputCommands[i].pzCommandString) == 0)
 			{
 				if (winboardInputCommands[i].implemented)
-					bRetVal=true;
+                    bRetVal = true;
 				break;
 			}
 		}
@@ -225,7 +225,7 @@ void parse_input_protover(const char* s, Engine* pE)
 	{
 		// if protocol version is 2 or higher, send feature list,
 		// by using feature command:
-		if (atoi(s)>=2)
+        if (atoi(s) >= 2)
 			send_output_feature(pE);
 		else
 		{
@@ -333,7 +333,7 @@ void parse_input_perft(const char* s, Engine* pE)
 	if (s == NULL)
 		return;
 
-	for (int q=1; q<=atoi(s); q++)
+    for (int q = 1; q <= atoi(s); q++)
 	{
 		{
 			RaiiTimer timer;
@@ -391,7 +391,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessPosition Q;
 	RaiiTimer timer;
 
-	while (pM->NoMoreMoves==0)
+    while (pM->NoMoreMoves == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM);

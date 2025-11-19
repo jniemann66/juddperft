@@ -218,7 +218,7 @@ struct PerftTableEntry
 			unsigned long long count : 60;
 			unsigned long long depth : 4;
 	
-	// warning: limitations are: max depth=15, max count = 2^60 = 1,152,921,504,606,846,976 
+    // warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
 	// which only allows up to perft 12 from start position
 
 		};

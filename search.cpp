@@ -173,8 +173,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 #endif
 		generateMoves(P, MoveList);
 		int movecount = MoveList->MoveCount;
-		for (int i=0; i<movecount; i++) {
-
+        for (int i = 0; i < movecount; i++) {
 			Q = P;								// unmake move
 			Q.performMove(MoveList[i]).switchSides();			// make move
 			perftFast(Q, depth - 1, nNodes);
@@ -245,7 +244,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 // perftFastIterative() - Iterative version of perft.
 void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 {
-	if (depth==0){
+    if (depth == 0){
 		nNodes = 1LL;
 		return;
 	}

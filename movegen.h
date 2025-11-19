@@ -126,16 +126,16 @@ public:
 	};
 
 public:
-	Move(BitBoard From=0, BitBoard To=0, uint32_t Flags=0);
+    Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
 	bool operator==(const Move & B) const;
 //	Move & operator=(const Move & M);
 
 	Move& format(
 		BitBoard From,
 		BitBoard To,
-		uint32_t BlackToMove=0,
-		uint32_t Piece=0,
-		uint32_t Flags=0
+        uint32_t BlackToMove = 0,
+        uint32_t Piece = 0,
+        uint32_t Flags = 0
 		);
 	void ClearFlags() {
 		Move::Flags = 0;
@@ -280,21 +280,21 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 void genWhiteMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genBlackAttacks(const ChessPosition& Z);
 BitBoard isWhiteInCheck(const ChessPosition & Z);
-void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
-void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
+void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
 // Black Move-Generation Functions:
 void genBlackMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genWhiteAttacks(const ChessPosition& Z);
 BitBoard isBlackInCheck(const ChessPosition & Z);
-void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
-void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags=0);
+void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
+void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
 // Dump I/O functions:
 void dumpBitBoard(BitBoard b);
 void dumpChessPosition(ChessPosition p);
-void dumpMove(ChessMove M, MoveNotationStyle style = LongAlgebraic, char* pBuffer = NULL);
-void dumpMoveList(ChessMove * pMoveList, MoveNotationStyle style=LongAlgebraic, char * pBuffer=NULL);
+void dumpMove(ChessMove M, MoveNotationStyle style = LongAlgebraic, char *pBuffer = NULL);
+void dumpMoveList(ChessMove * pMoveList, MoveNotationStyle style = LongAlgebraic, char *pBuffer = NULL);
 
 // Compound Bitboard Fill operations:
 BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p);
@@ -426,8 +426,8 @@ const int pieceMaterialValue[16] =
 #define BLACKKNPOS 0x0200000000000000
 #define BLACKKRPOS 0x0100000000000000
 
-const BitBoard LEFTMASK =0xfefefefefefefefe;
-const BitBoard RIGHTMASK=0x7f7f7f7f7f7f7f7f;
+const BitBoard LEFTMASK  = 0xfefefefefefefefe;
+const BitBoard RIGHTMASK = 0x7f7f7f7f7f7f7f7f;
 
 // Pre-calculated move tables: BitBoards
 
@@ -826,7 +826,7 @@ inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 	//// Right:
 	//i = g; j = p; j &= m2; y = i; y >>= 1; y &= j; i |= y; z = j; z >>= 1; j &= z; y = i; y >>= 2; y &= j;
 	//i |= y; z = j; z >>= 2; j &= z; y = i; y >>= 4; y &= j; i |= y; r |= i;
-	//r&=~g;
+    //r &= ~g;
 //	return r;
 }
 
@@ -891,15 +891,15 @@ inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
 #else
 
 	// Alternative:
-	//const BitBoard m1=0xfefefefefefefefe;
-	//const BitBoard m2=0x7f7f7f7f7f7f7f7f;
+    //const BitBoard m1 = 0xfefefefefefefefe;
+    //const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
 /*	BitBoard a;
 	a = g | (0xfefefefefefefefe & (g << 1));
 	a |= a << 8;
 	a |= 0x7f7f7f7f7f7f7f7f & (a >> 1);
 	a |= a >> 8;
-	a &=~g;
-	a &=p;
+    a &= ~g;
+    a &= p;
 	return a; */
 	//
 	BitBoard a, b;
