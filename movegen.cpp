@@ -464,7 +464,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	{
 		int capturedpiece;
 
-#if defined (_WIN64) && defined (_USE_BITTEST_INSTRUCTION)
+#if defined(_USE_BITTEST_INSTRUCTION) && defined(_WIN64) && defined(_MSC_VER)
 		const long long d = ChessPosition::D;
 		const long long c = ChessPosition::C;
 		const long long b = ChessPosition::B;
@@ -719,7 +719,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	unsigned long a = 63;
 	unsigned long b = 0;
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64)
+#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64) && defined(_MSC_VER)
 	// perform Bitscans to determine start and finish squares;
 	// Important: a and b must be initialised first !
 	_BitScanReverse64(&a, WhiteOccupied);
@@ -1167,7 +1167,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	unsigned long a = 63;
 	unsigned long b = 0;
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64)
+#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64) && defined(_MSC_VER)
 	// perform Bitscans to determine start and finish squares;
 	// Important: a and b must be initialised first !
 	_BitScanReverse64(&a, BlackOccupied);
