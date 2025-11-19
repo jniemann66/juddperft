@@ -28,7 +28,7 @@ SOFTWARE.
 // movegen.h								//
 // Defines:									//
 // BitBoard, class Move, 					//
-// class ChessPosition, 						//
+// class ChessPosition, 					//
 // Move Generation Functions				//
 // Bitboard fill functions					//
 // Piece codes and other constants			//
@@ -44,6 +44,7 @@ SOFTWARE.
 #include <x86intrin.h>
 #endif
 
+
 #include <cstdint>
 
 namespace juddperft {
@@ -55,6 +56,10 @@ namespace juddperft {
 #define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
 // #define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
+
+#ifdef _USE_BITSCAN_INSTRUCTIONS
+// #include <intrin.h>
+#endif
 
 #ifndef NULL
 #define NULL 0
