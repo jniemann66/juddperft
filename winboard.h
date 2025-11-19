@@ -46,7 +46,7 @@ namespace juddperft {
 struct WinboardInputCommandDefinition {
 	WinboardInputCommandDefinition(const char*commandString, void(*pF)(const char*, Engine*), bool isImplemented)
 		: pzCommandString(nullptr), pF(pF), implemented(isImplemented) {
-		if(commandString != nullptr) {
+		if (commandString != nullptr) {
 			pzCommandString = strdup(commandString);
 		}
 	};

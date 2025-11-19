@@ -140,7 +140,7 @@ namespace juddperft {
 			pP->setPieceAtSquare(piece, 1LL << Square);
 			Square -= shift;
 			s++;
-		} // ends while((s != NULL) && (Square >= 0))
+		} // ends while ((s != NULL) && (Square >= 0))
 		// Now, tokenize remainder of string:
 		strncpy(t, s, 1023);
 		token = strtok(t, " ");

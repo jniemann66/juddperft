@@ -132,7 +132,7 @@ int winBoard(Engine* pE)
 			printf("   %s\n", winboardInputCommands[i].pzCommandString);
 	}
 	printf("\n");
-	while(waitForInput(pE));
+	while (waitForInput(pE));
 	return 0;
 }
 
@@ -148,12 +148,12 @@ bool waitForInput(Engine* pE)
 	char* input = NULL;
 	std::string inputStr;
 	std::getline(std::cin, inputStr);
-	if(inputStr.empty())
+	if (inputStr.empty())
 		return true;
 
 	input = strdup(inputStr.c_str()); // damn ugly. to-do: stop using strtok altogether
 
-	if(input != NULL)
+	if (input != NULL)
 	{
 		char* command;
 		char* args;
@@ -161,15 +161,15 @@ bool waitForInput(Engine* pE)
 		// log input
 		logInput(logfile,input);
 		command=strtok(input," \n");
-		if(command!=NULL)
+		if (command!=NULL)
 		{
 
 			// search for command
-			for(int i=0;i<nRecognizedCommands;i++)
+			for (int i=0;i<nRecognizedCommands;i++)
 			{
-				if(_stricmp(command,winboardInputCommands[i].pzCommandString) == 0)
+				if (_stricmp(command,winboardInputCommands[i].pzCommandString) == 0)
 				{
-					if(_stricmp(command,"quit") == 0)
+					if (_stricmp(command,"quit") == 0)
 					{
 						pE->stopSignal = true;
 						return false;
@@ -198,14 +198,14 @@ bool isImplemented(const char* s,Engine* pE)
 {
 	bool bRetVal = false;
 	int nRecognizedCommands=sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
-	if(s != NULL)
+	if (s != NULL)
 	{
 		// search for command
-		for(int i=0; i<nRecognizedCommands; i++)
+		for (int i=0; i<nRecognizedCommands; i++)
 		{
-			if(_stricmp(s,winboardInputCommands[i].pzCommandString) == 0)
+			if (_stricmp(s,winboardInputCommands[i].pzCommandString) == 0)
 			{
-				if(winboardInputCommands[i].implemented)
+				if (winboardInputCommands[i].implemented)
 					bRetVal=true;
 				break;
 			}
@@ -262,7 +262,7 @@ void parse_input_setboard(const char* s,Engine* pE)
 	if (s == NULL)
 		return;
 
-	if(!readFen(&pE->currentPosition,s))
+	if (!readFen(&pE->currentPosition,s))
 		send_output_tellusererror("Illegal Position",pE);
 }
 void parse_input_edit(const char* s,Engine* pE){}
@@ -333,7 +333,7 @@ void parse_input_perft(const char* s,Engine* pE)
 	if (s == NULL)
 		return;
 
-	for(int q=1; q<=atoi(s); q++)
+	for (int q=1; q<=atoi(s); q++)
 	{
 		{
 			RaiiTimer timer;
@@ -391,7 +391,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessPosition Q;
 	RaiiTimer timer;
 
-	while(pM->NoMoreMoves==0)
+	while (pM->NoMoreMoves==0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM);
@@ -593,13 +593,13 @@ void winBoardOutput(const char* s)
 
 void logInput(std::ofstream& logfile, const char* s)
 {
-	if(logfile)
+	if (logfile)
 		logfile << "Received command: " << s << std::endl;
 }
 
 void logOutput(std::ofstream& logfile,const char* s)
 {
-	if(logfile)
+	if (logfile)
 		logfile << "Sent command: " << s << std::endl;
 }
 

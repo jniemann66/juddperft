@@ -392,7 +392,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
 			std::unique_lock<std::mutex> lock(q_mutex);
 			std::chrono::milliseconds startDelay(500);
-			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
+			cv.wait_for (lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
@@ -477,7 +477,7 @@ void perftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
 			std::unique_lock<std::mutex> lock(q_mutex);
 			std::chrono::milliseconds startDelay(500);
-			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
+			cv.wait_for (lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {

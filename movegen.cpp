@@ -139,7 +139,7 @@ ChessPosition & ChessPosition::calculateHash()
 	{
 		unsigned int piece = getPieceAtSquare(1LL<<q);
 		//assert(piece != 0x08);
-		if(piece & 0x7)
+		if (piece & 0x7)
 			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[piece][q];
 	}
 	if (ChessPosition::BlackToMove)	ChessPosition::HK ^= zobristKeys.zkBlackToMove;
@@ -199,7 +199,7 @@ ChessPosition& ChessPosition::calculateMaterial()
 	BitBoard M;
 	BitBoard V;
 
-	for(int q=0;q<64;q++)
+	for (int q=0;q<64;q++)
 	{
 		M=1LL << q;
 		V = (ChessPosition::D & M) >> q;
@@ -294,9 +294,9 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	// For White:
 	// D &= 0xffffffffffffff07 (ie clear colour of affected squares from QR to K)
 
-	if(M.Piece == BKING)
+	if (M.Piece == BKING)
 	{
-		if(M.Castle)
+		if (M.Castle)
 		{
 			ChessPosition::A ^= 0x0a00000000000000;
 			ChessPosition::B ^= 0x0a00000000000000;
@@ -311,7 +311,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::BlackCanCastleLong = 0;
 			return *this;
 		}
-		else if(M.CastleLong)
+		else if (M.CastleLong)
 		{
 			ChessPosition::A ^= 0x2800000000000000;
 			ChessPosition::B ^= 0x2800000000000000;
@@ -333,8 +333,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			{
 				// Black could have castled, but chose to move the King in a non-castling move
 #ifdef _USE_HASH
-				if(ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-				if(ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
+				if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+				if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 				ChessPosition::BlackForfeitedCastle = 1;
 				ChessPosition::BlackForfeitedCastleLong = 1;
@@ -347,7 +347,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	else if (M.Piece == WKING)
 	{
 		// White
-		if(M.Castle)
+		if (M.Castle)
 		{
 			ChessPosition::A ^= 0x000000000000000a;
 			ChessPosition::B ^= 0x000000000000000a;
@@ -363,7 +363,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			return *this;
 		}
 
-		if(M.CastleLong)
+		if (M.CastleLong)
 		{
 
 			ChessPosition::A ^= 0x0000000000000028;
@@ -403,13 +403,13 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	}
 
 	// LOOK FOR FORFEITED CASTLING RIGHTS DUE to ROOK MOVES:
-	else if(M.Piece == BROOK)
+	else if (M.Piece == BROOK)
 	{
-	//	if((1LL<<nFromSquare) & BLACKKRPOS)
-		if(nFromSquare==56)
+	//	if ((1LL<<nFromSquare) & BLACKKRPOS)
+		if (nFromSquare==56)
 		{
 			// Black moved K-side Rook and forfeits right to castle K-side
-			if(ChessPosition::BlackCanCastle){
+			if (ChessPosition::BlackCanCastle){
 				ChessPosition::BlackForfeitedCastle=1;
 #ifdef _USE_HASH
 				ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// flip black castling
@@ -431,9 +431,9 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		}
 	}
 
-	else if(M.Piece == WROOK)
+	else if (M.Piece == WROOK)
 	{
-		//if((1LL<<nFromSquare) & WHITEKRPOS)
+		//if ((1LL<<nFromSquare) & WHITEKRPOS)
 		if (nFromSquare==0)
 		{
 			// White moved K-side Rook and forfeits right to castle K-side
@@ -445,7 +445,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				ChessPosition::WhiteCanCastle=0;
 			}
 		}
-	//	else if((1LL<<nFromSquare) & WHITEQRPOS)
+	//	else if ((1LL<<nFromSquare) & WHITEQRPOS)
 		else if (nFromSquare==7)
 		{
 			// White moved the QSide Rook and forfeits right to castle Q-side
@@ -586,10 +586,10 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	}
 
 	// For Double-Pawn Moves, set EP square:	////
-	else if(M.DoublePawnMove)
+	else if (M.DoublePawnMove)
 	{
 		// Set EnPassant Square
-		if(M.BlackToMove)
+		if (M.BlackToMove)
 		{
 			To <<= 8;
 			ChessPosition::A |= To;
@@ -618,10 +618,10 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	}
 
 	// En-Passant Captures	////
-	else if(M.EnPassantCapture)
+	else if (M.EnPassantCapture)
 	{
 		// remove the actual pawn (it is different to the capture square)
-		if(M.BlackToMove)
+		if (M.BlackToMove)
 		{
 			To <<= 8;
 			ChessPosition::A &= ~To; // clear the pawn's square
@@ -679,7 +679,7 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 
 	assert((~(P.A | P.B | P.C) & P.D)==0); // Should not be any "black" empty squares
 
-	if(P.BlackToMove)
+	if (P.BlackToMove)
 	{
 		genBlackMoves(P, pM);
 	}
@@ -747,7 +747,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					piece=WPAWN;
 					// single move forward
 					Square = MoveUp[q] & WhiteFree & ~BlackOccupied /* pawns can't capture in forward moves */;
-					if((Square & RANK8) != 0)
+					if ((Square & RANK8) != 0)
 						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -764,7 +764,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					}
 					// generate Pawn Captures:
 					Square=MoveUpLeft[q] & WhiteFree & BlackOccupied;
-					if((Square & RANK8) != 0)
+					if ((Square & RANK8) != 0)
 						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -772,7 +772,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 						addWhiteMoveToListIfLegal(P, pM, q, Square, piece);
 					}
 					Square = MoveUpRight[q] & WhiteFree & BlackOccupied;
-					if((Square & RANK8) != 0)
+					if ((Square & RANK8) != 0)
 						addWhitePromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -838,7 +838,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					addWhiteMoveToListIfLegal(P, pM, q, Square, piece);
 
 					// Conditionally generate O-O-O move:
-					if((P.WhiteCanCastleLong)	&&							// White still has castle-long rights AND
+					if ((P.WhiteCanCastleLong)	&&							// White still has castle-long rights AND
 						(CurrentSquare==WHITEKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & ~P.D & WHITEQRPOS) != 0) &&	// QRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
@@ -1198,7 +1198,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 					piece=BPAWN;
 					// single move forward
 					Square = MoveDown[q] & BlackFree & ~WhiteOccupied /* pawns can't capture in forward moves */;
-					if((Square & RANK1) != 0)
+					if ((Square & RANK1) != 0)
 						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -1215,7 +1215,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 					}
 					// generate Pawn Captures:
 					Square=MoveDownLeft[q] & BlackFree & WhiteOccupied;
-					if((Square & RANK1) != 0)
+					if ((Square & RANK1) != 0)
 						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -1223,7 +1223,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 						addBlackMoveToListIfLegal(P, pM, q, Square, piece);
 					}
 					Square = MoveDownRight[q] & BlackFree & WhiteOccupied;
-					if((Square & RANK1) != 0)
+					if ((Square & RANK1) != 0)
 						addBlackPromotionsToListIfLegal(P, pM, q, Square, piece);
 					else
 					{
@@ -1267,7 +1267,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 					addBlackMoveToListIfLegal(P, pM, q, Square, piece);
 
 					// Conditionally generate O-O move:
-					if((P.BlackCanCastle) &&								// Black still has castle rights AND
+					if ((P.BlackCanCastle) &&								// Black still has castle rights AND
 						(CurrentSquare==BLACKKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & P.D & BLACKKRPOS) != 0) &&	// KRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to right) was legal AND
@@ -1289,7 +1289,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 					addBlackMoveToListIfLegal(P, pM, q, Square, piece);
 
 					// Conditionally generate O-O-O move:
-					if((P.BlackCanCastleLong) &&							// Black still has castle-long rights AND
+					if ((P.BlackCanCastleLong) &&							// Black still has castle-long rights AND
 						(CurrentSquare==BLACKKINGPOS) &&					// King is in correct Position AND
 						((~P.A & ~P.B & P.C & P.D & BLACKQRPOS) != 0) &&	// QRook is in correct Position AND
 						(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
@@ -1737,21 +1737,21 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 	bbTo = 1LL << M.ToSquare;
 	char c1, c2, p;
 
-	if(style != CoOrdinate)
+	if (style != CoOrdinate)
 	{
 
-		if(M.Castle==1)
+		if (M.Castle==1)
 		{
-			if(pBuffer==NULL)
+			if (pBuffer==NULL)
 				printf(" O-O\n");
 			else
 				sprintf (pBuffer, " O-O\n");
 			return;
 		}
 
-		if(M.CastleLong==1)
+		if (M.CastleLong==1)
 		{
-			if(pBuffer==NULL)
+			if (pBuffer==NULL)
 				printf(" O-O-O\n");
 			else
 				sprintf (pBuffer, " O-O-O\n");
@@ -1808,7 +1808,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 	char s[SMALL_BUFFER_SIZE];  // output string
 	*s = 0;
 
-	if((style == LongAlgebraic ) || (style == LongAlgebraicNoNewline))
+	if ((style == LongAlgebraic ) || (style == LongAlgebraicNoNewline))
 	{
 		// Determine if move is a capture
 		if (M.Capture || M.EnPassantCapture)
@@ -1826,18 +1826,18 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 			strcat(s, "(Q)");
 		//
 		//
-		if(style != LongAlgebraicNoNewline)
+		if (style != LongAlgebraicNoNewline)
 			strcat(s, "\n");
 		else
 			strcat(s, " ");
 		//
-		if(pBuffer == NULL)
+		if (pBuffer == NULL)
 			printf("%s", s);
 		else
 			strcpy(pBuffer, s);
 	}
 
-	if(style == CoOrdinate)
+	if (style == CoOrdinate)
 	{
 		sprintf(s, "%c%d%c%d", c1, 1+(from >> 3), c2, 1+(to >> 3));
 		// Promotions:
@@ -1851,7 +1851,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 			strcat(s, "q");
 		strcat(s, "\n");
 		//
-		if(pBuffer == NULL)
+		if (pBuffer == NULL)
 			printf("%s", s);
 		else
 			strcpy(pBuffer, s);
