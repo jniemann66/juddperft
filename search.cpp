@@ -53,7 +53,7 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	// Hash not used in this version (Table Entries with struct PerftInfo{} deemed too large ... )
 #endif
 
-	generateMoves(P,MoveList);
+	generateMoves(P, MoveList);
 	int movecount = MoveList->MoveCount;
 
 	if (depth == maxdepth)
@@ -261,7 +261,7 @@ void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 
 	// The Following variables are "stack-less" equivalents to local vars in recursive version:
 	std::vector<ChessMove[MOVELIST_SIZE]> MoveList(depth + 1);
-	std::vector<ChessMove*> pMovePtr(depth + 1,nullptr);
+	std::vector<ChessMove*> pMovePtr(depth + 1, nullptr);
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
 	std::vector<int64_t> orig_nNodes(depth+1);
@@ -386,7 +386,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	bool ready = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads,MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
 		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -471,7 +471,7 @@ void perftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 	bool ready = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads,MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
 		threads.emplace_back([&, depth, P, t] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.

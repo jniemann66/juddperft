@@ -27,13 +27,13 @@ SOFTWARE.
 //////////////////////////////////////////////
 // movegen.h								//
 // Defines:									//
-// BitBoard, class Move, 
-// class ChessPosition,						//
+// BitBoard, class Move, 					//
+// class ChessPosition, 						//
 // Move Generation Functions				//
 // Bitboard fill functions					//
 // Piece codes and other constants			//
 //////////////////////////////////////////////
-											
+
 #ifndef _MOVEGEN
 #define _MOVEGEN 1
 #define _CRT_SECURE_NO_WARNINGS 1
@@ -114,14 +114,14 @@ public:
 				uint32_t Unused : 7;
 				uint32_t IllegalMove : 1;
 				uint32_t NoMoreMoves : 1;
-				uint32_t Piece : 4;	
-				uint32_t MoveCount : 8;	
-		}; 
+				uint32_t Piece : 4;
+				uint32_t MoveCount : 8;
+		};
 		uint32_t Flags;
 	};
-	
+
 public:
-	Move(BitBoard From=0,BitBoard To=0,uint32_t Flags=0);
+	Move(BitBoard From=0, BitBoard To=0, uint32_t Flags=0);
 	bool operator==(const Move & B) const;
 //	Move & operator=(const Move & M);
 
@@ -129,7 +129,7 @@ public:
 		BitBoard From,
 		BitBoard To,
 		uint32_t BlackToMove=0,
-		uint32_t Piece=0, 
+		uint32_t Piece=0,
 		uint32_t Flags=0
 		);
 	void ClearFlags() {
@@ -172,7 +172,7 @@ class ChessPosition
 
 			Explanation of Bit-Representation used in positions:
 
-			D (msb):	Colour (1=Black) 
+			D (msb):	Colour (1=Black)
 			C			1=Straight-Moving Piece (Q or R)
 			B			1=Diagonal-moving piece (Q or B)
 			A (lsb):	1=Pawn
@@ -180,7 +180,7 @@ class ChessPosition
 			D	C	B	A
 
 	(0)		0	0	0	0	Empty Square
-	(1)		0	0	0	1	White Pawn	
+	(1)		0	0	0	1	White Pawn
 	(2)		0	0	1	0	White Bishop
 	(3)		0	0	1	1	White En passant Square
 	(4)		0	1	0	0	White Rook
@@ -188,14 +188,14 @@ class ChessPosition
 	(6)		0	1	1	0	White Queen
 	(7)		0	1	1	1	White King
 	(8)		1	0	0	0	Reserved-Don't use (Black empty square)
-	(9)		1	0	0	1	Black Pawn	
+	(9)		1	0	0	1	Black Pawn
 	(10)	1	0	1	0	Black Bishop
 	(11)	1	0	1	1	Black En passant Square
 	(12)	1	1	0	0	Black Rook
 	(13)	1	1	0	1	Black Knight
 	(14)	1	1	1	0	Black Queen
 	(15)	1	1	1	1	Black King
-		
+
 	---------------------------------------------------------------*/
 
 public:
@@ -233,7 +233,7 @@ public:
 #ifdef _USE_HASH
 	HashKey HK;
 #endif
-		
+
 public:
 	ChessPosition();
 	ChessPosition& setupStartPosition();
@@ -252,7 +252,7 @@ private:
 
 
 /////////////////////////////////////////////
-// Move notation styles: 
+// Move notation styles:
 // ---------------------
 // LongAlgebraic: e7xf8(q)
 // StandardAlgebraic: exf(q)
@@ -332,7 +332,7 @@ Deafault material values of Pieces:
 ---------------------------------------------------------------*/
 
 const int pieceMaterialValue[16] =
-{	
+{
 	0,			// Empty Square
 	100,		// White pawn
 	300,		// White Bishop
@@ -341,7 +341,7 @@ const int pieceMaterialValue[16] =
 	300,		// White Knight
 	900,		// White Queen
 	0,			// White King
-	0,			// Unused	
+	0,			// Unused
 	-100,		// Black Pawn
 	-300,		// Black Bishop
 	0,			// Black En passant Square
@@ -794,12 +794,12 @@ inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 {
 
 	BitBoard a;
-	a =fillRightOccluded(g,p);
-	a |= fillLeftOccluded(g,p);
-	a |= fillUpOccluded(g,p);
-	a |= fillDownOccluded(g,p);
-	a &= ~g; // exclude attacking pieces 
-	return a; 
+	a =fillRightOccluded(g, p);
+	a |= fillLeftOccluded(g, p);
+	a |= fillUpOccluded(g, p);
+	a |= fillDownOccluded(g, p);
+	a &= ~g; // exclude attacking pieces
+	return a;
 
 
 	// (Broken into single operations):
@@ -833,10 +833,10 @@ inline BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 {
 
 	BitBoard a;
-	a =  fillUpRightOccluded(g,p);
-	a |= fillDownRightOccluded(g,p);
-	a |= fillDownLeftOccluded(g,p);
-	a |= fillUpLeftOccluded(g,p);
+	a =  fillUpRightOccluded(g, p);
+	a |= fillDownRightOccluded(g, p);
+	a |= fillDownLeftOccluded(g, p);
+	a |= fillUpLeftOccluded(g, p);
 	a &= ~g; // exclude attacking pieces
 	return a;
 
@@ -872,19 +872,19 @@ inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
 {
 #ifdef V1
 	BitBoard a;
-	a =  moveUpSingleOccluded(g,p);
-	a |= moveUpRightSingleOccluded(g,p);
-	a |= moveRightSingleOccluded(g,p);
-	a |= moveDownRightSingleOccluded(g,p);
+	a =  moveUpSingleOccluded(g, p);
+	a |= moveUpRightSingleOccluded(g, p);
+	a |= moveRightSingleOccluded(g, p);
+	a |= moveDownRightSingleOccluded(g, p);
 
-	a |= moveDownSingleOccluded(g,p);
-	a |= moveDownLeftSingleOccluded(g,p);
-	a |= moveLeftSingleOccluded(g,p);
-	a |= moveUpLeftSingleOccluded(g,p);
+	a |= moveDownSingleOccluded(g, p);
+	a |= moveDownLeftSingleOccluded(g, p);
+	a |= moveLeftSingleOccluded(g, p);
+	a |= moveUpLeftSingleOccluded(g, p);
 	//a &= ~g; // exclude attacking pieces
-	return a; 
+	return a;
 #else
-	
+
 	// Alternative:
 	//const BitBoard m1=0xfefefefefefefefe;
 	//const BitBoard m2=0x7f7f7f7f7f7f7f7f;
@@ -896,7 +896,7 @@ inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
 	a &=~g;
 	a &=p;
 	return a; */
-	// 
+	//
 	BitBoard a, b;
 	BitBoard t, u;
 	a = g; t = g; t <<= 1; t &= 0xfefefefefefefefe; a |= t;
@@ -924,19 +924,19 @@ inline BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p)
 {
 	/*
 	BitBoard a;
-	a =  moveKnight1Occluded(g,p);
-	a |= moveKnight2Occluded(g,p);
-	a |= moveKnight3Occluded(g,p);
-	a |= moveKnight4Occluded(g,p);
+	a =  moveKnight1Occluded(g, p);
+	a |= moveKnight2Occluded(g, p);
+	a |= moveKnight3Occluded(g, p);
+	a |= moveKnight4Occluded(g, p);
 
-	a |= moveKnight5Occluded(g,p);
-	a |= moveKnight6Occluded(g,p);
-	a |= moveKnight7Occluded(g,p);
-	a |= moveKnight8Occluded(g,p);
+	a |= moveKnight5Occluded(g, p);
+	a |= moveKnight6Occluded(g, p);
+	a |= moveKnight7Occluded(g, p);
+	a |= moveKnight8Occluded(g, p);
 	//a &= ~g; // exclude attacking pieces
-	return a; 
+	return a;
 	*/
-		
+
 	BitBoard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
 	BitBoard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;
 	BitBoard r1 = (g << 1) & 0xfefefefefefefefe;
@@ -944,7 +944,7 @@ inline BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p)
 	BitBoard h1 = l1 | r1;
 	BitBoard h2 = l2 | r2;
 	return p &((h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8));
-	
+
 }
 
 inline BitBoard FillKnightAttacks(BitBoard g)
@@ -961,10 +961,10 @@ inline BitBoard FillKnightAttacks(BitBoard g)
 inline BitBoard fillUpOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-    g |= p & (g <<  8);
-    p &=     (p <<  8);
-    g |= p & (g << 16);
-    p &=     (p << 16);
+	g |= p & (g <<  8);
+	p &=     (p <<  8);
+	g |= p & (g << 16);
+	p &=     (p << 16);
 	g |= p & (g << 32);
 	return g;
 }
@@ -972,10 +972,10 @@ inline BitBoard fillUpOccluded(BitBoard g, BitBoard p)
 inline BitBoard fillDownOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-    g |= p & (g >>  8);
-    p &=     (p >>  8);
-    g |= p & (g >> 16);
-    p &=     (p >> 16);
+	g |= p & (g >>  8);
+	p &=     (p >>  8);
+	g |= p & (g >> 16);
+	p &=     (p >> 16);
 	g |= p & (g >> 32);
 	return g;
 }
@@ -983,11 +983,11 @@ inline BitBoard fillDownOccluded(BitBoard g, BitBoard p)
 inline BitBoard fillLeftOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-    p &= 0xfefefefefefefefe;
-    g |= p & (g << 1);
-    p &=     (p << 1);
-    g |= p & (g << 2);
-    p &=     (p << 2);
+	p &= 0xfefefefefefefefe;
+	g |= p & (g << 1);
+	p &=     (p << 1);
+	g |= p & (g << 2);
+	p &=     (p << 2);
 	g |= p & (g << 4);
 	return g;
 }
@@ -995,11 +995,11 @@ inline BitBoard fillLeftOccluded(BitBoard g, BitBoard p)
 inline BitBoard fillRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
-    p &= 0x7f7f7f7f7f7f7f7f;
-    g |= p & (g >> 1);
-    p &=     (p >> 1);
-    g |= p & (g >> 2);
-    p &=     (p >> 2);
+	p &= 0x7f7f7f7f7f7f7f7f;
+	g |= p & (g >> 1);
+	p &=     (p >> 1);
+	g |= p & (g >> 2);
+	p &=     (p >> 2);
 	g |= p & (g >> 4);
 	return g;
 }
@@ -1008,10 +1008,10 @@ inline BitBoard fillUpRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
-    g |= p & (g <<  7);
-    p &=     (p <<  7);
-    g |= p & (g << 14);
-    p &=     (p << 14);
+	g |= p & (g <<  7);
+	p &=     (p <<  7);
+	g |= p & (g << 14);
+	p &=     (p << 14);
 	g |= p & (g << 28);
 	return g;
 }
@@ -1020,10 +1020,10 @@ inline BitBoard fillDownRightOccluded(BitBoard g, BitBoard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
-    g |= p & (g >>  9);
-    p &=     (p >>  9);
-    g |= p & (g >> 18);
-    p &=     (p >> 18); 
+	g |= p & (g >>  9);
+	p &=     (p >>  9);
+	g |= p & (g >> 18);
+	p &=     (p >> 18);
 	g |= p & (g >> 36);
 	return g;
 }
@@ -1100,7 +1100,7 @@ inline BitBoard moveUpLeftSingleOccluded(BitBoard g, BitBoard p)
 }
 
 inline BitBoard MoveDownLeftRightSingle(BitBoard g)
-{	
+{
 	return	(0xfefefefefefefefe & (g >> 7)) |	// DownLeft
 			(0x7f7f7f7f7f7f7f7f & (g >> 9));		// DownRight
 }
@@ -1163,7 +1163,7 @@ inline int popCount(const BitBoard & B)
 #if defined( _USE_POPCNT_INSTRUCTION) && defined(_WIN64)
 	return static_cast<int>(__popcnt64(B));
 #else
-	// This routine comes from: 
+	// This routine comes from:
 	// Knuth, TAoCP Vol 4: Fascicle 1, (no. 62)
 	BitBoard A;
 	A = B - ((B >> 1) & 0x5555555555555555);
@@ -1181,7 +1181,7 @@ inline unsigned long getSquareIndex(BitBoard b)
 #if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64)
 	// Get index of Square:
 	_BitScanForward64(&n, b);
-#else 
+#else
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
@@ -1210,23 +1210,23 @@ inline unsigned long getSquareIndex(BitBoard b)
 // getFirstAndLastPiece()
 // Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
 inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& Last)
-{	
+{
 	unsigned long a = 63;
 	unsigned long b = 0;
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64) 
+#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64)
 	// perform Bitscans to determine start and finish squares;
 	// Important: a and b must be initialised first !
 	_BitScanReverse64(&a, B);
 	_BitScanForward64(&b, B);
 #else
-	
+
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
 	// credit: Kim Walisch, Gerd Isenberg et al.
 
 	const BitBoard db64 = 0x03f79d71b4cb0a89;
-	
+
 	const int tbl[64] = {
 		0, 47,  1, 56, 48, 27,  2, 60,
 		57, 49, 41, 37, 28, 16,  3, 61,
@@ -1250,10 +1250,10 @@ inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	A |= A >> 16;
 	A |= A >> 32;
 	a= tbl[(A * db64) >> 58];
-	
+
 #endif
 
-	Last = B & (1LL << a); 
+	Last = B & (1LL << a);
 	First = B & (1LL << b);
 }
 

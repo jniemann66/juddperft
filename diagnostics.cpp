@@ -48,11 +48,11 @@ void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 	ChessPosition P;
 	readFen(&P, pzFENstring);
 	dumpChessPosition(P);
-	
+
 	int64_t n=0;
 	perftFastMT(P, depth, n);
 	printf("Perft %d: %lld (Correct Answer= %lld)\n", depth, n, correctAnswer);
-		
+
 	if (n != correctAnswer)
 		printf("-== FAIL !!! ==-\n");
 
@@ -62,7 +62,7 @@ void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 int perftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value)
 {
 	std::string command = validatorPath + " \"" + fenString + "\" " + std::to_string(depth) + " " + std::to_string(value);
-	
+
 	/* // mock
 	std::cout << command << std::endl;
 	return PERFTVALIDATE_TRUE;
@@ -80,7 +80,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 	// generate Move List
 	ChessMove MoveList[MOVELIST_SIZE];
 	generateMoves(*pP, MoveList);
-	
+
 	PerftInfo T;
 
 	if (depth <= 1) { // terminal node
@@ -152,7 +152,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 	std::cout << "findPerftBug() finished\n\n";
 }
 
-void runTestSuite() 
+void runTestSuite()
 {
 	// see https://chessprogramming.wikispaces.com/perft+Results
 	printf("Running Test Suite\n\n");
