@@ -186,10 +186,10 @@ ChessPosition& ChessPosition::setPieceAtSquare(const unsigned int& piece /*=0*/,
 uint32_t ChessPosition::getPieceAtSquare(const BitBoard& square) const
 {
 	uint32_t V;
-    V = (ChessPosition::D & square)?8:0;
-    V |= (ChessPosition::C & square)?4:0;
-    V |= (ChessPosition::B & square)?2:0;
-    V |= (ChessPosition::A & square)?1:0;
+    V = (ChessPosition::D & square) ? 8 : 0;
+    V |= (ChessPosition::C & square) ? 4 : 0;
+    V |= (ChessPosition::B & square) ? 2 : 0;
+    V |= (ChessPosition::A & square) ? 1 : 0;
 	return V;
 }
 

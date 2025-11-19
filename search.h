@@ -39,12 +39,14 @@ namespace juddperft {
 #define SEARCH_STOPPED 0x80000000
 
 struct PerftInfo{
-	int64_t nMoves;
-	int64_t nCapture;
-	int64_t nEPCapture;
-	int64_t nCastle;
-	int64_t nCastleLong;
-	int64_t nPromotion;
+    int64_t nMoves{ZERO_64};
+    int64_t nCapture{ZERO_64};
+    int64_t nEPCapture{ZERO_64};
+    int64_t nCastle{ZERO_64};
+    int64_t nCastleLong{ZERO_64};
+    int64_t nPromotion{ZERO_64};
+    int64_t nCheck{ZERO_64};
+    int64_t nCheckmate{ZERO_64};
 };
 
 int64_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded		

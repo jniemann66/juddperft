@@ -94,7 +94,6 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 
 		dumpChessPosition(*pP);
 		dumpMoveList(MoveList);
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0LL;
 		perftMT(*pP, 1, 1, &T);
 		int nResult = perftValidateWithExternal(validatorPath, fenString, 1, T.nMoves);
 		if (nResult == PERFTVALIDATE_FALSE) {
@@ -130,7 +129,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		dumpMove(*pM);
 		std::cout << "Position: " << fenString << std::endl;
 
-		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = 0LL;
+        T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = T.nCheck = T.nCheckmate = 0LL;
 		perftMT(Q, depth - 1, 1, &T);
 
 		std::cout << "\nValidating depth: " << depth - 1 << " perft: " << T.nMoves << std::endl;

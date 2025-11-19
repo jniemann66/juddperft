@@ -62,19 +62,32 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 		for (int i = 0; i<movecount; i++, pM++)
 		{
 			pI->nMoves++;
-			if (pM->Capture)
+            if (pM->Capture) {
 				pI->nCapture++;
-			if (pM->Castle)
+            }
+
+            if (pM->Castle) {
 				pI->nCastle++;
-			if (pM->CastleLong)
+            }
+
+            if (pM->CastleLong) {
 				pI->nCastleLong++;
-			if (pM->EnPassantCapture)
+            }
+
+            if (pM->EnPassantCapture) {
 				pI->nEPCapture++;
+            }
+
 			if (pM->PromoteBishop ||
 				pM->PromoteKnight ||
 				pM->PromoteQueen ||
-				pM->PromoteRook)
+                pM->PromoteRook) {
 				pI->nPromotion++;
+            }
+
+            if (pM->Check) {
+                pI->nCheck++;
+            }
 		}
 	}
 
@@ -396,7 +409,6 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
 				PerftInfo T;
-				T.nCapture = T.nCastle = T.nCastleLong = T.nEPCapture = T.nMoves = T.nPromotion = ZERO_64;
 				ChessPosition Q = P;							// Set up position
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
@@ -425,13 +437,15 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	// add up total:
-	std::for_each(PerftPartial.begin(), PerftPartial.end(), [pI](PerftInfo& t) {
+    std::for_each(PerftPartial.begin(), PerftPartial.end(), [pI](const PerftInfo& t) {
 		pI->nCapture += t.nCapture;
 		pI->nCastle += t.nCastle;
 		pI->nCastleLong += t.nCastleLong;
 		pI->nEPCapture += t.nEPCapture;
 		pI->nMoves += t.nMoves;
 		pI->nPromotion += t.nPromotion;
+        pI->nCheck += t.nCheck;
+        pI->nCheckmate += t.nCheckmate;
 	});
 }
 
