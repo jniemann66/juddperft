@@ -34,6 +34,7 @@ SOFTWARE.
 #include <queue>
 #include <numeric>
 #include <condition_variable>
+#include <string>
 #include <algorithm>
 #include <chrono>
 
@@ -43,7 +44,7 @@ uint64_t nodecount;
 //
 
 int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
-{	
+{
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
 	ChessMove* pM;
@@ -51,7 +52,7 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 #ifdef _USE_HASH
 	// Hash not used in this version (Table Entries with struct PerftInfo{} deemed too large ... )
 #endif
-	
+
 	generateMoves(P,MoveList);
 	int movecount = MoveList->MoveCount;
 
@@ -67,7 +68,7 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				pI->nCastle++;
 			if (pM->CastleLong)
 				pI->nCastleLong++;
-			if (pM->EnPassantCapture) 
+			if (pM->EnPassantCapture)
 				pI->nEPCapture++;
 			if (pM->PromoteBishop ||
 				pM->PromoteKnight ||
@@ -76,7 +77,7 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				pI->nPromotion++;
 		}
 	}
-	
+
 	else
 	{
 		pM = MoveList;
@@ -154,7 +155,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 #endif
 	}
 
-	else { /* Branch Node */ 
+	else { /* Branch Node */
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
@@ -163,7 +164,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 		PerftTableEntry RetrievedRecord2;
 		pAtomicRecord2 = perftTable.getAddress(HK);								// get address of atomic record
 		RetrievedRecord2 = pAtomicRecord2->load();						// Load a non-atomic copy of the record
-		if (RetrievedRecord2.Hash == HK) {	
+		if (RetrievedRecord2.Hash == HK) {
 			if (RetrievedRecord2.depth == depth) {
 				nNodes += RetrievedRecord2.count;
 				return;
@@ -264,21 +265,21 @@ void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 	std::vector<ChessPosition> Q(depth + 1);
 	Q[depth] = P;
 	std::vector<int64_t> orig_nNodes(depth+1);
-	
+
 #ifdef _USE_HASH
 	std::vector<HashKey> HK(depth+1);
 	std::vector<std::atomic<PerftTableEntry>*> pAtomicRecord(depth + 1);
 	std::vector<PerftTableEntry> RetrievedRecord(depth+1);
 	std::vector<PerftTableEntry> NewRecord(depth + 1);
 #endif
-	
+
 	int currentdepth = depth;
-	
+
 	for (;;) {
 
 #ifdef _USE_HASH
 		// Consult the HashTable:
-		HK[currentdepth] = Q[currentdepth].HK^zobristKeys.zkPerftDepth[currentdepth];	
+		HK[currentdepth] = Q[currentdepth].HK^zobristKeys.zkPerftDepth[currentdepth];
 		pAtomicRecord[currentdepth] = perftTable.getAddress(HK[currentdepth]);	// get address of atomic record
 		RetrievedRecord[currentdepth] = pAtomicRecord[currentdepth]->load();	// Load a non-atomic copy of the record
 
@@ -326,18 +327,18 @@ void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 		}
 
 #ifdef _USE_HASH
-			
+
 		//	Writehash - (2016-02-26 broken in multithreading)
 			//NewRecord[currentdepth].Hash = HK[currentdepth];
 			//NewRecord[currentdepth].depth = currentdepth;
 			//NewRecord[currentdepth].count = nNodes-orig_nNodes[currentdepth]; // Record RELATIVE increase in nodes
 			//do {
-			//	
+			//
 			//} while (!pAtomicRecord[currentdepth]->compare_exchange_weak(RetrievedRecord[currentdepth], NewRecord[currentdepth])); // loop until successfully written;
 #endif
 			if (currentdepth == depth)
 				break; // finished
-			else 
+			else
 				++currentdepth; // step out
 	}
 }
@@ -371,8 +372,8 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	// determine number of threads. Note:
-	// MAX_THREADS is compile-time hard limit. 
-	// theEngine.nNumCores is how many cores user wants. 
+	// MAX_THREADS is compile-time hard limit.
+	// theEngine.nNumCores is how many cores user wants.
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
 
@@ -392,7 +393,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			std::unique_lock<std::mutex> lock(q_mutex);
 			std::chrono::milliseconds startDelay(500);
 			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
-			
+
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
 				PerftInfo T;
@@ -400,7 +401,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				ChessPosition Q = P;							// Set up position
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
-				lock.unlock();									// yield usage of queue to other threads while busy processing perft												
+				lock.unlock();									// yield usage of queue to other threads while busy processing perft
 				Q.performMove(M).switchSides();					// make move
 				perft(Q, maxdepth, depth + 1, &T);				// Invoke perft()
 				std::cout << ".";								// show progress
@@ -454,10 +455,10 @@ void perftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 		nNodes = MoveList->MoveCount;
 		return;
 	}
-	
+
 	// determine number of threads. Note:
-	// MAX_THREADS is compile-time hard limit. 
-	// theEngine.nNumCores is how many cores user wants. 
+	// MAX_THREADS is compile-time hard limit.
+	// theEngine.nNumCores is how many cores user wants.
 	// concurrency is what system is capable of.
 	// App should only ever dispatch whichever is smallest of {concurrency, nNumCores, MAX_THREADS} threads:
 
@@ -477,14 +478,14 @@ void perftFastMT(ChessPosition P, int depth, int64_t& nNodes)
 			std::unique_lock<std::mutex> lock(q_mutex);
 			std::chrono::milliseconds startDelay(500);
 			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
-			
+
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
 				int64_t s = ZERO_64; 							// local accumulator for thread
 				ChessPosition Q = P;							// Set up position
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
-				lock.unlock();									// yield usage of queue to other threads while busy processing perft												
+				lock.unlock();									// yield usage of queue to other threads while busy processing perft
 				Q.performMove(M).switchSides();					// make move
 				perftFast(Q, depth - 1, s);						// Invoke perftFast()
 				std::cout << ".";								// show progress

@@ -35,7 +35,11 @@ x64/Instrument
 *.lastbuildstate
 *.ipdb
 
+# Binary of executable
+juddperft-gcc
 
+# Qt
+CMakeLists.txt.user
 
 # Visual Studio 2015 cache/options directory
 .vs/

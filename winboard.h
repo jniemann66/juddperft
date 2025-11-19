@@ -44,7 +44,7 @@ SOFTWARE.
 namespace juddperft {
 
 struct WinboardInputCommandDefinition {
-	WinboardInputCommandDefinition(const char*commandString, void(*pF)(const char*, Engine*), bool isImplemented) 
+	WinboardInputCommandDefinition(const char*commandString, void(*pF)(const char*, Engine*), bool isImplemented)
 		: pzCommandString(nullptr), pF(pF), implemented(isImplemented) {
 		if(commandString != nullptr) {
 			pzCommandString = strdup(commandString);
@@ -78,46 +78,46 @@ void logOutput(std::ofstream& logfile,const char* s);
 
 // functions for parsing input commands
 void parse_input_xboard(const char* s,Engine* pE);
-void parse_input_protover(const char* s,Engine* pE);		
+void parse_input_protover(const char* s,Engine* pE);
 void parse_input_accepted(const char* s,Engine* pE);
 void parse_input_rejected(const char* s,Engine* pE);
-void parse_input_new(const char* s,Engine* pE); 
-void parse_input_variant(const char* s,Engine* pE);			
-void parse_input_quit(const char* s,Engine* pE); 
-void parse_input_random(const char* s,Engine* pE); 
-void parse_input_force(const char* s,Engine* pE); 
-void parse_input_go(const char* s,Engine* pE); 
-void parse_input_playother(const char* s,Engine* pE); 
-void parse_input_white(const char* s,Engine* pE); 
-void parse_input_black(const char* s,Engine* pE); 
-void parse_input_level(const char* s,Engine* pE);				
-void parse_input_st(const char* s,Engine* pE);					
+void parse_input_new(const char* s,Engine* pE);
+void parse_input_variant(const char* s,Engine* pE);
+void parse_input_quit(const char* s,Engine* pE);
+void parse_input_random(const char* s,Engine* pE);
+void parse_input_force(const char* s,Engine* pE);
+void parse_input_go(const char* s,Engine* pE);
+void parse_input_playother(const char* s,Engine* pE);
+void parse_input_white(const char* s,Engine* pE);
+void parse_input_black(const char* s,Engine* pE);
+void parse_input_level(const char* s,Engine* pE);
+void parse_input_st(const char* s,Engine* pE);
 void parse_input_sd(const char* s,Engine* pE);
 void parse_input_nps(const char* s, Engine* pE);
-void parse_input_time(const char* s,Engine* pE);				
-void parse_input_otim(const char* s,Engine* pE); 
-void parse_input_move(const char* s,Engine* pE); 
-void parse_input_usermove(const char* s,Engine* const pE);			
-void parse_input_movenow(const char* s,Engine* pE); 
-void parse_input_ping(const char* s,Engine* pE);				
-void parse_input_draw(const char* s,Engine* pE); 
-void parse_input_result(const char* s,Engine* pE);				
-void parse_input_setboard(const char* s,Engine* pE);			
-void parse_input_edit(const char* s,Engine* pE); 
-void parse_input_hint(const char* s,Engine* pE); 
-void parse_input_bk(const char* s,Engine* pE); 
-void parse_input_undo(const char* s,Engine* pE); 
-void parse_input_remove(const char* s,Engine* pE); 
-void parse_input_hard(const char* s,Engine* pE); 
-void parse_input_easy(const char* s,Engine* pE); 
-void parse_input_post(const char* s,Engine* pE); 
+void parse_input_time(const char* s,Engine* pE);
+void parse_input_otim(const char* s,Engine* pE);
+void parse_input_move(const char* s,Engine* pE);
+void parse_input_usermove(const char* s,Engine* const pE);
+void parse_input_movenow(const char* s,Engine* pE);
+void parse_input_ping(const char* s,Engine* pE);
+void parse_input_draw(const char* s,Engine* pE);
+void parse_input_result(const char* s,Engine* pE);
+void parse_input_setboard(const char* s,Engine* pE);
+void parse_input_edit(const char* s,Engine* pE);
+void parse_input_hint(const char* s,Engine* pE);
+void parse_input_bk(const char* s,Engine* pE);
+void parse_input_undo(const char* s,Engine* pE);
+void parse_input_remove(const char* s,Engine* pE);
+void parse_input_hard(const char* s,Engine* pE);
+void parse_input_easy(const char* s,Engine* pE);
+void parse_input_post(const char* s,Engine* pE);
 void parse_input_nopost(const char* s,Engine* pE);
-void parse_input_analyze(const char* s,Engine* pE); 
-void parse_input_name(const char* s,Engine* pE);				
-void parse_input_rating(const char* s,Engine* pE); 
-void parse_input_ics(const char* s,Engine* pE);				
-void parse_input_computer(const char* s,Engine* pE); 
-void parse_input_pause(const char* s,Engine* pE); 
+void parse_input_analyze(const char* s,Engine* pE);
+void parse_input_name(const char* s,Engine* pE);
+void parse_input_rating(const char* s,Engine* pE);
+void parse_input_ics(const char* s,Engine* pE);
+void parse_input_computer(const char* s,Engine* pE);
+void parse_input_pause(const char* s,Engine* pE);
 void parse_input_resume(const char* s,Engine* pE);
 void parse_input_memory(const char* s, Engine* pE);
 void parse_input_cores(const char* s, Engine* pE);
