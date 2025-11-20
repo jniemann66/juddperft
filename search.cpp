@@ -88,6 +88,10 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			if (pM->Check) {
 				pI->nCheck++;
 			}
+
+            if (pM->Checkmate) {
+                pI->nCheckmate++;
+            }
 		}
 	}
 

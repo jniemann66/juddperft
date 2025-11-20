@@ -339,7 +339,7 @@ void parse_input_perft(const char* s, Engine* pE)
 			RaiiTimer timer;
 			PerftInfo T;
 			perftMT(pE->currentPosition, q, 1, &T);
-			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+            printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 				   q,
 				   T.nMoves,
 				   T.nCapture + T.nEPCapture,
@@ -347,7 +347,8 @@ void parse_input_perft(const char* s, Engine* pE)
 				   T.nCastleLong,
 				   T.nEPCapture,
 				   T.nPromotion,
-				   T.nCheck
+                   T.nCheck,
+                   T.nCheckmate
 				   );
 			printf("\n");
 		}
@@ -397,7 +398,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		dumpMove(*pM, LongAlgebraicNoNewline);
 		PerftInfo T;
 		perftMT(Q, depth-1, 1, &T);
-		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+        printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 			depth-1,
 			T.nMoves,
 			T.nCapture + T.nEPCapture,
@@ -405,7 +406,8 @@ void parse_input_divide(const char* s, Engine* pE)
 			T.nCastleLong,
 			T.nEPCapture,
 			T.nPromotion,
-			T.nCheck
+            T.nCheck,
+            T.nCheckmate
 			);
 
 		printf("\n");
@@ -422,7 +424,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		pM++;
 	}
 
-	printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+    printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 		depth,
 		GT.nMoves,
 		GT.nCapture + GT.nEPCapture,
@@ -430,7 +432,8 @@ void parse_input_divide(const char* s, Engine* pE)
 		GT.nCastleLong,
 		GT.nEPCapture,
 		GT.nPromotion,
-		GT.nCheck
+        GT.nCheck,
+        GT.nCheckmate
 		);
 }
 

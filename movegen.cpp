@@ -933,6 +933,20 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
+inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
+{
+    // test if white's move will put black in check or checkmate
+    if (isBlackInCheck(Q))	{
+        pM->Check = 1;
+        Q.BlackToMove = 1;
+        ChessMove blacksMoves[MOVELIST_SIZE];
+        genBlackMoves(Q, blacksMoves);
+        if (blacksMoves->MoveCount == 0) { // black will be in check with no legal moves
+            pM->Checkmate = 1; // this move is a checkmating move
+        }
+    }
+}
+
 inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
 {
 	if (to != 0)
@@ -953,16 +967,13 @@ inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, 
 			Q.C ^= 0x000000000000000f;
 		}
 
-		// check test
-		if (!isWhiteInCheck(Q))	{
-			if (isBlackInCheck(Q))	{
-				pM->Check = 1; // this move will put the opponent in check
-			}
-			pM++; // Add to list (advance pointer)
-			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        if (isWhiteInCheck(Q)) {
+            pM->IllegalMove = 1;
+        } else {
+            scanWhiteMoveForChecks(Q, pM);
+            pM++; // Add to list (advance pointer)
+            pM->Flags = 0;
+        }
 	}
 }
 
@@ -1009,16 +1020,13 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			}
 		}
 
-		// check test
-		if (!isWhiteInCheck(Q))	{
-			if (isBlackInCheck(Q))	{
-				pM->Check = 1; // this move will put the opponent in check
-			}
-			pM++; // Add to list (advance pointer)
-			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        if (isWhiteInCheck(Q)) {
+            pM->IllegalMove = 1;
+        } else {
+            scanWhiteMoveForChecks(Q, pM);
+            pM++; // Add to list (advance pointer)
+            pM->Flags = 0;
+        }
 	}
 }
 
@@ -1049,34 +1057,29 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		Q.B |= to;
 		Q.C |= to;
 
-		if (!isWhiteInCheck(Q))	{
-
+        if (isWhiteInCheck(Q))	{
+            pM->IllegalMove = 1;
+        } else {
 			// make an additional 3 copies for the underpromotions
 			*(pM + 1) = *pM;
 			*(pM + 2) = *pM;
 			*(pM + 3) = *pM;
 
 			pM->PromoteQueen = 1;
-			if (isBlackInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanWhiteMoveForChecks(Q, pM);
 			pM++;
 
 			// rook underpromotion
 			pM->PromoteRook = 1;
 			Q.B &= ~to;
-			if (isBlackInCheck(Q)) {
-				 pM->Check = 1;
-			}
+            scanWhiteMoveForChecks(Q, pM);
 			pM++;
 
 			// bishop underpromotion
 			pM->PromoteBishop = 1;
 			Q.C &= ~to;
 			Q.B |= to;
-			if (isBlackInCheck(Q)) {
-			  pM->Check = 1;
-			}
+            scanWhiteMoveForChecks(Q, pM);
 			pM++;
 
 			// knight underpromotion
@@ -1084,14 +1087,11 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			Q.A |= to;
 			Q.B &= ~to;
 			Q.C |= to;
-			if (isBlackInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanWhiteMoveForChecks(Q, pM);
 			pM++;
+
 			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        }
 	}
 }
 
@@ -1418,6 +1418,21 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
+inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
+{
+    // test if black's move will put white in check or checkmate
+    if (isWhiteInCheck(Q))	{
+        pM->Check = 1;
+        Q.BlackToMove = 0;
+        ChessMove whitesMoves[MOVELIST_SIZE];
+        genWhiteMoves(Q, whitesMoves);
+        if (whitesMoves->MoveCount == 0) { // white will be in check with no legal moves
+            pM->Checkmate = 1; // this move is a checkmating move
+        }
+    }
+}
+
+
  inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
  {
 	if (to != 0)
@@ -1441,16 +1456,13 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 			Q.D ^= 0x0f00000000000000;
 		}
 
-		// check test
-		if (!isBlackInCheck(Q))	{
-			if (isWhiteInCheck(Q))	{
-				pM->Check = 1; // this move will put the opponent in check
-			}
-			pM++; // Add to list (advance pointer)
-			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        if (isBlackInCheck(Q)) {
+            pM->IllegalMove = 1;
+        } else {
+            scanBlackMoveForChecks(Q, pM);
+            pM++; // Add to list (advance pointer)
+            pM->Flags = 0;
+        }
 	}
 }
 
@@ -1498,16 +1510,13 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			}
 		}
 
-		// check test
-		if (!isBlackInCheck(Q))	{
-			if (isWhiteInCheck(Q))	{
-				pM->Check = 1; // this move will put the opponent in check
-			}
-			pM++; // Add to list (advance pointer)
-			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        if (isBlackInCheck(Q)) {
+            pM->IllegalMove = 1;
+        } else {
+            scanBlackMoveForChecks(Q, pM);
+            pM++; // Add to list (advance pointer)
+            pM->Flags = 0;
+        }
 	}
 }
 
@@ -1540,34 +1549,29 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		Q.C |= to;
 		Q.D |= to;
 
-		if (!isBlackInCheck(Q))
-		{
+        if (isBlackInCheck(Q)) {
+            pM->IllegalMove = 1;
+        } else {
 			// make an additional 3 copies for underpromotions
 			*(pM + 1) = *pM;
 			*(pM + 2) = *pM;
 			*(pM + 3) = *pM;
 
 			pM->PromoteQueen = 1;
-			if (isWhiteInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanBlackMoveForChecks(Q, pM);
 			pM++;
 
 			// rook underpromotion
 			pM->PromoteRook = 1;
 			Q.B &= ~to;
-			if (isWhiteInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanBlackMoveForChecks(Q, pM);
 			pM++;
 
 			// bishop underpromotion
 			pM->PromoteBishop = 1;
 			Q.C &= ~to;
 			Q.B |= to;
-			if (isWhiteInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanBlackMoveForChecks(Q, pM);
 			pM++;
 
 			// knight underpromotion
@@ -1575,14 +1579,11 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			Q.A |= to;
 			Q.B &= ~to;
 			Q.C |= to;
-			if (isWhiteInCheck(Q)) {
-				pM->Check = 1;
-			}
+            scanBlackMoveForChecks(Q, pM);
 			pM++;
+
 			pM->Flags = 0;
-		} else {
-			pM->IllegalMove = 1;
-		}
+        }
 	}
 }
 
