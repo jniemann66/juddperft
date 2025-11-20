@@ -389,7 +389,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessPosition Q;
 	RaiiTimer timer;
 
-	while (pM->NoMoreMoves == 0)
+	while (pM->EndOfMoveList == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM);
@@ -449,7 +449,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	int64_t GrandTotal = 0;
 	RaiiTimer timer;
 
-	while (pM->NoMoreMoves == 0)
+	while (pM->EndOfMoveList == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM).switchSides();
@@ -571,8 +571,8 @@ void  send_output_feature(Engine* pE)
 }
 void  send_output_illegalmove(const char* s, Engine* pE){}
 void  send_output_error(const char* s, Engine* pE){}
-void  send_output_move(Move M){}
-void  send_output_hint(Move M){}
+void  send_output_move(const ChessMove& M){}
+void  send_output_hint(const ChessMove& M){}
 void  send_output_result(const char* s, Engine* pE){}
 void  send_output_resign(Engine* pE){}
 void  send_output_offerdraw(Engine* pE){}

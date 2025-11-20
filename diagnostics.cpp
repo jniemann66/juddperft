@@ -111,7 +111,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
 
-	while (pM->NoMoreMoves == 0)
+	while (pM->EndOfMoveList == 0)
 	{
 		// Set up position
 		Q = *pP;

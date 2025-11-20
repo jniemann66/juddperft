@@ -53,7 +53,7 @@ namespace juddperft {
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
 //
 #define _USE_BITSCAN_INSTRUCTIONS 1				// if defined, use x86-64 BSR and BSF instructions (Only available on x86-64)
-//#define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
+// #define _USE_POPCNT_INSTRUCTION 1			// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
 
 #ifdef _USE_BITSCAN_INSTRUCTIONS
@@ -92,82 +92,50 @@ namespace juddperft {
 typedef uint64_t BitBoard;
 typedef uint64_t HashKey;
 
-// class Move: This is the Long-Format, in which the From and To squares are represented by Bitboards.
-// This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
-// an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
-
-class Move
-{
-public:
-	BitBoard From;
-	BitBoard To;
-	union{
-		struct{
-				uint32_t BlackToMove : 1;
-				uint32_t Check : 1;
-				uint32_t Capture : 1;
-				uint32_t EnPassantCapture : 1;
-				uint32_t DoublePawnMove : 1;
-				uint32_t Castle : 1;
-				uint32_t CastleLong : 1;
-				uint32_t PromoteKnight : 1;
-				uint32_t PromoteBishop : 1;
-				uint32_t PromoteRook : 1;
-				uint32_t PromoteQueen : 1;
-				uint32_t Unused : 7;
-				uint32_t IllegalMove : 1;
-				uint32_t NoMoreMoves : 1;
-				uint32_t Piece : 4;
-				uint32_t MoveCount : 8;
-		};
-		uint32_t Flags;
-	};
-
-public:
-	Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
-	bool operator==(const Move & B) const;
-
-	Move& format(
-		BitBoard From,
-		BitBoard To,
-		uint32_t BlackToMove = 0,
-		uint32_t Piece = 0,
-		uint32_t Flags = 0
-		);
-	void ClearFlags() {
-		Move::Flags = 0;
-	}
-};
-
 // ChessMove{} - Compact move format packed into 64 bits
 // From and To squares represented by unsigned char square index
 // to-do: try to pack it into 32 bits ?
 
 struct ChessMove {
+	ChessMove(unsigned char From = 0, unsigned char To = 0, uint32_t Flags = 0)
+		: FromSquare(From), ToSquare(To), Flags(Flags)
+	{
+
+	}
+
 	union {
 		struct {
+			uint32_t MoveCount : 8;			// used in the first move of list; indicates how many moves there are
+			uint32_t EndOfMoveList : 1;		// if set, this marks the end of the move list (not a move)
+			uint32_t IllegalMove : 1;
 			uint32_t BlackToMove : 1;
-			uint32_t Check : 1;
-			uint32_t Capture : 1;
-			uint32_t EnPassantCapture : 1;
+			uint32_t Unused : 5;
+			uint32_t Piece : 4;
 			uint32_t DoublePawnMove : 1;
+			uint32_t EnPassantCapture : 1;
 			uint32_t Castle : 1;
 			uint32_t CastleLong : 1;
+			uint32_t Capture : 1;
+			uint32_t Check : 1;				// if set, performing this move will put opponent in check
 			uint32_t PromoteKnight : 1;
 			uint32_t PromoteBishop : 1;
 			uint32_t PromoteRook : 1;
 			uint32_t PromoteQueen : 1;
-			uint32_t Unused : 7;
-			uint32_t IllegalMove : 1;
-			uint32_t NoMoreMoves : 1;
-			uint32_t Piece : 4;
-			uint32_t MoveCount : 8;
+			uint32_t Stalemate : 1;			// if set, performing this move will put opponent in checkmate
+			uint32_t Checkmate : 1;			// if set, performing this move will result in stalemate
 		};
 		uint32_t Flags;
 	};
 	unsigned char FromSquare;
 	unsigned char ToSquare;
+
+	void ClearFlags() {
+		Flags = 0;
+	}
+
 };
+
+
 class ChessPosition
 {
 	/* --------------------------------------------------------------
@@ -220,8 +188,12 @@ public:
 			uint32_t WhiteDidCastleLong : 1;
 			uint32_t BlackDidCastle : 1;
 			uint32_t BlackDidCastleLong : 1;
-			uint32_t CheckmateWhite;
-			uint32_t CheckmateBlack;
+			uint32_t Stalemate : 1;
+			uint32_t Unused : 12;
+			uint32_t WhiteIsInCheck : 1;
+			uint32_t BlackIsInCheck : 1;
+			uint32_t WhiteIsCheckmated : 1;
+			uint32_t BlackIsCheckmated : 1;
 		};
 		uint32_t Flags;
 	};
@@ -1263,6 +1235,59 @@ inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	First = B & (1LL << b);
 }
 
+/*
+
+// class Move: This is the (OLD) Long-Format, in which the From and To squares are represented by Bitboards.
+// This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
+// an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
+
+class Move
+{
+public:
+	BitBoard From;
+	BitBoard To;
+	union{
+		struct{
+				uint32_t BlackToMove : 1;
+				uint32_t Check : 1;
+				uint32_t Capture : 1;
+				uint32_t EnPassantCapture : 1;
+				uint32_t DoublePawnMove : 1;
+				uint32_t Castle : 1;
+				uint32_t CastleLong : 1;
+				uint32_t PromoteKnight : 1;
+				uint32_t PromoteBishop : 1;
+				uint32_t PromoteRook : 1;
+				uint32_t PromoteQueen : 1;
+				uint32_t Unused : 7;
+				uint32_t IllegalMove : 1;
+				uint32_t NoMoreMoves : 1;
+				uint32_t Piece : 4;
+				uint32_t MoveCount : 8;
+		};
+		uint32_t Flags{0};
+	};
+
+public:
+	Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
+	bool operator==(const Move & B) const;
+
+	Move& format(
+		BitBoard From,
+		BitBoard To,
+		uint32_t BlackToMove = 0,
+		uint32_t Piece = 0,
+		uint32_t Flags = 0
+		);
+	void ClearFlags() {
+		Move::Flags = 0;
+	}
+};
+
+*/
+
+/*
+
 // Conversion functions for the different Move formats:
 inline void move2ChessMove(ChessMove& m, const Move& M) {
 	m.Flags = M.Flags;
@@ -1275,6 +1300,8 @@ inline void chessMove2Move(const ChessMove& m, Move& M) {
 	M.From = 1LL << m.FromSquare;
 	M.To = 1LL << m.ToSquare;
 }
+
+*/
 
 } // namespace juddperft
 #endif // _MOVEGEN

@@ -43,47 +43,6 @@ SOFTWARE.
 
 namespace juddperft {
 
-//////////////////////////////////////
-// Implementation of Class Move		//
-//////////////////////////////////////
-
-Move::Move(BitBoard From /*=0*/, BitBoard To /*=0*/ , uint32_t Flags /*=0*/)
-{
-	Move::From = From;
-	Move::To = To;
-	Move::Flags = Flags;
-}
-
-bool Move::operator==(const Move& B) const
-{
-	return	(Move::From == B.From)	&&
-		(Move::To == B.To)		&&
-		(Move::Piece == B.Piece);
-
-	// Note Move::Flags doesn't need to be the same
-	// for two moves to be considered equal.
-	// This is because the equality test is primarily used
-	// to verify inputted moves against a list of legal moves
-	// and there is no need to go to all the trouble of setting the flags
-	// on both sides.
-}
-
-Move& Move::format(
-		BitBoard From /*=0*/,
-		BitBoard To /*=0*/,
-		uint32_t BlackToMove /*=0*/,
-		uint32_t Piece /*=0*/,
-		uint32_t Flags /*=0*/
-		)
-{
-	Move::Flags = Flags;
-	Move::From = From;
-	Move::To = To;
-	Move::BlackToMove = BlackToMove;
-	Move::Piece = Piece;
-	return *this;
-}
-
 //////////////////////////////////////////////
 // Implementation of Class ChessPosition	//
 //////////////////////////////////////////////
@@ -737,7 +696,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	BitBoard Square;
 	BitBoard CurrentSquare;
 	BitBoard A, B, C;
-	Move M; // Dummy Move object used for setting flags.
+	ChessMove M; // Dummy Move object used for setting flags.
 	uint32_t piece = 0;
 
 	unsigned long lastSq = 63;
@@ -971,7 +930,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->FromSquare = 0;
 	pM->ToSquare = 0;
 	pM->Piece = 0;
-	pM->NoMoreMoves = 1;
+	pM->EndOfMoveList = 1;
 }
 
 inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
@@ -1220,7 +1179,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	BitBoard Square;
 	BitBoard CurrentSquare;
 	BitBoard A, B, C;
-	Move M; // Dummy Move object used for setting flags.
+	ChessMove M; // Dummy Move object used for setting flags.
 	uint32_t piece = 0;
 
 	unsigned long lastSq = 63;
@@ -1456,7 +1415,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->FromSquare = 0;
 	pM->ToSquare = 0;
 	pM->Piece = 0;
-	pM->NoMoreMoves = 1;
+	pM->EndOfMoveList = 1;
 }
 
  inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
@@ -1943,7 +1902,7 @@ void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
 	do{
 		if (pM->ToSquare != pM->FromSquare)
 			dumpMove(*pM, style, pBuffer);
-		if (pM->NoMoreMoves != 0)
+		if (pM->EndOfMoveList != 0)
 		{
 			// No more moves
 			break;
@@ -1951,5 +1910,47 @@ void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
 		++pM;
 	} while (++i<MOVELIST_SIZE);
 }
+
+// //////////////////////////////////////
+// // Implementation of Class Move		//
+// //////////////////////////////////////
+
+// Move::Move(BitBoard From /*=0*/, BitBoard To /*=0*/ , uint32_t Flags /*=0*/)
+// {
+// 	Move::From = From;
+// 	Move::To = To;
+// 	Move::Flags = Flags;
+// }
+
+// bool Move::operator==(const Move& B) const
+// {
+// 	return	(Move::From == B.From)	&&
+// 		(Move::To == B.To)		&&
+// 		(Move::Piece == B.Piece);
+
+// 	// Note Move::Flags doesn't need to be the same
+// 	// for two moves to be considered equal.
+// 	// This is because the equality test is primarily used
+// 	// to verify inputted moves against a list of legal moves
+// 	// and there is no need to go to all the trouble of setting the flags
+// 	// on both sides.
+// }
+
+// Move& Move::format(
+// 		BitBoard From /*=0*/,
+// 		BitBoard To /*=0*/,
+// 		uint32_t BlackToMove /*=0*/,
+// 		uint32_t Piece /*=0*/,
+// 		uint32_t Flags /*=0*/
+// 		)
+// {
+// 	Move::Flags = Flags;
+// 	Move::From = From;
+// 	Move::To = To;
+// 	Move::BlackToMove = BlackToMove;
+// 	Move::Piece = Piece;
+// 	return *this;
+// }
+
 
 } // namespace juddperft

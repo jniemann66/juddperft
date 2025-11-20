@@ -329,7 +329,7 @@ void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 			continue;
 		}
 
-		if (!pMovePtr[currentdepth]->NoMoreMoves) {
+		if (!pMovePtr[currentdepth]->EndOfMoveList) {
 			Q[currentdepth - 1] = Q[currentdepth];
 			Q[currentdepth - 1].performMove(*pMovePtr[currentdepth]).switchSides();
 			++pMovePtr[currentdepth];
@@ -363,7 +363,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	generateMoves(P, MoveList);
 
 	if (depth == maxdepth) {
-		for (ChessMove* pM = MoveList; pM->NoMoreMoves == 0; pM++)
+		for (ChessMove* pM = MoveList; pM->EndOfMoveList == 0; pM++)
 		{
 			pI->nMoves++;
 			if (pM->Capture)
