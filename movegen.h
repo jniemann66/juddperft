@@ -188,10 +188,11 @@ public:
 			uint32_t WhiteDidCastleLong : 1;
 			uint32_t BlackDidCastle : 1;
 			uint32_t BlackDidCastleLong : 1;
-			uint32_t Stalemate : 1;
-			uint32_t Unused : 12;
+            uint32_t Unused : 13;
 			uint32_t WhiteIsInCheck : 1;
 			uint32_t BlackIsInCheck : 1;
+            uint32_t WhiteIsStalemated : 1;
+            uint32_t BlackIsStalemated : 1;
 			uint32_t WhiteIsCheckmated : 1;
 			uint32_t BlackIsCheckmated : 1;
 		};

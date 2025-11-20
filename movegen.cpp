@@ -214,16 +214,23 @@ ChessPosition& ChessPosition::calculateMaterial()
 
 ChessPosition& ChessPosition::performMove(ChessMove M)
 {
-	BitBoard O, To;
-	To = 1LL << M.ToSquare;
-	O = ~((1LL << M.FromSquare) | To);
+    BitBoard To = 1LL << M.ToSquare;
+    const BitBoard O = ~((1LL << M.FromSquare) | To);
 	unsigned long nFromSquare = M.FromSquare;
 	unsigned long nToSquare = M.ToSquare;
 
+    // if move is known to be delivering checkmate, immediately flag checkmate in the position
+    if (M.Checkmate && M.BlackToMove == BlackToMove) {
+        if (M.BlackToMove) {
+            WhiteIsCheckmated = 1;
+        } else {
+            BlackIsCheckmated = 1;
+        }
+    }
+
 	// CLEAR EP SQUARES :
 	// clear any enpassant squares
-
-	BitBoard EnPassant = A & B & (~C);
+    const BitBoard EnPassant = A & B & (~C);
 	ChessPosition::A &= ~EnPassant;
 	ChessPosition::B &= ~EnPassant;
 	ChessPosition::C &= ~EnPassant;
@@ -681,7 +688,16 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 
 void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
-	ChessMove* pFirstMove = pM;
+    if (P.WhiteIsCheckmated || P.WhiteIsStalemated) {
+        pM->MoveCount = 0;
+        pM->FromSquare = 0;
+        pM->ToSquare = 0;
+        pM->Piece = 0;
+        pM->EndOfMoveList = 1;
+        return;
+    }
+
+    ChessMove* pFirstMove = pM;
 	BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
 	BitBoard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
 	BitBoard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
@@ -1164,6 +1180,15 @@ inline BitBoard isWhiteInCheck(const ChessPosition& Z)
 
 void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
+    if (P.BlackIsCheckmated || P.BlackIsStalemated) {
+        pM->MoveCount = 0;
+        pM->FromSquare = 0;
+        pM->ToSquare = 0;
+        pM->Piece = 0;
+        pM->EndOfMoveList = 1;
+        return;
+    }
+
 	ChessMove* pFirstMove = pM;
 	const BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
 	const BitBoard BlackOccupied = P.D & ~(P.A & P.B & ~P.C);					// all squares occupied by B, excluding EP Squares
