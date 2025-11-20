@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -143,7 +143,7 @@ int winBoard(Engine* pE)
 
 bool waitForInput(Engine* pE)
 {
-    int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
+	int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
 
 	char* input = NULL;
 	std::string inputStr;
@@ -160,12 +160,12 @@ bool waitForInput(Engine* pE)
 
 		// log input
 		logInput(logfile, input);
-        command = strtok(input, " \n");
-        if (command != NULL)
+		command = strtok(input, " \n");
+		if (command != NULL)
 		{
 
 			// search for command
-            for (int i = 0; i < nRecognizedCommands; i++)
+			for (int i = 0; i < nRecognizedCommands; i++)
 			{
 				if (_stricmp(command, winboardInputCommands[i].pzCommandString) == 0)
 				{
@@ -175,7 +175,7 @@ bool waitForInput(Engine* pE)
 						return false;
 					}
 					// separate command from remainder of string
-                    args = strtok(NULL, "\n" /* note: deliberately ignore spaces */);
+					args = strtok(NULL, "\n" /* note: deliberately ignore spaces */);
 					winboardInputCommands[i].pF(args, pE); // invoke handler for function
 					return true;
 				}
@@ -197,16 +197,16 @@ bool waitForInput(Engine* pE)
 bool isImplemented(const char* s, Engine* pE)
 {
 	bool bRetVal = false;
-    int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
+	int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
 	if (s != NULL)
 	{
 		// search for command
-        for (int i = 0; i<nRecognizedCommands; i++)
+		for (int i = 0; i<nRecognizedCommands; i++)
 		{
 			if (_stricmp(s, winboardInputCommands[i].pzCommandString) == 0)
 			{
 				if (winboardInputCommands[i].implemented)
-                    bRetVal = true;
+					bRetVal = true;
 				break;
 			}
 		}
@@ -225,7 +225,7 @@ void parse_input_protover(const char* s, Engine* pE)
 	{
 		// if protocol version is 2 or higher, send feature list,
 		// by using feature command:
-        if (atoi(s) >= 2)
+		if (atoi(s) >= 2)
 			send_output_feature(pE);
 		else
 		{
@@ -330,28 +330,28 @@ void parse_input_showhash(const char* s, Engine* pE)
 
 void parse_input_perft(const char* s, Engine* pE)
 {
-    if (s == nullptr)
+	if (s == nullptr)
 		return;
 
-    for (int q = 1; q <= atoi(s); q++)
-    {
-        {
-            RaiiTimer timer;
-            PerftInfo T;
-            perftMT(pE->currentPosition, q, 1, &T);
-            printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
-                   q,
-                   T.nMoves,
-                   T.nCapture + T.nEPCapture,
-                   T.nCastle,
-                   T.nCastleLong,
-                   T.nEPCapture,
-                   T.nPromotion,
-                   T.nCheck
-                   );
-            printf("\n");
-        }
-    }
+	for (int q = 1; q <= atoi(s); q++)
+	{
+		{
+			RaiiTimer timer;
+			PerftInfo T;
+			perftMT(pE->currentPosition, q, 1, &T);
+			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+				   q,
+				   T.nMoves,
+				   T.nCapture + T.nEPCapture,
+				   T.nCastle,
+				   T.nCastleLong,
+				   T.nEPCapture,
+				   T.nPromotion,
+				   T.nCheck
+				   );
+			printf("\n");
+		}
+	}
 }
 
 void parse_input_perftfast(const char* s, Engine* pE) {
@@ -389,23 +389,23 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessPosition Q;
 	RaiiTimer timer;
 
-    while (pM->NoMoreMoves == 0)
+	while (pM->NoMoreMoves == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM);
 		Q.switchSides();
 		dumpMove(*pM, LongAlgebraicNoNewline);
-        PerftInfo T;
+		PerftInfo T;
 		perftMT(Q, depth-1, 1, &T);
-        printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
 			depth-1,
 			T.nMoves,
 			T.nCapture + T.nEPCapture,
 			T.nCastle,
 			T.nCastleLong,
 			T.nEPCapture,
-            T.nPromotion,
-            T.nCheck
+			T.nPromotion,
+			T.nCheck
 			);
 
 		printf("\n");
@@ -416,21 +416,21 @@ void parse_input_divide(const char* s, Engine* pE)
 		GT.nCastleLong += T.nCastleLong;
 		GT.nEPCapture += T.nEPCapture;
 		GT.nPromotion += T.nPromotion;
-        GT.nCheck += T.nCheck;
-        GT.nCheckmate += T.nCheckmate;
+		GT.nCheck += T.nCheck;
+		GT.nCheckmate += T.nCheckmate;
 
 		pM++;
 	}
 
-    printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
+	printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld\n",
 		depth,
 		GT.nMoves,
 		GT.nCapture + GT.nEPCapture,
 		GT.nCastle,
 		GT.nCastleLong,
 		GT.nEPCapture,
-        GT.nPromotion,
-        GT.nCheck
+		GT.nPromotion,
+		GT.nCheck
 		);
 }
 

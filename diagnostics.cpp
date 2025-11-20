@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -49,7 +49,7 @@ void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 	readFen(&P, pzFENstring);
 	dumpChessPosition(P);
 
-    int64_t n = 0;
+	int64_t n = 0;
 	perftFastMT(P, depth, n);
 	printf("Perft %d: %lld (Correct Answer= %lld)\n", depth, n, correctAnswer);
 
@@ -129,7 +129,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		dumpMove(*pM);
 		std::cout << "Position: " << fenString << std::endl;
 
-        T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = T.nCheck = T.nCheckmate = 0LL;
+		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = T.nCheck = T.nCheckmate = 0LL;
 		perftMT(Q, depth - 1, 1, &T);
 
 		std::cout << "\nValidating depth: " << depth - 1 << " perft: " << T.nMoves << std::endl;
@@ -156,9 +156,9 @@ void runTestSuite()
 	// see https://chessprogramming.wikispaces.com/perft+Results
 	printf("Running Test Suite\n\n");
 	dumpPerftScoreFfromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860);				// Position 1: Initial Position
-	dumpPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25",5,193690690);	// Position 2: 'Kiwipete' position
-	dumpPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0",7, 178633661);								// Position 3
-	dumpPerftScoreFfromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",6, 706045033);		// Position 4
+	dumpPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25", 5, 193690690);	// Position 2: 'Kiwipete' position
+	dumpPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0", 7, 178633661);								// Position 3
+	dumpPerftScoreFfromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 6, 706045033);		// Position 4
 	dumpPerftScoreFfromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", 6, 706045033);		// Position 4 Mirrored (should be same score as previous)
 	dumpPerftScoreFfromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194);				// Position 5
 	dumpPerftScoreFfromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 7, 287188994746); // Position 6 28/1/2016: Correct (took 8454195 ms)

@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -55,7 +55,6 @@ namespace juddperft {
 #define _USE_BITSCAN_INSTRUCTIONS 1				// if defined, use x86-64 BSR and BSF instructions (Only available on x86-64)
 //#define _USE_POPCNT_INSTRUCTION 1				// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
- #define _FLAG_CHECKS_IN_MOVE_GENERATION 1		// Move generator will set "Check" flag in moves which put enemy in check (not needed for perft)
 
 #ifdef _USE_BITSCAN_INSTRUCTIONS
 // #include <intrin.h>
@@ -93,7 +92,6 @@ namespace juddperft {
 typedef uint64_t BitBoard;
 typedef uint64_t HashKey;
 
-
 // class Move: This is the Long-Format, in which the From and To squares are represented by Bitboards.
 // This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
 // an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
@@ -126,16 +124,15 @@ public:
 	};
 
 public:
-    Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
+	Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
 	bool operator==(const Move & B) const;
-//	Move & operator=(const Move & M);
 
 	Move& format(
 		BitBoard From,
 		BitBoard To,
-        uint32_t BlackToMove = 0,
-        uint32_t Piece = 0,
-        uint32_t Flags = 0
+		uint32_t BlackToMove = 0,
+		uint32_t Piece = 0,
+		uint32_t Flags = 0
 		);
 	void ClearFlags() {
 		Move::Flags = 0;
@@ -242,9 +239,11 @@ public:
 public:
 	ChessPosition();
 	ChessPosition& setupStartPosition();
+
 #ifdef _USE_HASH
 	ChessPosition& calculateHash();
 #endif
+
 	ChessPosition & setPieceAtSquare(const unsigned int & piece, BitBoard square);
 	uint32_t getPieceAtSquare(const BitBoard & square) const;
 	ChessPosition& calculateMaterial();
@@ -280,6 +279,7 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 void genWhiteMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genBlackAttacks(const ChessPosition& Z);
 BitBoard isWhiteInCheck(const ChessPosition & Z);
+void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
@@ -287,6 +287,7 @@ void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, u
 void genBlackMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genWhiteAttacks(const ChessPosition& Z);
 BitBoard isBlackInCheck(const ChessPosition & Z);
+void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
@@ -826,7 +827,7 @@ inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 	//// Right:
 	//i = g; j = p; j &= m2; y = i; y >>= 1; y &= j; i |= y; z = j; z >>= 1; j &= z; y = i; y >>= 2; y &= j;
 	//i |= y; z = j; z >>= 2; j &= z; y = i; y >>= 4; y &= j; i |= y; r |= i;
-    //r &= ~g;
+	//r &= ~g;
 //	return r;
 }
 
@@ -891,15 +892,15 @@ inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
 #else
 
 	// Alternative:
-    //const BitBoard m1 = 0xfefefefefefefefe;
-    //const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
+	//const BitBoard m1 = 0xfefefefefefefefe;
+	//const BitBoard m2 = 0x7f7f7f7f7f7f7f7f;
 /*	BitBoard a;
 	a = g | (0xfefefefefefefefe & (g << 1));
 	a |= a << 8;
 	a |= 0x7f7f7f7f7f7f7f7f & (a >> 1);
 	a |= a >> 8;
-    a &= ~g;
-    a &= p;
+	a &= ~g;
+	a &= p;
 	return a; */
 	//
 	BitBoard a, b;

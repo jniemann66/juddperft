@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -54,7 +54,7 @@ public:
 	ZobristKey zkBlackCanCastle;
 	ZobristKey zkBlackCanCastleLong;
 	ZobristKey zkPerftDepth[24];
-	
+
 	// pre-fabricated combinations of keys for castling:
 	ZobristKey zkDoBlackCastle;
 	ZobristKey zkDoBlackCastleLong;
@@ -217,14 +217,14 @@ struct PerftTableEntry
 		struct {
 			unsigned long long count : 60;
 			unsigned long long depth : 4;
-	
-    // warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
+
+	// warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
 	// which only allows up to perft 12 from start position
 
 		};
 		unsigned long long data;
-	}; 
-#endif 
+	};
+#endif
 	// Note: std::atomic<> version of this appears to add 8 bytes on msvc
 };
 

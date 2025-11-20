@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -62,32 +62,32 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 		for (int i = 0; i<movecount; i++, pM++)
 		{
 			pI->nMoves++;
-            if (pM->Capture) {
+			if (pM->Capture) {
 				pI->nCapture++;
-            }
+			}
 
-            if (pM->Castle) {
+			if (pM->Castle) {
 				pI->nCastle++;
-            }
+			}
 
-            if (pM->CastleLong) {
+			if (pM->CastleLong) {
 				pI->nCastleLong++;
-            }
+			}
 
-            if (pM->EnPassantCapture) {
+			if (pM->EnPassantCapture) {
 				pI->nEPCapture++;
-            }
+			}
 
 			if (pM->PromoteBishop ||
 				pM->PromoteKnight ||
 				pM->PromoteQueen ||
-                pM->PromoteRook) {
+				pM->PromoteRook) {
 				pI->nPromotion++;
-            }
+			}
 
-            if (pM->Check) {
-                pI->nCheck++;
-            }
+			if (pM->Check) {
+				pI->nCheck++;
+			}
 		}
 	}
 
@@ -186,7 +186,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 #endif
 		generateMoves(P, MoveList);
 		int movecount = MoveList->MoveCount;
-        for (int i = 0; i < movecount; i++) {
+		for (int i = 0; i < movecount; i++) {
 			Q = P;								// unmake move
 			Q.performMove(MoveList[i]).switchSides();			// make move
 			perftFast(Q, depth - 1, nNodes);
@@ -257,7 +257,7 @@ void perftFast(const ChessPosition& P, int depth, int64_t& nNodes)
 // perftFastIterative() - Iterative version of perft.
 void perftFastIterative(const ChessPosition& P, int depth, int64_t& nNodes)
 {
-    if (depth == 0){
+	if (depth == 0){
 		nNodes = 1LL;
 		return;
 	}
@@ -437,15 +437,15 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	// add up total:
-    std::for_each(PerftPartial.begin(), PerftPartial.end(), [pI](const PerftInfo& t) {
+	std::for_each(PerftPartial.begin(), PerftPartial.end(), [pI](const PerftInfo& t) {
 		pI->nCapture += t.nCapture;
 		pI->nCastle += t.nCastle;
 		pI->nCastleLong += t.nCastleLong;
 		pI->nEPCapture += t.nEPCapture;
 		pI->nMoves += t.nMoves;
 		pI->nPromotion += t.nPromotion;
-        pI->nCheck += t.nCheck;
-        pI->nCheckmate += t.nCheckmate;
+		pI->nCheck += t.nCheck;
+		pI->nCheckmate += t.nCheckmate;
 	});
 }
 

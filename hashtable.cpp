@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-#include "hashtable.h" 
+#include "hashtable.h"
 #include "search.h"
 
 #include <iostream>
@@ -41,7 +41,7 @@ namespace juddperft {
 	bool ZobristKeySet::generate()
 	{
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
-		// with a uniform distribution of ints 
+		// with a uniform distribution of ints
 		std::random_device rd;
 		std::mt19937_64 e2(rd());
 		std::uniform_int_distribution<unsigned long long int> dist(0, 0xffffffffffffffff);

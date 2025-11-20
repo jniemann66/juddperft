@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -39,7 +39,7 @@ namespace juddperft {
 		Engine::depth = 8;
 		Engine::forceMode = false;
 		Engine::showThinking = true;
-		Engine::nNumCores = MAX_THREADS;	// Hard maximum: 
+		Engine::nNumCores = MAX_THREADS;	// Hard maximum:
 											// App should only ever dispatch std::min(concurrency, nNumCores, MAX_THREADS) threads
 	}
 

@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2017 Judd Niemann
+Copyright(c) 2016-2025 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include "fen.h"
 
-/////////////////////////////////////////////////////////	
+/////////////////////////////////////////////////////////
 // readFen() - Reads a FEN string and sets up position
 // Accordingly..
 /////////////////////////////////////////////////////////
@@ -214,13 +214,13 @@ namespace juddperft {
 		}
 
 #ifdef _USE_HASH
-		pP->calculateHash(); // Important: always do this after setting up a position ! 
+		pP->calculateHash(); // Important: always do this after setting up a position !
 #endif
 
 		return true;
 	}
 
-	/////////////////////////////////////////////////////////	
+	/////////////////////////////////////////////////////////
 	// writeFen() - Generates a FEN string from a Position
 	/////////////////////////////////////////////////////////
 
@@ -291,7 +291,7 @@ namespace juddperft {
 						break;
 					} // ends switch
 					nBlanks = 0;
-				} // ends else	
+				} // ends else
 			}
 
 
