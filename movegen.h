@@ -100,11 +100,10 @@ typedef uint64_t HashKey;
 
 // ChessMove{} - Compact move format packed into 64 bits
 // From and To squares represented by unsigned char square index
-// to-do: try to pack it into 32 bits ?
 
 struct ChessMove {
 	ChessMove(unsigned char From = 0, unsigned char To = 0, uint32_t Flags = 0)
-		: FromSquare(From), ToSquare(To), Flags(Flags)
+        : Flags(Flags), FromSquare(From), ToSquare(To)
 	{
 
 	}
@@ -140,7 +139,6 @@ struct ChessMove {
 	}
 
 };
-
 
 class ChessPosition
 {
@@ -207,7 +205,6 @@ public:
 	};
 	uint16_t MoveNumber;
 	uint16_t HalfMoves;
-	int material;
 	bool operator==(const ChessPosition& Q) {
 		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::Flags == Q.Flags));
 	}
@@ -224,13 +221,49 @@ public:
 	ChessPosition& calculateHash();
 #endif
 
-	ChessPosition& setPieceAtSquare(const piece_t& piece,  unsigned int s);
-	piece_t getPieceAtSquare(unsigned int s) const;
-	ChessPosition& calculateMaterial();
+    ChessPosition& setPieceAtSquare(const piece_t& piece,  unsigned int s)
+    {
+        const BitBoard S = 1LL << s;
+
+        // clear the square
+        A &= ~S;
+        B &= ~S;
+        C &= ~S;
+        D &= ~S;
+
+        // Populate the square
+        A |= static_cast<int64_t>(piece & 1) << s;
+        B |= static_cast<int64_t>((piece & 2) >> 1) << s;
+        C |= static_cast<int64_t>((piece & 4) >> 2) << s;
+        D |= static_cast<int64_t>((piece & 8) >> 3) << s;
+
+#ifdef _USE_HASH
+        ChessPosition::calculateHash();
+#endif
+
+        return *this;
+    }
+
+    piece_t getPieceAtSquare(unsigned int q) const
+    {
+        const BitBoard S = 1LL << q;
+
+        BitBoard V = (D & S) >> q;
+        V <<= 1;
+        V |= (C & S) >> q;
+        V <<= 1;
+        V |= (B & S) >> q;
+        V <<= 1;
+        V |= (A & S) >> q;
+
+        return static_cast<piece_t>(V);
+    }
+
 	ChessPosition& performMove(ChessMove M);
 	void switchSides();
 	void clear(void);
-	//	ChessPosition& operator=(const ChessPosition& P);
+    int calculateMaterial() const;
+
 private:
 };
 
@@ -1244,74 +1277,6 @@ inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	Last = B & (1LL << a);
 	First = B & (1LL << b);
 }
-
-/*
-
-// class Move: This is the (OLD) Long-Format, in which the From and To squares are represented by Bitboards.
-// This is the format that is used throughout the full chess engine. The downside is that for recursive functions like perft,
-// an array of these uses a lot of stack space, and slows things down. Hence, the more compact version below is used.
-
-class Move
-{
-public:
-	BitBoard From;
-	BitBoard To;
-	union{
-		struct{
-				uint32_t BlackToMove : 1;
-				uint32_t Check : 1;
-				uint32_t Capture : 1;
-				uint32_t EnPassantCapture : 1;
-				uint32_t DoublePawnMove : 1;
-				uint32_t Castle : 1;
-				uint32_t CastleLong : 1;
-				uint32_t PromoteKnight : 1;
-				uint32_t PromoteBishop : 1;
-				uint32_t PromoteRook : 1;
-				uint32_t PromoteQueen : 1;
-				uint32_t Unused : 7;
-				uint32_t IllegalMove : 1;
-				uint32_t NoMoreMoves : 1;
-				uint32_t Piece : 4;
-				uint32_t MoveCount : 8;
-		};
-		uint32_t Flags{0};
-	};
-
-public:
-	Move(BitBoard From = 0, BitBoard To = 0, uint32_t Flags = 0);
-	bool operator==(const Move & B) const;
-
-	Move& format(
-		BitBoard From,
-		BitBoard To,
-		uint32_t BlackToMove = 0,
-		uint32_t Piece = 0,
-		uint32_t Flags = 0
-		);
-	void ClearFlags() {
-		Move::Flags = 0;
-	}
-};
-
-*/
-
-/*
-
-// Conversion functions for the different Move formats:
-inline void move2ChessMove(ChessMove& m, const Move& M) {
-	m.Flags = M.Flags;
-	m.FromSquare =	static_cast<unsigned char>(getSquareIndex(M.From));
-	m.ToSquare =	static_cast<unsigned char>(getSquareIndex(M.To));
-}
-
-inline void chessMove2Move(const ChessMove& m, Move& M) {
-	M.Flags = m.Flags;
-	M.From = 1LL << m.FromSquare;
-	M.To = 1LL << m.ToSquare;
-}
-
-*/
 
 } // namespace juddperft
 #endif // _MOVEGEN

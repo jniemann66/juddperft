@@ -54,7 +54,6 @@ ChessPosition::ChessPosition()
 	ChessPosition::C = 0;
 	ChessPosition::D = 0;
 	ChessPosition::Flags = 0;
-	ChessPosition::material = 0;
 
 #ifdef _USE_HASH
 	ChessPosition::HK = 0;
@@ -116,60 +115,13 @@ ChessPosition & ChessPosition::calculateHash()
 }
 #endif
 
-ChessPosition& ChessPosition::setPieceAtSquare(const piece_t& piece, unsigned int s)
+int ChessPosition::calculateMaterial() const
 {
-	const BitBoard S = 1LL << s;
-
-	// clear the square
-	A &= ~S;
-	B &= ~S;
-	C &= ~S;
-	D &= ~S;
-
-	// Populate the square
-	A |= static_cast<int64_t>(piece & 1) << s;
-	B |= static_cast<int64_t>((piece & 2) >> 1) << s;
-	C |= static_cast<int64_t>((piece & 4) >> 2) << s;
-	D |= static_cast<int64_t>((piece & 8) >> 3) << s;
-
-	ChessPosition::calculateMaterial();
-
-#ifdef _USE_HASH
-	ChessPosition::calculateHash();
-#endif
-
-	return *this;
-}
-
-piece_t ChessPosition::getPieceAtSquare(unsigned int s) const
-{
-	const BitBoard S = 1LL << s;
-
-	piece_t V;
-	V = (ChessPosition::D & S) ? 8 : 0;
-	V |= (ChessPosition::C & S) ? 4 : 0;
-	V |= (ChessPosition::B & S) ? 2 : 0;
-	V |= (ChessPosition::A & S) ? 1 : 0;
-	return V;
-}
-
-ChessPosition& ChessPosition::calculateMaterial()
-{
-	ChessPosition::material = 0;
-	BitBoard M;
-	BitBoard V;
+    int material = 0;
 
 	for (int q = 0; q < 64; q++)
 	{
-		M = 1LL << q;
-		V = (ChessPosition::D & M) >> q;
-		V <<= 1;
-		V |= (ChessPosition::C & M) >> q;
-		V <<= 1;
-		V |= (ChessPosition::B & M) >> q;
-		V <<= 1;
-		V |= (ChessPosition::A & M) >> q;
-		switch (V)
+        switch (getPieceAtSquare(q))
 		{
 		case WPAWN:
 			material += 100;
@@ -203,7 +155,8 @@ ChessPosition& ChessPosition::calculateMaterial()
 			break;
 		}
 	}
-	return *this;
+
+    return material;
 }
 
 ChessPosition& ChessPosition::performMove(ChessMove M)
@@ -650,7 +603,6 @@ void ChessPosition::clear(void)
 {
 	A = B = C = D = 0;
 	Flags = 0;
-	material = 0;
 
 #ifdef _USE_HASH
 	HK = 0;
@@ -1685,19 +1637,9 @@ void dumpBitBoard(BitBoard b)
 void dumpChessPosition(ChessPosition p)
 {
 	printf("\n---------------------------------\n");
-	int64_t M;
-	int64_t V;
-	for (int q = 63; q >= 0; q--)
+    for (unsigned int q = 63; q >= 0; q--)
 	{
-		M = 1LL << q;
-		V = ((p.D) & M) >> q;
-		V <<= 1;
-		V |= ((p.C) & M) >> q;
-		V <<= 1;
-		V |= ((p.B) & M) >> q;
-		V <<= 1;
-		V |= ((p.A) & M) >> q;
-		switch(V)
+        switch(p.getPieceAtSquare(q))
 		{
 		case WPAWN:
 			printf("| P ");
@@ -1756,7 +1698,7 @@ void dumpChessPosition(ChessPosition p)
 				printf("White can Castle");
 			if ((q == 32) && (p.WhiteCanCastleLong))
 				printf("White can Castle Long");
-			if (q == 8) printf("material= %d", p.material);
+            if (q == 8) printf("material= %d", p.calculateMaterial());
 			if (q == 0) printf("%s to move", p.BlackToMove ? "Black" : "White");
 			printf("\n---------------------------------\n");
 		}
@@ -1913,47 +1855,5 @@ void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
 		++pM;
 	} while (++i<MOVELIST_SIZE);
 }
-
-// //////////////////////////////////////
-// // Implementation of Class Move		//
-// //////////////////////////////////////
-
-// Move::Move(BitBoard From /*=0*/, BitBoard To /*=0*/ , uint32_t Flags /*=0*/)
-// {
-// 	Move::From = From;
-// 	Move::To = To;
-// 	Move::Flags = Flags;
-// }
-
-// bool Move::operator==(const Move& B) const
-// {
-// 	return	(Move::From == B.From)	&&
-// 		(Move::To == B.To)		&&
-// 		(Move::Piece == B.Piece);
-
-// 	// Note Move::Flags doesn't need to be the same
-// 	// for two moves to be considered equal.
-// 	// This is because the equality test is primarily used
-// 	// to verify inputted moves against a list of legal moves
-// 	// and there is no need to go to all the trouble of setting the flags
-// 	// on both sides.
-// }
-
-// Move& Move::format(
-// 		BitBoard From /*=0*/,
-// 		BitBoard To /*=0*/,
-// 		uint32_t BlackToMove /*=0*/,
-// 		uint32_t Piece /*=0*/,
-// 		uint32_t Flags /*=0*/
-// 		)
-// {
-// 	Move::Flags = Flags;
-// 	Move::From = From;
-// 	Move::To = To;
-// 	Move::BlackToMove = BlackToMove;
-// 	Move::Piece = Piece;
-// 	return *this;
-// }
-
 
 } // namespace juddperft
