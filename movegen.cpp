@@ -411,12 +411,6 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 #else
 		// find out which piece has been captured:
 
-		// Branchy version (reliable, maybe a tiny bit slower):
-		//capturedpiece = (ChessPosition::D & (1LL<<nToSquare))?8:0;
-		//capturedpiece |= (ChessPosition::C & (1LL<<nToSquare))?4:0;
-		//capturedpiece |= (ChessPosition::B & (1LL<<nToSquare))?2:0;
-		//capturedpiece |= (ChessPosition::A & (1LL<<nToSquare))?1:0;
-
 		// Branchless version:
 		capturedpiece = ((ChessPosition::D & To) >> nToSquare) << 3
 			| ((ChessPosition::C & To) >> nToSquare) << 2
@@ -568,17 +562,18 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::B &= ~To;
 			ChessPosition::C &= ~To;
 			ChessPosition::D &= ~To;
-		//	ChessPosition::material -= 100; // perft doesn't care
+
 #ifdef _USE_HASH
 			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
 #endif
+
 		} else {
 			To >>= 8;
 			ChessPosition::A &= ~To;
 			ChessPosition::B &= ~To;
 			ChessPosition::C &= ~To;
 			ChessPosition::D &= ~To;
-		//	ChessPosition::material += 100; // perft doesn't care
+
 #ifdef _USE_HASH
 			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
 #endif
@@ -904,8 +899,7 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 
 inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
 {
-	if (to != 0)
-	{
+    if (to != 0) {
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
 		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
@@ -916,10 +910,12 @@ inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, 
 			Q.A ^= 0x0000000000000028;
 			Q.B ^= 0x0000000000000028;
 			Q.C ^= 0x00000000000000b8;
+            Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 		} else {
 			Q.A ^= 0x000000000000000a;
 			Q.B ^= 0x000000000000000a;
 			Q.C ^= 0x000000000000000f;
+            Q.D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
 		}
 
 		if (isWhiteInCheck(Q)) {
@@ -987,8 +983,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 
 inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags /*=0*/)
 {
-	if (to != 0)
-	{
+    if (to != 0) {
 		pM->FromSquare = fromsquare;
 		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		assert((1LL << pM->ToSquare) == to);
@@ -1389,8 +1384,7 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 
  inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
  {
-	if (to != 0)
-	{
+    if (to != 0) {
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
 		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
@@ -1476,8 +1470,7 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 
 inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
 {
-	if (to != 0)
-	{
+    if (to != 0) {
 		pM->FromSquare = fromsquare;
 		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
 		pM->Flags = flags;
