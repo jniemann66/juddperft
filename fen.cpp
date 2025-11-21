@@ -38,13 +38,13 @@ namespace juddperft {
 		const char* s = pzFENString;
 		char* token;
 		char t[1024];
-		unsigned int piece;
+		piece_t piece;
 		unsigned int shift;
 		pP->clear();
 		// Read Field 1: Piece Positions
-		int Square = 63;
+		int square = 63;
 
-		while ((s != NULL) && (Square >= 0))
+		while ((s != NULL) && (square >= 0))
 		{
 			switch (*s)
 			{
@@ -137,8 +137,8 @@ namespace juddperft {
 				shift = 0;
 			}
 
-			pP->setPieceAtSquare(piece, 1LL << Square);
-			Square -= shift;
+			pP->setPieceAtSquare(piece, square);
+			square -= shift;
 			s++;
 		} // ends while ((s != NULL) && (Square >= 0))
 		// Now, tokenize remainder of string:
@@ -198,7 +198,7 @@ namespace juddperft {
 			}
 			if (((iSquare >= 16) && (iSquare <= 24)) ||
 				((iSquare >= 40) && (iSquare <= 48)))
-				pP->setPieceAtSquare(piece, 1LL << (iSquare));
+				pP->setPieceAtSquare(piece, iSquare);
 			token = strtok(NULL, " ");
 		}
 		// Read Field 5: Halfmove clock (number of half moves since last capture or pawn advance)
@@ -231,9 +231,9 @@ namespace juddperft {
 		int EPSquare = 0;
 		char s[1024];
 
-		for (int square = 63; square >= 0; --square)
+		for (unsigned int square = 63; square >= 0; --square)
 		{
-			piece = pP->getPieceAtSquare(1LL << square);
+			piece = pP->getPieceAtSquare(square);
 			if ((piece & 0x07) == 0) // Blank
 				nBlanks++;
 			else
