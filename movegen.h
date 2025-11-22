@@ -128,7 +128,7 @@ struct ChessMove {
 			uint32_t Stalemate : 1;			// if set, performing this move will put opponent in checkmate
 			uint32_t Checkmate : 1;			// if set, performing this move will result in stalemate
 		};
-		uint32_t Flags;
+        uint32_t Flags{0};
 	};
 	unsigned char FromSquare;
 	unsigned char ToSquare;

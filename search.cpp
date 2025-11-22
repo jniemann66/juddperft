@@ -43,7 +43,7 @@ namespace juddperft {
 uint64_t nodecount;
 //
 
-int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
+nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
@@ -59,7 +59,7 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	if (depth == maxdepth)
 	{
 		pM = MoveList;
-		for (int i = 0; i<movecount; i++, pM++)
+        for (int i = 0; i < movecount; i++, pM++)
 		{
 			pI->nMoves++;
 			if (pM->Capture) {
@@ -139,11 +139,11 @@ int64_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 }
 
 // perftFast() - stripped-down perft. Doesn't collect stats on Captures/castles/EPs etc.
-void perftFast(const ChessPosition& P, int depth, uint64_t& nNodes)
+void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 {
-	ChessMove MoveList[MOVELIST_SIZE];
+    ChessMove moveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
-	int64_t orig_nNodes = nNodes;
+    nodecount_t orig_nNodes = nNodes;
 
 	if (depth == 1) { /* Leaf Node*/
 
@@ -158,8 +158,8 @@ void perftFast(const ChessPosition& P, int depth, uint64_t& nNodes)
 		}
 #endif // _USE_HASH
 
-		generateMoves(P, MoveList);
-		int movecount = MoveList->MoveCount;
+        generateMoves(P, moveList);
+        int movecount = moveList->MoveCount;
 		nNodes += movecount;
 
 #ifdef _USE_HASH
@@ -188,11 +188,11 @@ void perftFast(const ChessPosition& P, int depth, uint64_t& nNodes)
 			}
 		}
 #endif
-		generateMoves(P, MoveList);
-		int movecount = MoveList->MoveCount;
+        generateMoves(P, moveList);
+        int movecount = moveList->MoveCount;
 		for (int i = 0; i < movecount; i++) {
 			Q = P;								// unmake move
-			Q.performMove(MoveList[i]).switchSides();			// make move
+            Q.performMove(moveList[i]).switchSides();			// make move
 			perftFast(Q, depth - 1, nNodes);
 		}
 
@@ -259,7 +259,7 @@ void perftFast(const ChessPosition& P, int depth, uint64_t& nNodes)
 //}
 
 // perftFastIterative() - Iterative version of perft.
-void perftFastIterative(const ChessPosition& P, int depth, uint64_t& nNodes)
+void perftFastIterative(const ChessPosition& P, int depth, nodecount_t& nNodes)
 {
 	if (depth == 0){
 		nNodes = 1LL;
@@ -456,7 +456,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 // perftFastMT() - Multi-threaded perftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
 // 01/03/2016: (working ok)
 
-void perftFastMT(ChessPosition P, int depth, uint64_t& nNodes)
+void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 {
     nNodes = 0;
 
@@ -498,7 +498,7 @@ void perftFastMT(ChessPosition P, int depth, uint64_t& nNodes)
 
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
-                uint64_t s = 0; 							// local accumulator for thread
+                nodecount_t s = 0; 							// local accumulator for thread
 				ChessPosition Q = P;							// Set up position
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
@@ -527,7 +527,7 @@ void perftFastMT(ChessPosition P, int depth, uint64_t& nNodes)
 	}
 
 	// add up total:
-    nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0);
+    nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0ull);
 }
 
 } // namespace juddperft

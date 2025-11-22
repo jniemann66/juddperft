@@ -49,7 +49,7 @@ void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 	readFen(&P, pzFENstring);
 	dumpChessPosition(P);
 
-    uint64_t n = 0;
+    nodecount_t n = 0;
 	perftFastMT(P, depth, n);
 	printf("Perft %d: %lld (Correct Answer= %lld)\n", depth, n, correctAnswer);
 

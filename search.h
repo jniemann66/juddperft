@@ -32,27 +32,30 @@ SOFTWARE.
 
 namespace juddperft {
 
+using nodecount_t = uint64_t;
+
 #define PV_SIZE 64
 #define MAX_THREADS 64 // Hard limit for number of threads to use
 
 #define SEARCH_STOPPED 0x80000000
 
-struct PerftInfo{
-    uint64_t nMoves{0};
-    uint64_t nCapture{0};
-    uint64_t nEPCapture{0};
-    uint64_t nCastle{0};
-    uint64_t nCastleLong{0};
-    uint64_t nPromotion{0};
-    uint64_t nCheck{0};
-    uint64_t nCheckmate{0};
+struct PerftInfo
+{
+    nodecount_t nMoves{0};
+    nodecount_t nCapture{0};
+    nodecount_t nEPCapture{0};
+    nodecount_t nCastle{0};
+    nodecount_t nCastleLong{0};
+    nodecount_t nPromotion{0};
+    nodecount_t nCheck{0};
+    nodecount_t nCheckmate{0};
 };
 
-int64_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded
-void perftFast(const ChessPosition & P, int depth, uint64_t & nNodes);		// Simple, Hash-Table-using perft
-void perftFastIterative(const ChessPosition & P, int depth, uint64_t & nNodes);	// Iterative version - Hash Table functionality still broken
+nodecount_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded
+void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes);		// Simple, Hash-Table-using perft
+void perftFastIterative(const ChessPosition& P, int depth, nodecount_t& nNodes);	// Iterative version - Hash Table functionality still broken
 void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Multi-Threaded driver for perft()
-void perftFastMT(ChessPosition P, int depth, uint64_t & nNodes);				// Multi-Threaded driver for perftFast()
+void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes);				// Multi-Threaded driver for perftFast()
 
 #ifndef NULL
 #define NULL nullptr

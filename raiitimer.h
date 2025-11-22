@@ -28,12 +28,7 @@ public:
 		endTimer = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTimer - beginTimer).count();
         std::cout << "Duration=";
-        if (duration < 1000) {
-            std::cout << duration << "ms";
-        } else {
-            std::cout << format_duration(std::chrono::milliseconds(duration));
-        }
-        std::cout << std::endl;
+        std::cout << duration << "ms (" << format_duration(std::chrono::milliseconds(duration)) << ")" << std::endl;
 	}
 
 private:
@@ -55,7 +50,6 @@ private:
                << std::setw(2) << hh.count() << ":"
                << std::setw(2) << mm.count() << ":"
                << std::setw(2) << ss.count() << "."
-               << std::setfill(' ')
                << std::setw(3) << ms.count();
         return stream.str();
     }

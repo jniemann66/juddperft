@@ -213,8 +213,8 @@ struct PerftTableEntry
         struct {
             // warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
             // which only allows up to perft 12 from start position
+            uint64_t depth : 4;
             uint64_t count : 60;
-            uint64_t  depth : 4;
 		};
         uint64_t data{0};
     };

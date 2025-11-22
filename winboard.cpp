@@ -364,7 +364,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 	{
 		{
 			RaiiTimer timer;
-            uint64_t nNumPositions = 0;
+            nodecount_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
             printf("Perft %d: %lld \n",
 				q, nNumPositions
@@ -458,10 +458,10 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q.performMove(*pM).switchSides();
 
 		dumpMove(*pM, LongAlgebraicNoNewline);
-        uint64_t nNumPositions = 0;
-		perftFastMT(Q, depth-1, nNumPositions);
+        nodecount_t nNumPositions = 0;
+        perftFastMT(Q, depth - 1, nNumPositions);
         printf("Perft %d: %lld \n",
-			depth-1, nNumPositions
+            depth - 1, nNumPositions
 			);
         grandtotal += nNumPositions;
 		pM++;
