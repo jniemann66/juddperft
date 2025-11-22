@@ -40,9 +40,6 @@ SOFTWARE.
 
 namespace juddperft {
 
-uint64_t nodecount;
-//
-
 nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
 	ChessMove MoveList[MOVELIST_SIZE];

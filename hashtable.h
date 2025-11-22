@@ -39,7 +39,6 @@ namespace juddperft {
 
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000
-#define _SQUEEZE_PERFT_COUNT_60BITS 1 // squeeze depth and count into single 64-bit integer (4:60 bits respectively) to make hash entries smaller.
 
 typedef uint64_t HashKey;
 typedef uint64_t ZobristKey;
@@ -219,12 +218,6 @@ struct PerftTableEntry
         uint64_t data{0};
     };
 };
-
-// struct LeafEntry
-// {
-// 	HashKey Hash;
-// 	unsigned char count;
-// };
 
 #ifdef _USE_HASH
 // Global instances:
