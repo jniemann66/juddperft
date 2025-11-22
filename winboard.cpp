@@ -339,6 +339,7 @@ void parse_input_perft(const char* s, Engine* pE)
                    T.nCheckmate
 				   );
 			printf("\n");
+            timer.setNodes(T.nMoves);
 		}
 	}
 }
@@ -358,7 +359,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 				q, nNumPositions
 				);
 			printf("\n");
-
+            timer.setNodes(nNumPositions);
 		}
 	}
 }
@@ -448,12 +449,13 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		dumpMove(*pM, LongAlgebraicNoNewline);
         nodecount_t nNumPositions = 0;
         perftFastMT(Q, depth - 1, nNumPositions);
-        printf("\nPerft %d: %lld \n",
-            depth - 1, nNumPositions
+        printf(" %lld \n",
+            nNumPositions
 			);
         grandtotal += nNumPositions;
 		pM++;
 	}
+    timer.setNodes(grandtotal);
     printf("\nPerft %d: %lld\n", depth, grandtotal);
 }
 

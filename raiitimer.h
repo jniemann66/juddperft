@@ -10,6 +10,7 @@
 #ifndef _RAIITIMER_H
 #define _RAIITIMER_H 1
 
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <chrono>
@@ -28,8 +29,17 @@ public:
 		endTimer = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTimer - beginTimer).count();
         std::cout << "Duration = ";
-        std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")" << std::endl;
+        std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")";
+        if (nodes) {
+            std::cout << " " << std::setw(5) << 1000.0 * nodes / std::max(1ll, duration) << " nodes/sec";
+        }
+        std::cout << std::endl;
 	}
+
+    void setNodes(uint64_t n)
+    {
+        nodes = n;
+    }
 
 private:
 	std::chrono::time_point<std::chrono::high_resolution_clock> beginTimer;
@@ -53,6 +63,10 @@ private:
                << std::setw(3) << ms.count();
         return stream.str();
     }
+
+    uint64_t nodes{0};
 };
+
+
 
 #endif // _RAIITIMER_H
