@@ -28,7 +28,6 @@ SOFTWARE.
 #define _SEARCH_H 1
 
 #include "movegen.h"
-#include "hashtable.h"
 
 namespace juddperft {
 
@@ -51,15 +50,18 @@ struct PerftInfo
     nodecount_t nCheckmate{0};
 };
 
-nodecount_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Single-Threaded
-void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes);		// Simple, Hash-Table-using perft
-void perftFastIterative(const ChessPosition& P, int depth, nodecount_t& nNodes);	// Iterative version - Hash Table functionality still broken
-void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);		// Multi-Threaded driver for perft()
-void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes);				// Multi-Threaded driver for perftFast()
+// perft() : single-threaded; doesn't use hashtable, but does collect stats (EP, capture, checks ... etc)
+nodecount_t perft(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);
 
-#ifndef NULL
-#define NULL nullptr
-#endif
+// perfFast() : single-threaded; does use hashtable; doesn't collect stats
+void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes);
+
+// Multi-Threaded driver for perft()
+void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI);
+
+// Multi-Threaded driver for perftFast()
+void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes);
 
 } //namespace juddperft
+
 #endif // _SEARCH_H

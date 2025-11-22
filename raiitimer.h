@@ -27,8 +27,8 @@ public:
     {
 		endTimer = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTimer - beginTimer).count();
-        std::cout << "Duration=";
-        std::cout << duration << "ms (" << format_duration(std::chrono::milliseconds(duration)) << ")" << std::endl;
+        std::cout << "Duration = ";
+        std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")" << std::endl;
 	}
 
 private:

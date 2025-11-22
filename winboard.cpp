@@ -297,32 +297,20 @@ void parse_input_showposition(const char* s, Engine* pE)
 void parse_input_showhash(const char* s, Engine* pE)
 {
 #ifdef _USE_HASH
-	printf("Leaf Node Table Size: %lld bytes\n", leafTable.getSize());
-	int64_t numEntries = leafTable.getNumEntries();
-	int64_t nPopulatedLeafEntries = 0;
-	std::atomic<LeafEntry> *pLeafTableBaseAddress= leafTable.getAddress(0);
-	LeafEntry LE;
-	for (int64_t w = 0; w < numEntries; w++) {
-		LE = (pLeafTableBaseAddress + w)->load();
-		if (LE.count != 0)
-			nPopulatedLeafEntries++;
-	}
-	printf("%lld entries occupied out of %lld (%2.2f%%)\n\n", nPopulatedLeafEntries, numEntries, 100.0*static_cast<float>(nPopulatedLeafEntries) / static_cast<float>(numEntries));
-	//
 	printf("Perft Table Size: %lld bytes\n", perftTable.getSize());
-	numEntries = perftTable.getNumEntries();
+    uint64_t numEntries = perftTable.getNumEntries();
 	std::vector<int64_t> depthTally(16, 0);
 	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 
-	for (int64_t x = 0; x < numEntries; x++) {
+    for (uint64_t x = 0; x < numEntries; x++) {
 		pAtomicRecord = pBaseAddress + x;
 		PerftTableEntry RetrievedRecord = pAtomicRecord->load();
 		++depthTally[RetrievedRecord.depth];
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0*static_cast<float>(depthTally[d])/static_cast<float>(numEntries));
+        printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
 	printf("Total: %lld\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
 #endif
@@ -366,7 +354,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 			RaiiTimer timer;
             nodecount_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
-            printf("Perft %d: %lld \n",
+            printf("\nPerft %d: %lld \n",
 				q, nNumPositions
 				);
 			printf("\n");
@@ -460,7 +448,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		dumpMove(*pM, LongAlgebraicNoNewline);
         nodecount_t nNumPositions = 0;
         perftFastMT(Q, depth - 1, nNumPositions);
-        printf("Perft %d: %lld \n",
+        printf("\nPerft %d: %lld \n",
             depth - 1, nNumPositions
 			);
         grandtotal += nNumPositions;

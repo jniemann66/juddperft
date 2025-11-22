@@ -220,17 +220,16 @@ struct PerftTableEntry
     };
 };
 
-struct LeafEntry
-{
-	HashKey Hash;
-	unsigned char count;
-};
+// struct LeafEntry
+// {
+// 	HashKey Hash;
+// 	unsigned char count;
+// };
 
 #ifdef _USE_HASH
 // Global instances:
 extern ZobristKeySet zobristKeys;
 extern HashTable <std::atomic<PerftTableEntry>> perftTable;
-extern HashTable <std::atomic<LeafEntry>> leafTable;
 #endif
 
 } // namespace juddperft

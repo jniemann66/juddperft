@@ -73,15 +73,7 @@ namespace juddperft {
 
 		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
-		// constraint: Leaf Table should have 3 times as many Entries as perftTable (ie 3:1 ratio)
-
-		uint64_t bytesForPerftTable = (nTotalBytes * sizeof(std::atomic<PerftTableEntry>)) /
-			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
-
-		uint64_t bytesForLeafTable = (nTotalBytes * 3 * sizeof(std::atomic<LeafEntry>)) /
-			(sizeof(std::atomic<PerftTableEntry>) + 3 * sizeof(std::atomic<LeafEntry>));
-
-		return	(perftTable.setSize(bytesForPerftTable) && leafTable.setSize(bytesForLeafTable));
+        return perftTable.setSize(nTotalBytes);
 #else
 		return false;
 #endif

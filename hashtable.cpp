@@ -97,7 +97,6 @@ namespace juddperft {
 #ifdef _USE_HASH
 	ZobristKeySet zobristKeys;
 	HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
-	HashTable <std::atomic<LeafEntry>> leafTable("Leaf Node Table");
 #endif
 
 } // namespace juddperft
