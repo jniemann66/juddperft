@@ -28,6 +28,7 @@ SOFTWARE.
 #define _HASHTABLE_H 1
 
 #include "movegen.h"
+#include "utils.h"
 
 #include <iostream>
 #include <atomic>
@@ -140,11 +141,14 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 		return false;
 	}
 	else {
-		std::cout << "Allocated " << m_nEntries * sizeof(T) << " bytes for " << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
-		m_nCollisions = 0;
-		m_nWrites = 0;
-		HashTable<T>::clear();
-		return true;
+        const uint64_t bytes = m_nEntries * sizeof(T);
+        std::cout << "Allocated " << bytes << " bytes ("
+                  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
+                  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
+        m_nCollisions = 0;
+        m_nWrites = 0;
+        HashTable<T>::clear();
+        return true;
 	}
 }
 
@@ -197,35 +201,23 @@ inline double HashTable<T>::getLoadFactor() const
 template<class T>
 inline void HashTable<T>::clear()
 {
-	if (m_pTable != nullptr)
-		std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
+    if (m_pTable != nullptr)
+        std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
 }
-
-//
 
 struct PerftTableEntry
 {
 	HashKey Hash;
 
-#ifndef _SQUEEZE_PERFT_COUNT_60BITS
-	int depth;
-	unsigned long long count;
-#else
-	// more compact (squeeze count and depth into 64 bits):
-
-	union {
-		struct {
-			unsigned long long count : 60;
-			unsigned long long depth : 4;
-
-	// warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
-	// which only allows up to perft 12 from start position
-
+    union {
+        struct {
+            // warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
+            // which only allows up to perft 12 from start position
+            uint64_t count : 60;
+            uint64_t  depth : 4;
 		};
-		unsigned long long data;
-	};
-#endif
-	// Note: std::atomic<> version of this appears to add 8 bytes on msvc
+        uint64_t data{0};
+    };
 };
 
 struct LeafEntry

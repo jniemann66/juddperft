@@ -364,9 +364,9 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 	{
 		{
 			RaiiTimer timer;
-			int64_t nNumPositions = 0;
+            uint64_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
-			printf("Perft %d: %" PRIu64 "\n",
+            printf("Perft %d: %lld \n",
 				q, nNumPositions
 				);
 			printf("\n");
@@ -449,7 +449,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
-	int64_t GrandTotal = 0;
+    int64_t grandtotal = 0;
 	RaiiTimer timer;
 
 	while (pM->EndOfMoveList == 0)
@@ -458,15 +458,15 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q.performMove(*pM).switchSides();
 
 		dumpMove(*pM, LongAlgebraicNoNewline);
-		int64_t nNumPositions = 0;
+        uint64_t nNumPositions = 0;
 		perftFastMT(Q, depth-1, nNumPositions);
-		printf("Perft %d: %lld \n",
+        printf("Perft %d: %lld \n",
 			depth-1, nNumPositions
 			);
-		GrandTotal += nNumPositions;
+        grandtotal += nNumPositions;
 		pM++;
 	}
-	printf("\nPerft %d: %lld\n", depth, GrandTotal);
+    printf("\nPerft %d: %lld\n", depth, grandtotal);
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}

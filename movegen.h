@@ -94,8 +94,6 @@ enum Piece : piece_t {
 	BKING = 15
 };
 
-
-
 typedef uint64_t BitBoard;
 typedef uint64_t HashKey;
 
@@ -140,6 +138,7 @@ struct ChessMove {
 	}
 
 };
+
 
 class ChessPosition
 {

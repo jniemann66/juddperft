@@ -47,7 +47,6 @@ using namespace juddperft;
 
 int main(int argc, char *argv[], char *envp[])
 {
-	//	std::cout.imbue(std::locale(""));
 
 #ifdef _USE_HASH
 	uint64_t nBytesToAllocate = 1000000000; // <-- Set how much RAM to use here (more RAM -> faster !!!)
