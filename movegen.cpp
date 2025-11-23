@@ -724,10 +724,9 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
                 )
             {
                 // OK to Castle
-                toSq = G1;										// Move King to g1
                 M.ClearFlags();
                 M.Castle = 1;
-                addWhiteCastlingMoveIfLegal(P, pM, q, toSq, piece, M.Flags);
+                addWhiteCastlingMoveIfLegal(P, pM, piece, M.Flags);
             }
 
             toSq = MoveDown[q] & WhiteFree;
@@ -746,10 +745,9 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
                 )
             {
                 // Ok to Castle Long
-                toSq = C1;										// Move King to c1
                 M.ClearFlags();
                 M.CastleLong = 1;
-                addWhiteCastlingMoveIfLegal(P, pM, q, toSq, piece, M.Flags);
+                addWhiteCastlingMoveIfLegal(P, pM, piece, M.Flags);
             }
             toSq = MoveUpRight[q] & WhiteFree;
             addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -863,11 +861,10 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
     }
 }
 
-inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
+inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags)
 {
     ChessPosition Q = P;
-    pM->FromSquare = fromsquare;
-    pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
+    pM->FromSquare = static_cast<unsigned char>(SquareIndex::e1);
     pM->Flags = flags;
     pM->Piece = piece;
 
@@ -876,11 +873,13 @@ inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, 
         Q.B ^= 0x0000000000000028;
         Q.C ^= 0x00000000000000b8;
         Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
+        pM->ToSquare = static_cast<unsigned char>(SquareIndex::c1);
     } else {
         Q.A ^= 0x000000000000000a;
         Q.B ^= 0x000000000000000a;
         Q.C ^= 0x000000000000000f;
         Q.D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+        pM->ToSquare = static_cast<unsigned char>(SquareIndex::g1);
     }
 
     if (isWhiteInCheck(Q)) {
@@ -1197,10 +1196,9 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
                 )
             {
                 // OK to Castle
-                toSq = G8;										// Move King to g8
                 M.ClearFlags();
                 M.Castle = 1;
-                addBlackCastlingMoveToListIfLegal(P, pM, q, toSq, piece, M.Flags);
+                addBlackCastlingMoveToListIfLegal(P, pM, piece, M.Flags);
             }
 
             toSq = MoveDown[q] & BlackFree;
@@ -1219,10 +1217,9 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
                 )
             {
                 // OK to castle Long
-                toSq = C8;										// Move King to c8
                 M.ClearFlags();
                 M.CastleLong = 1;
-                addBlackCastlingMoveToListIfLegal(P, pM, q, toSq, piece, M.Flags);
+                addBlackCastlingMoveToListIfLegal(P, pM, piece, M.Flags);
             }
 
             toSq = MoveUpRight[q] & BlackFree;
@@ -1339,11 +1336,10 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
     }
 }
 
-inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags/*=0*/)
 {
     ChessPosition Q = P;
-    pM->FromSquare = fromsquare;
-    pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
+    pM->FromSquare = static_cast<unsigned char>(SquareIndex::e8);
     pM->Flags = flags;
     pM->BlackToMove = 1;
     pM->Piece = piece;
@@ -1353,11 +1349,13 @@ inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*
         Q.B ^= 0x2800000000000000;
         Q.C ^= 0xb800000000000000;
         Q.D ^= 0xb800000000000000;
+        pM->ToSquare = static_cast<unsigned char>(SquareIndex::c8);
     } else {
         Q.A ^= 0x0a00000000000000;
         Q.B ^= 0x0a00000000000000;
         Q.C ^= 0x0f00000000000000;
         Q.D ^= 0x0f00000000000000;
+        pM->ToSquare = static_cast<unsigned char>(SquareIndex::g8);
     }
 
     if (isBlackInCheck(Q)) {
@@ -1665,7 +1663,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
     BitBoard bbFrom, bbTo;
     bbFrom = 1LL << M.FromSquare;
     bbTo = 1LL << M.ToSquare;
-    char c1, c2, p;
+    char ch1, ch2, p;
 
     if (style != CoOrdinate)
     {
@@ -1707,8 +1705,8 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
         }
     }
 
-    c1 = 'h' - (from % 8);
-    c2 = 'h' - (to % 8);
+    ch1 = 'h' - (from % 8);
+    ch2 = 'h' - (to % 8);
 
     // Determine piece and assign character p accordingly:
     switch (M.Piece & 7)
@@ -1742,9 +1740,9 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
     {
         // Determine if move is a capture
         if (M.Capture || M.EnPassantCapture)
-            sprintf(s, "%c%c%dx%c%d", p, c1, 1+(from >> 3), c2, 1+(to >> 3));
+            sprintf(s, "%c%c%dx%c%d", p, ch1, 1+(from >> 3), ch2, 1+(to >> 3));
         else
-            sprintf(s, "%c%c%d-%c%d", p, c1, 1+(from >> 3), c2, 1+(to >> 3));
+            sprintf(s, "%c%c%d-%c%d", p, ch1, 1+(from >> 3), ch2, 1+(to >> 3));
         // Promotions:
         if (M.PromoteBishop)
             strcat(s, "(B)");
@@ -1769,7 +1767,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
     if (style == CoOrdinate)
     {
-        sprintf(s, "%c%d%c%d", c1, 1 + (from >> 3), c2, 1 + (to >> 3));
+        sprintf(s, "%c%d%c%d", ch1, 1 + (from >> 3), ch2, 1 + (to >> 3));
         // Promotions:
         if (M.PromoteBishop)
             strcat(s, "b");

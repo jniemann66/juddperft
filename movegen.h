@@ -289,7 +289,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genBlackAttacks(const ChessPosition& Z);
 BitBoard isWhiteInCheck(const ChessPosition & Z);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
-void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
+void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags = 0);
 void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
@@ -298,7 +298,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genWhiteAttacks(const ChessPosition& Z);
 BitBoard isBlackInCheck(const ChessPosition & Z);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
-void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
+void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags = 0);
 void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 
@@ -368,6 +368,18 @@ const int pieceMaterialValue[16] =
 	,0			// Black King
 };
 
+// all the square indexes
+enum class SquareIndex : unsigned char {
+    h1 = 0,
+        g1, f1, e1, d1, c1, b1, a1,
+    h2, g2, f2, e2, d2, c2, b2, a2,
+    h3, g3, f3, e3, d3, c3, b3, a3,
+    h4, g4, f4, e4, d4, c4, b4, a4,
+    h5, g5, f5, e5, d5, c5, b5, a5,
+    h6, g6, f6, e6, d6, c6, b6, a6,
+    h7, g7, f7, e7, d7, c7, b7, a7,
+    h8, g8, f8, e8, d8, c8, b8, a8 = 63
+};
 
 // all the squares in binary (Bitboard) representation
 enum SQUARES : uint64_t {
