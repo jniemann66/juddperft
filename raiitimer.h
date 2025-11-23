@@ -19,52 +19,52 @@
 class RaiiTimer {
 
 public:
-    RaiiTimer()
-    {
+	RaiiTimer()
+	{
 		beginTimer = std::chrono::high_resolution_clock::now();
 	}
 
-    ~RaiiTimer()
-    {
+	~RaiiTimer()
+	{
 		endTimer = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTimer - beginTimer).count();
-        std::cout << "Duration = ";
-        std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")";
-        if (nodes) {
-            std::cout << " " << std::setw(5) << 1000.0 * nodes / std::max(1ll, duration) << " nodes/sec";
-        }
-        std::cout << std::endl;
+		std::cout << "Duration = ";
+		std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")";
+		if (nodes) {
+			std::cout << " " << std::setw(5) << 1000.0 * nodes / std::max<long long>(1ll, duration) << " nodes/sec";
+		}
+		std::cout << std::endl;
 	}
 
-    void setNodes(uint64_t n)
-    {
-        nodes = n;
-    }
+	void setNodes(uint64_t n)
+	{
+		nodes = n;
+	}
 
 private:
 	std::chrono::time_point<std::chrono::high_resolution_clock> beginTimer;
 	std::chrono::time_point<std::chrono::high_resolution_clock> endTimer;
 
-    std::string format_duration(std::chrono::milliseconds ms)
-    {
-        using namespace std::chrono;
-        auto ss = duration_cast<seconds>(ms);
-        ms -= duration_cast<milliseconds>(ss);
-        auto mm = duration_cast<minutes>(ss);
-        ss -= duration_cast<seconds>(mm);
-        auto hh = duration_cast<hours>(mm);
-        mm -= duration_cast<minutes>(hh);
+	std::string format_duration(std::chrono::milliseconds ms)
+	{
+		using namespace std::chrono;
+		auto ss = duration_cast<seconds>(ms);
+		ms -= duration_cast<milliseconds>(ss);
+		auto mm = duration_cast<minutes>(ss);
+		ss -= duration_cast<seconds>(mm);
+		auto hh = duration_cast<hours>(mm);
+		mm -= duration_cast<minutes>(hh);
 
-        std::stringstream stream;
-        stream << std::setfill('0')
-               << std::setw(2) << hh.count() << ":"
-               << std::setw(2) << mm.count() << ":"
-               << std::setw(2) << ss.count() << "."
-               << std::setw(3) << ms.count();
-        return stream.str();
-    }
+		std::stringstream stream;
+		stream << std::setfill('0')
+			   << std::setw(2) << hh.count() << ":"
+			   << std::setw(2) << mm.count() << ":"
+			   << std::setw(2) << ss.count() << "."
+			   << std::setw(3) << ms.count();
+		return stream.str();
+	}
 
-    uint64_t nodes{0};
+	uint64_t nodes{0};
 };
 
 
