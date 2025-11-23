@@ -284,7 +284,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genBlackAttacks(const ChessPosition& Z);
 BitBoard isWhiteInCheck(const ChessPosition & Z);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
-void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags = 0);
+void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t flags = 0);
 
@@ -293,7 +293,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genWhiteAttacks(const ChessPosition& Z);
 BitBoard isBlackInCheck(const ChessPosition & Z);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
-void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags = 0);
+void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t flags = 0);
 

@@ -726,7 +726,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
                 // OK to Castle
                 M.ClearFlags();
                 M.Castle = 1;
-                addWhiteCastlingMoveIfLegal(P, pM, piece, M.Flags);
+                addWhiteCastlingMoveIfLegal(P, pM, M.Flags);
             }
 
             toSq = MoveDown[q] & WhiteFree;
@@ -747,7 +747,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
                 // Ok to Castle Long
                 M.ClearFlags();
                 M.CastleLong = 1;
-                addWhiteCastlingMoveIfLegal(P, pM, piece, M.Flags);
+                addWhiteCastlingMoveIfLegal(P, pM, M.Flags);
             }
             toSq = MoveUpRight[q] & WhiteFree;
             addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -861,12 +861,12 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
     }
 }
 
-inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags)
+inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags)
 {
     ChessPosition Q = P;
     pM->FromSquare = static_cast<unsigned char>(SquareIndex::e1);
     pM->Flags = flags;
-    pM->Piece = piece;
+    pM->Piece = WKING;
 
     if (pM->CastleLong) {
         Q.A ^= 0x0000000000000028;
@@ -1198,7 +1198,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
                 // OK to Castle
                 M.ClearFlags();
                 M.Castle = 1;
-                addBlackCastlingMoveToListIfLegal(P, pM, piece, M.Flags);
+                addBlackCastlingMoveToListIfLegal(P, pM, M.Flags);
             }
 
             toSq = MoveDown[q] & BlackFree;
@@ -1219,7 +1219,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
                 // OK to castle Long
                 M.ClearFlags();
                 M.CastleLong = 1;
-                addBlackCastlingMoveToListIfLegal(P, pM, piece, M.Flags);
+                addBlackCastlingMoveToListIfLegal(P, pM, M.Flags);
             }
 
             toSq = MoveUpRight[q] & BlackFree;
@@ -1336,13 +1336,13 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
     }
 }
 
-inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags /*=0*/)
 {
     ChessPosition Q = P;
     pM->FromSquare = static_cast<unsigned char>(SquareIndex::e8);
     pM->Flags = flags;
     pM->BlackToMove = 1;
-    pM->Piece = piece;
+    pM->Piece = BKING;
 
     if (pM->CastleLong) {
         Q.A ^= 0x2800000000000000;
