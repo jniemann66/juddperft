@@ -56,10 +56,6 @@ namespace juddperft {
 // #define _USE_POPCNT_INSTRUCTION 1			// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
 
-#ifdef _USE_BITSCAN_INSTRUCTIONS
-// #include <intrin.h>
-#endif
-
 #ifndef NULL
 #define NULL 0
 #endif
@@ -1255,10 +1251,19 @@ inline unsigned long getSquareIndex(BitBoard b)
 {
 	unsigned long n = 0;
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64) && defined(_MSC_VER)
-	// Get index of Square:
-	_BitScanForward64(&n, b);
-#else
+    // note: bit scans performed terribly in this context (at least, on my machine),
+    // so just going with the DeBruijn Multiplication
+
+// #if defined(_USE_BITSCAN_INSTRUCTIONS)
+
+// #if defined(_MSC_VER)
+//     // Important: a and b must be initialised first !
+//     _BitScanForward64(&n, b);
+// #elif defined(__GNUC__) || defined(__clang__)
+//     n = __builtin_ctzll(b);
+// #endif
+
+// #else
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
@@ -1280,22 +1285,27 @@ inline unsigned long getSquareIndex(BitBoard b)
 	// BitScanForward:
 	n = tbl[((b ^ (b - 1)) * db64) >> 58];
 
-#endif
+// #endif // defined(_USE_BITSCAN_INSTRUCTIONS)
+
 	return n;
 }
 
 // getFirstAndLastPiece()
 // Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
-inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& Last)
+inline void getFirstAndLastPiece(const BitBoard& B, unsigned long& a, unsigned long& b)
 {
-	unsigned long a = 63;
-	unsigned long b = 0;
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS) && defined(_WIN64) && defined(_MSC_VER)
-	// perform Bitscans to determine start and finish squares;
-	// Important: a and b must be initialised first !
-	_BitScanReverse64(&a, B);
-	_BitScanForward64(&b, B);
+#if defined(_USE_BITSCAN_INSTRUCTIONS)
+    // perform Bitscans to determine start and finish squares;
+#if defined(_MSC_VER)
+    // Important: a and b must be initialised first !
+    _BitScanReverse64(&b, B);
+    _BitScanForward64(&a, B);
+#elif defined(__GNUC__) || defined(__clang__)
+    b = 63 - __builtin_clzll(B);
+    a = __builtin_ctzll(B);
+#endif
+
 #else
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
@@ -1316,7 +1326,7 @@ inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	};
 
 	// BitScanForward:
-	b = tbl[((B ^ (B - 1)) * db64) >> 58];
+    a = tbl[((B ^ (B - 1)) * db64) >> 58];
 
 	// BitScanReverse:
 	BitBoard A = B;
@@ -1326,12 +1336,9 @@ inline void getFirstAndLastPiece(const BitBoard& B, BitBoard& First, BitBoard& L
 	A |= A >> 8;
 	A |= A >> 16;
 	A |= A >> 32;
-	a= tbl[(A * db64) >> 58];
+    b = tbl[(A * db64) >> 58];
 
 #endif
-
-	Last = B & (1LL << a);
-	First = B & (1LL << b);
 }
 
 } // namespace juddperft

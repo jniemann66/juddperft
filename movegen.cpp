@@ -632,22 +632,9 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
     const BitBoard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
 
-    unsigned long lastSq = 63;
     unsigned long firstSq = 0;
-
-#if defined(_USE_BITSCAN_INSTRUCTIONS)
-    // perform Bitscans to determine start and finish squares;
-#if defined(_MSC_VER)
-    // Important: a and b must be initialised first !
-    _BitScanReverse64(&lastSq, WhiteOccupied);
-    _BitScanForward64(&firstSq, WhiteOccupied);
-#elif defined(__GNUC__) || defined(__clang__)
-    lastSq = 63 - __builtin_clzll(WhiteOccupied);
-    firstSq = __builtin_ctzll(WhiteOccupied);
-#endif
-#else
-    // (just scan all 64 squares: 0-63):
-#endif
+    unsigned long lastSq = 63;
+    getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
 
     for (unsigned int q = firstSq; q <= lastSq; q++) {
         const BitBoard fromSQ = 1LL << q;
@@ -878,32 +865,30 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 
 inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
 {
-    if (to != 0) {
-        ChessPosition Q = P;
-        pM->FromSquare = fromsquare;
-        pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
-        pM->Flags = flags;
-        pM->Piece = piece;
+    ChessPosition Q = P;
+    pM->FromSquare = fromsquare;
+    pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
+    pM->Flags = flags;
+    pM->Piece = piece;
 
-        if (pM->CastleLong) {
-            Q.A ^= 0x0000000000000028;
-            Q.B ^= 0x0000000000000028;
-            Q.C ^= 0x00000000000000b8;
-            Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
-        } else {
-            Q.A ^= 0x000000000000000a;
-            Q.B ^= 0x000000000000000a;
-            Q.C ^= 0x000000000000000f;
-            Q.D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
-        }
+    if (pM->CastleLong) {
+        Q.A ^= 0x0000000000000028;
+        Q.B ^= 0x0000000000000028;
+        Q.C ^= 0x00000000000000b8;
+        Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
+    } else {
+        Q.A ^= 0x000000000000000a;
+        Q.B ^= 0x000000000000000a;
+        Q.C ^= 0x000000000000000f;
+        Q.D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+    }
 
-        if (isWhiteInCheck(Q)) {
-            pM->IllegalMove = 1;
-        } else {
-            scanWhiteMoveForChecks(Q, pM);
-            pM++; // Add to list (advance pointer)
-            pM->Flags = 0;
-        }
+    if (isWhiteInCheck(Q)) {
+        pM->IllegalMove = 1;
+    } else {
+        scanWhiteMoveForChecks(Q, pM);
+        pM++; // Add to list (advance pointer)
+        pM->Flags = 0;
     }
 }
 
@@ -914,7 +899,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
         ChessPosition Q = P;
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
-        assert((1LL << pM->ToSquare) == to);
+        assert((1ULL << pM->ToSquare) == to);
         pM->Flags = flags;
         pM->Piece = piece;
 
@@ -925,6 +910,12 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
         Q.B &= O;
         Q.C &= O;
         Q.D &= O;
+
+        //// Populate new square (Branchless method, BitBoard input):
+        // Q.A |= to & -( static_cast<int64_t>(piece) & 1);
+        // Q.B |= to & -((static_cast<int64_t>(piece) & 2) >> 1);
+        // Q.C |= to & -((static_cast<int64_t>(piece) & 4) >> 2);
+        // Q.D |= to & -((static_cast<int64_t>(piece) & 8) >> 3);
 
         // Populate new square (Branchless method):
         Q.A |= static_cast<int64_t>(piece & 1) << pM->ToSquare;
@@ -965,7 +956,7 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
     if (to != 0) {
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
-        assert((1LL << pM->ToSquare) == to);
+        assert((1ULL << pM->ToSquare) == to);
         pM->Flags = flags;
         pM->Piece = piece;
 
@@ -1115,22 +1106,9 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 
     const BitBoard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
 
-    unsigned long lastSq = 63;
     unsigned long firstSq = 0;
-
-#if defined(_USE_BITSCAN_INSTRUCTIONS)
-    // perform Bitscans to determine start and finish squares;
-#if defined(_MSC_VER)
-    // Important: a and b must be initialised first !
-    _BitScanReverse64(&lastSq, BlackOccupied);
-    _BitScanForward64(&firstSq, BlackOccupied);
-#elif defined(__GNUC__) || defined(__clang__)
-    lastSq = 63 - __builtin_clzll(BlackOccupied);
-    firstSq = __builtin_ctzll(BlackOccupied);
-#endif
-#else
-    // (just scan all 64 squares: 0-63):
-#endif
+    unsigned long lastSq = 63;
+    getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
     for (unsigned int q = firstSq; q <= lastSq; ++q) {
         const BitBoard fromSQ = 1LL << q;
@@ -1363,33 +1341,31 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 
 inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
 {
-    if (to != 0) {
-        ChessPosition Q = P;
-        pM->FromSquare = fromsquare;
-        pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
-        pM->Flags = flags;
-        pM->BlackToMove = 1;
-        pM->Piece = piece;
+    ChessPosition Q = P;
+    pM->FromSquare = fromsquare;
+    pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
+    pM->Flags = flags;
+    pM->BlackToMove = 1;
+    pM->Piece = piece;
 
-        if (pM->CastleLong) {
-            Q.A ^= 0x2800000000000000;
-            Q.B ^= 0x2800000000000000;
-            Q.C ^= 0xb800000000000000;
-            Q.D ^= 0xb800000000000000;
-        } else {
-            Q.A ^= 0x0a00000000000000;
-            Q.B ^= 0x0a00000000000000;
-            Q.C ^= 0x0f00000000000000;
-            Q.D ^= 0x0f00000000000000;
-        }
+    if (pM->CastleLong) {
+        Q.A ^= 0x2800000000000000;
+        Q.B ^= 0x2800000000000000;
+        Q.C ^= 0xb800000000000000;
+        Q.D ^= 0xb800000000000000;
+    } else {
+        Q.A ^= 0x0a00000000000000;
+        Q.B ^= 0x0a00000000000000;
+        Q.C ^= 0x0f00000000000000;
+        Q.D ^= 0x0f00000000000000;
+    }
 
-        if (isBlackInCheck(Q)) {
-            pM->IllegalMove = 1;
-        } else {
-            scanBlackMoveForChecks(Q, pM);
-            pM++; // Add to list (advance pointer)
-            pM->Flags = 0;
-        }
+    if (isBlackInCheck(Q)) {
+        pM->IllegalMove = 1;
+    } else {
+        scanBlackMoveForChecks(Q, pM);
+        pM++; // Add to list (advance pointer)
+        pM->Flags = 0;
     }
 }
 
@@ -1589,7 +1565,7 @@ inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
 void dumpBitBoard(BitBoard b)
 {
     printf("\n");
-    for (unsigned int q = 63; q >= 0; q--)
+    for (int q = 63; q >= 0; q--)
     {
         if ((b & (1LL << q)) != 0)
         {
@@ -1609,7 +1585,7 @@ void dumpBitBoard(BitBoard b)
 void dumpChessPosition(ChessPosition p)
 {
     printf("\n---------------------------------\n");
-    for (unsigned int q = 63; q >= 0; q--)
+    for (int q = 63; q >= 0; q--)
     {
         switch(p.getPieceAtSquare(q))
         {
