@@ -13,9 +13,28 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx2")
 find_package(Threads REQUIRED)
 
 add_executable(juddperft
-    diagnostics.h  engine.h  fen.h  hashtable.h  Juddperft.h  movegen.h  raiitimer.h  search.h  targetver.h  timemanage.h  winboard.h
-    diagnostics.cpp  engine.cpp  fen.cpp  hashtable.cpp  Juddperft.cpp  movegen.cpp  search.cpp  timemanage.cpp  winboard.cpp
-    utils.h utils.cpp
+    diagnostics.h
+    engine.h
+    fen.h
+    hashtable.h
+    Juddperft.h
+    movegen.h
+    raiitimer.h
+    search.h
+    targetver.h
+    timemanage.h
+    utils.h
+    winboard.h
+    diagnostics.cpp
+    engine.cpp
+    fen.cpp
+    hashtable.cpp
+    Juddperft.cpp
+    movegen.cpp
+    search.cpp
+    timemanage.cpp
+    utils.cpp
+    winboard.cpp
 )
 
 set_property(TARGET juddperft PROPERTY
