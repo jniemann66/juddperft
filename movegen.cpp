@@ -887,6 +887,7 @@ inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, 
     } else {
         scanWhiteMoveForChecks(Q, pM);
         pM++; // Add to list (advance pointer)
+        pM->Piece = WKING;
         pM->Flags = 0;
     }
 }
@@ -944,19 +945,21 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
             pM->IllegalMove = 1;
         } else {
             scanWhiteMoveForChecks(Q, pM);
+            const auto piece = pM->Piece;
             pM++; // Add to list (advance pointer)
+            pM->Piece = piece;
             pM->Flags = 0;
         }
     }
 }
 
-inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t flags /*=0*/)
+inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to)
 {
     if (to != 0) {
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
         assert((1ULL << pM->ToSquare) == to);
-        pM->Flags = flags;
+        pM->Flags = 0;
         pM->Piece = WPAWN;
 
         // Test for capture:
@@ -1009,6 +1012,7 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
             scanWhiteMoveForChecks(Q, pM);
 
             pM++;
+            pM->Piece = WPAWN;
             pM->Flags = 0;
         }
     }
@@ -1364,6 +1368,7 @@ inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*
         scanBlackMoveForChecks(Q, pM);
         pM++; // Add to list (advance pointer)
         pM->Flags = 0;
+        pM->Piece = BKING;
     }
 }
 
@@ -1415,19 +1420,21 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
             pM->IllegalMove = 1;
         } else {
             scanBlackMoveForChecks(Q, pM);
+            const auto piece = pM->Piece;
             pM++; // Add to list (advance pointer)
+            pM->Piece = piece;
             pM->Flags = 0;
         }
     }
 }
 
-inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t flags/*=0*/)
+inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to)
 {
     if (to != 0) {
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
-        pM->Flags = flags;
         pM->BlackToMove = 1;
+        pM->Flags = 0;
         pM->Piece = BPAWN;
 
         // Test for capture:
@@ -1482,6 +1489,7 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
             scanBlackMoveForChecks(Q, pM);
 
             pM++;
+            pM->Piece = BPAWN;
             pM->Flags = 0;
         }
     }
