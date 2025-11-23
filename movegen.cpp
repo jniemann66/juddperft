@@ -652,7 +652,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
             // single move forward
             toSq = MoveUp[q] & WhiteFree & ~BlackOccupied /* pawns can't capture in forward moves */;
             if ((toSq & RANK8) != 0) {
-                addWhitePromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addWhitePromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Advance
                 addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -668,7 +668,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
             // generate Pawn Captures:
             toSq = MoveUpLeft[q] & WhiteFree & BlackOccupied;
             if ((toSq & RANK8) != 0) {
-                addWhitePromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addWhitePromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Capture to Left
                 addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -676,7 +676,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
             toSq = MoveUpRight[q] & WhiteFree & BlackOccupied;
             if ((toSq & RANK8) != 0) {
-                addWhitePromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addWhitePromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Capture to right
                 addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -950,14 +950,14 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
     }
 }
 
-inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags /*=0*/)
+inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t flags /*=0*/)
 {
     if (to != 0) {
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
         assert((1ULL << pM->ToSquare) == to);
         pM->Flags = flags;
-        pM->Piece = piece;
+        pM->Piece = WPAWN;
 
         // Test for capture:
         BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
@@ -1125,7 +1125,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
             // single move forward
             toSq = MoveDown[q] & BlackFree & ~WhiteOccupied /* pawns can't capture in forward moves */;
             if ((toSq & RANK1) != 0) {
-                addBlackPromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addBlackPromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Advance
                 addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -1141,7 +1141,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
             // generate Pawn Captures:
             toSq = MoveDownLeft[q] & BlackFree & WhiteOccupied;
             if ((toSq & RANK1) != 0) {
-                addBlackPromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addBlackPromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Capture to Left
                 addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -1149,7 +1149,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 
             toSq = MoveDownRight[q] & BlackFree & WhiteOccupied;
             if ((toSq & RANK1) != 0) {
-                addBlackPromotionsToListIfLegal(P, pM, q, toSq, piece);
+                addBlackPromotionsToListIfLegal(P, pM, q, toSq);
             } else {
                 // Ordinary Pawn Capture to right
                 addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
@@ -1421,14 +1421,14 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
     }
 }
 
-inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t flags/*=0*/)
 {
     if (to != 0) {
         pM->FromSquare = fromsquare;
         pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
         pM->Flags = flags;
         pM->BlackToMove = 1;
-        pM->Piece = piece;
+        pM->Piece = BPAWN;
 
         // Test for capture:
         BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings

@@ -49,46 +49,46 @@ int main(int argc, char *argv[], char *envp[])
 {
 
 #ifdef _USE_HASH
-	uint64_t nBytesToAllocate = 1000000000; // <-- Set how much RAM to use here (more RAM -> faster !!!)
+    uint64_t nBytesToAllocate = 8589934593; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
-	while (!setMemory(nBytesToAllocate)) {
-		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
-		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
-			return EXIT_FAILURE;	// not going to end well ...
-	}
+    while (!setMemory(nBytesToAllocate)) {
+        nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
+        if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
+            return EXIT_FAILURE;	// not going to end well ...
+    }
 #endif
-	setProcessPriority();
+    setProcessPriority();
 
-	// runTestSuite();
+    // runTestSuite();
 
-	winBoard(&theEngine);
-	return EXIT_SUCCESS;
+    winBoard(&theEngine);
+    return EXIT_SUCCESS;
 }
 
 namespace juddperft {
 
-	bool setMemory(uint64_t nTotalBytes) {
+    bool setMemory(uint64_t nTotalBytes) {
 
 #ifdef _USE_HASH
 
-		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
+        std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
         return perftTable.setSize(nTotalBytes);
 #else
-		return false;
+        return false;
 #endif
-	}
+    }
 
-	void setProcessPriority()
-	{
+    void setProcessPriority()
+    {
 #ifdef _MSC_VER
-		DWORD dwError;
+        DWORD dwError;
 
-		if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)) {
-			dwError = GetLastError();
-			std::cout << "Failed to set Process priority: " << dwError << std::endl;
-		}
+        if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)) {
+            dwError = GetLastError();
+            std::cout << "Failed to set Process priority: " << dwError << std::endl;
+        }
 #endif
-	}
+    }
 
 } // namespace juddperft
