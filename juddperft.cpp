@@ -48,15 +48,6 @@ using namespace juddperft;
 
 int main(int argc, char *argv[], char *envp[])
 {
-	// ChessPosition P;
-	// readFen(&P, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 ");
-	// ChessMove ml[MOVELIST_SIZE];
-	// generateMoves(P, ml);
-	// dumpMoveList(ml);
-
-	std::cout << std::endl;
-
-
 
 #ifdef _USE_HASH
 	uint64_t nBytesToAllocate = 8589934593; // <-- Set how much RAM to use here (more RAM -> faster !!!)
