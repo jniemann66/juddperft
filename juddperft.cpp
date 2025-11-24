@@ -48,55 +48,56 @@ using namespace juddperft;
 
 int main(int argc, char *argv[], char *envp[])
 {
+    std::cout << "sizeof(ChessMove) == " << sizeof(ChessMove) << " sizeof(ChessPosition) == " << sizeof(ChessPosition) << std::endl;
 
 #ifdef _USE_HASH
-	uint64_t nBytesToAllocate = 8589934593; // <-- Set how much RAM to use here (more RAM -> faster !!!)
+    uint64_t nBytesToAllocate = 8589934593; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
-	while (!setMemory(nBytesToAllocate)) {
-		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
-		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
-			return EXIT_FAILURE;	// not going to end well ...
-	}
+    while (!setMemory(nBytesToAllocate)) {
+        nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
+        if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
+            return EXIT_FAILURE;	// not going to end well ...
+    }
 #endif
-	setProcessPriority();
+    setProcessPriority();
 
-	// runTestSuite();
+    // runTestSuite();
 
-	winBoard(&theEngine);
+    winBoard(&theEngine);
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
-	const double avg_cpu_cycles = static_cast<double>(movegen_total_cycles) / movegen_call_count;
-	std::cout << "Move generator average cpu cycles=" << avg_cpu_cycles << std::endl;
+    const double avg_cpu_cycles = static_cast<double>(movegen_total_cycles) / movegen_call_count;
+    std::cout << "Move generator average cpu cycles=" << avg_cpu_cycles << std::endl;
 
 #endif
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 namespace juddperft {
 
-	bool setMemory(uint64_t nTotalBytes) {
+    bool setMemory(uint64_t nTotalBytes) {
 
 #ifdef _USE_HASH
 
-		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
+        std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
-		return perftTable.setSize(nTotalBytes);
+        return perftTable.setSize(nTotalBytes);
 #else
-		return false;
+        return false;
 #endif
-	}
+    }
 
-	void setProcessPriority()
-	{
+    void setProcessPriority()
+    {
 #ifdef _MSC_VER
-		DWORD dwError;
+        DWORD dwError;
 
-		if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)) {
-			dwError = GetLastError();
-			std::cout << "Failed to set Process priority: " << dwError << std::endl;
-		}
+        if (!SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS)) {
+            dwError = GetLastError();
+            std::cout << "Failed to set Process priority: " << dwError << std::endl;
+        }
 #endif
-	}
+    }
 
 } // namespace juddperft
