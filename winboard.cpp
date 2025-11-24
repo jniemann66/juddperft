@@ -27,7 +27,7 @@ SOFTWARE.
 // winboard.cpp - Winboard Interface driver
 
 #include "winboard.h"
-#include "Juddperft.h"
+#include "juddperft.h"
 #include "diagnostics.h"
 #include "engine.h"
 #include "fen.h"
@@ -219,6 +219,7 @@ void parse_input_xboard(const char* s, Engine* pE)
 {
 	winBoardOutput("\n");
 }
+
 void parse_input_protover(const char* s, Engine* pE)
 {
 	if (s != NULL)
@@ -233,6 +234,7 @@ void parse_input_protover(const char* s, Engine* pE)
 		}
 	}
 }
+
 void parse_input_accepted(const char* s, Engine* pE){}
 void parse_input_rejected(const char* s, Engine* pE){}
 void parse_input_new(const char* s, Engine* pE){}
@@ -298,19 +300,19 @@ void parse_input_showhash(const char* s, Engine* pE)
 {
 #ifdef _USE_HASH
 	printf("Perft Table Size: %lld bytes\n", perftTable.getSize());
-    uint64_t numEntries = perftTable.getNumEntries();
+	uint64_t numEntries = perftTable.getNumEntries();
 	std::vector<int64_t> depthTally(16, 0);
 	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 
-    for (uint64_t x = 0; x < numEntries; x++) {
+	for (uint64_t x = 0; x < numEntries; x++) {
 		pAtomicRecord = pBaseAddress + x;
 		PerftTableEntry RetrievedRecord = pAtomicRecord->load();
 		++depthTally[RetrievedRecord.depth];
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-        printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
+		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
 	printf("Total: %lld\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
 #endif
@@ -327,7 +329,7 @@ void parse_input_perft(const char* s, Engine* pE)
 			RaiiTimer timer;
 			PerftInfo T;
 			perftMT(pE->currentPosition, q, 1, &T);
-            printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 				   q,
 				   T.nMoves,
 				   T.nCapture + T.nEPCapture,
@@ -335,11 +337,11 @@ void parse_input_perft(const char* s, Engine* pE)
 				   T.nCastleLong,
 				   T.nEPCapture,
 				   T.nPromotion,
-                   T.nCheck,
-                   T.nCheckmate
+				   T.nCheck,
+				   T.nCheckmate
 				   );
 			printf("\n");
-            timer.setNodes(T.nMoves);
+			timer.setNodes(T.nMoves);
 		}
 	}
 }
@@ -353,13 +355,13 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 	{
 		{
 			RaiiTimer timer;
-            nodecount_t nNumPositions = 0;
+			nodecount_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
-            printf("\nPerft %d: %lld \n",
+			printf("\nPerft %d: %lld \n",
 				q, nNumPositions
 				);
 			printf("\n");
-            timer.setNodes(nNumPositions);
+			timer.setNodes(nNumPositions);
 		}
 	}
 }
@@ -387,7 +389,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		dumpMove(*pM, LongAlgebraicNoNewline);
 		PerftInfo T;
 		perftMT(Q, depth-1, 1, &T);
-        printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 			depth-1,
 			T.nMoves,
 			T.nCapture + T.nEPCapture,
@@ -395,8 +397,8 @@ void parse_input_divide(const char* s, Engine* pE)
 			T.nCastleLong,
 			T.nEPCapture,
 			T.nPromotion,
-            T.nCheck,
-            T.nCheckmate
+			T.nCheck,
+			T.nCheckmate
 			);
 
 		printf("\n");
@@ -413,7 +415,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		pM++;
 	}
 
-    printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+	printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
 		depth,
 		GT.nMoves,
 		GT.nCapture + GT.nEPCapture,
@@ -421,8 +423,8 @@ void parse_input_divide(const char* s, Engine* pE)
 		GT.nCastleLong,
 		GT.nEPCapture,
 		GT.nPromotion,
-        GT.nCheck,
-        GT.nCheckmate
+		GT.nCheck,
+		GT.nCheckmate
 		);
 }
 
@@ -438,7 +440,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
-    int64_t grandtotal = 0;
+	int64_t grandtotal = 0;
 	RaiiTimer timer;
 
 	while (pM->EndOfMoveList == 0)
@@ -447,16 +449,16 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q.performMove(*pM).switchSides();
 
 		dumpMove(*pM, LongAlgebraicNoNewline);
-        nodecount_t nNumPositions = 0;
-        perftFastMT(Q, depth - 1, nNumPositions);
-        printf(" %lld \n",
-            nNumPositions
+		nodecount_t nNumPositions = 0;
+		perftFastMT(Q, depth - 1, nNumPositions);
+		printf(" %lld \n",
+			nNumPositions
 			);
-        grandtotal += nNumPositions;
+		grandtotal += nNumPositions;
 		pM++;
 	}
-    timer.setNodes(grandtotal);
-    printf("\nPerft %d: %lld\n", depth, grandtotal);
+	timer.setNodes(grandtotal);
+	printf("\nPerft %d: %lld\n", depth, grandtotal);
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}

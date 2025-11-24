@@ -7,7 +7,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # Find the threads package
 find_package(Threads REQUIRED)
@@ -17,7 +17,7 @@ add_executable(juddperft
 	engine.h
 	fen.h
 	hashtable.h
-	Juddperft.h
+	juddperft.h
 	movegen.h
 	raiitimer.h
 	search.h
@@ -29,7 +29,7 @@ add_executable(juddperft
 	engine.cpp
 	fen.cpp
 	hashtable.cpp
-	Juddperft.cpp
+	juddperft.cpp
 	movegen.cpp
 	search.cpp
 	timemanage.cpp
