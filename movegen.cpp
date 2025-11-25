@@ -1691,8 +1691,8 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 {
     int from = 0, to = 0;
     BitBoard bbFrom, bbTo;
-    bbFrom = 1LL << M.FromSquare;
-    bbTo = 1LL << M.ToSquare;
+    bbFrom = 1ULL << M.FromSquare;
+    bbTo = 1ULL << M.ToSquare;
     char ch1, ch2, p;
 
     if (style != CoOrdinate)
@@ -1719,7 +1719,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
     for (int q = 0; q < 64; q++)
     {
-        if (bbFrom & (1LL << q))
+        if (bbFrom & (1ULL << q))
         {
             from = q;
             break;
@@ -1728,7 +1728,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
     for (int q = 0; q < 64; q++)
     {
-        if (bbTo & (1LL << q))
+        if (bbTo & (1ULL << q))
         {
             to = q;
             break;
@@ -1770,24 +1770,31 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
     {
         // Determine if move is a capture
         if (M.Capture || M.EnPassantCapture)
-            sprintf(s, "%c%c%dx%c%d", p, ch1, 1+(from >> 3), ch2, 1+(to >> 3));
+            sprintf(s, "%c%c%dx%c%d", p, ch1, 1 + (from >> 3), ch2, 1+(to >> 3));
         else
-            sprintf(s, "%c%c%d-%c%d", p, ch1, 1+(from >> 3), ch2, 1+(to >> 3));
+            sprintf(s, "%c%c%d-%c%d", p, ch1, 1 + (from >> 3), ch2, 1+(to >> 3));
+
         // Promotions:
-        if (M.PromoteBishop)
-            strcat(s, "(B)");
-        if (M.PromoteKnight)
-            strcat(s, "(N)");
-        if (M.PromoteRook)
-            strcat(s, "(R)");
         if (M.PromoteQueen)
-            strcat(s, "(Q)");
-        //
-        //
-        if (style != LongAlgebraicNoNewline)
-            strcat(s, "\n");
-        else
+            strcat(s, "=Q");
+        else if (M.PromoteBishop)
+            strcat(s, "=B");
+        else if (M.PromoteKnight)
+            strcat(s, "=N");
+        else if (M.PromoteRook)
+            strcat(s, "=R");
+
+        // checks
+        if (M.Checkmate) {
+            strcat(s, "#");
+        } else if (M.Check) {
+            strcat(s, "+");
+        }
+
+        if (style == LongAlgebraicNoNewline)
             strcat(s, " ");
+        else
+            strcat(s, "\n");
         //
         if (pBuffer == NULL)
             printf("%s", s);

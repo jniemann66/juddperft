@@ -53,8 +53,8 @@ SOFTWARE.
 // #define _USE_POPCNT_INSTRUCTION 1			// if defined, use popcnt instruction (Intel: Nehalem or Higher, AMD: Barcelona or Higher)
 // #define _USE_BITTEST_INSTRUCTION 1			// if defined, use the BT instruction (all Intels)
 
-// on gcc & clang, there is a non-standard extension, std::bitset::_Find_first()
-// which allows scanning of the first "on" bit, but MSVC doesn't have it
+// on gcc, there is a non-standard extension, std::bitset::_Find_first()
+// which allows scanning of the first "on" bit, but clang and MSVC don't have it
 // also, it is unclear whether this is actually any faster than just looping through all 64 bits
 #define _USE_BITSET_FIND_FIRST
 
@@ -63,7 +63,7 @@ SOFTWARE.
 // this is typically used to get the indices of "on" squares in a BitBoard
 // expected: an initialised std::bitset<64> called 'bs' ;-)
 
-#if defined (_USE_BITSET_FIND_FIRST) && (defined(__GNUC__) || defined (__clang__))
+#if defined (_USE_BITSET_FIND_FIRST) && defined(__GNUC__) &&!defined(__clang__)
 #define BITSET_LOOP(x) \
 size_t bit; \
 while ((bit = bs._Find_first()) != 64) { \
@@ -79,7 +79,7 @@ for (int bit = 0; bit < 64; bit++) { \
 }
 #endif
 
-#undef _OLD_METHOD_FOR_SLIDING_PIECES
+// #define _OLD_METHOD_FOR_SLIDING_PIECES
 
 #ifndef SMALL_BUFFER_SIZE
 #define SMALL_BUFFER_SIZE 64

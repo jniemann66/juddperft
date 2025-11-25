@@ -44,7 +44,10 @@ set_property(TARGET juddperft PROPERTY
 )
 
 target_link_libraries(juddperft PRIVATE Threads::Threads)
-target_link_libraries(juddperft PRIVATE atomic)
+
+if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    target_link_libraries(juddperft PRIVATE atomic)
+endif()
 
 include(GNUInstallDirs)
 
