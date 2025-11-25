@@ -1,0 +1,11 @@
+--- movegen.cpp
++++ movegen.cpp
+@@ -1829,7 +1829,7 @@ void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
+             break;
+         }
+         ++pM;
+-    } while (++i < MOVELIST_SIZE);
++    } while (++i<MOVELIST_SIZE);
+ }
+ 
+ } // namespace juddperft
