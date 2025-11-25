@@ -1775,26 +1775,26 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
         // Promotions:
         if (M.PromoteQueen) {
-            strncat(s, "=Q", S);
+            strcat(s, "=Q");
         } else if (M.PromoteBishop) {
-            strncat(s, "=B", S);
+            strcat(s, "=B");
         } else if (M.PromoteKnight) {
-            strncat(s, "=N", S);
+            strcat(s, "=N");
         } else if (M.PromoteRook) {
-            strncat(s, "=R", S);
+            strcat(s, "=R");
         }
 
         // checks
         if (M.Checkmate) {
-            strncat(s, "#", S);
+            strcat(s, "#");
         } else if (M.Check) {
-            strncat(s, "+", S);
+            strcat(s, "+");
         }
 
         if (style == LongAlgebraicNoNewline) {
-            strncat(s, " ", S);
+            strcat(s, " ");
         } else {
-            strncat(s, "\n", S);
+            strcat(s, "\n");
         }
 
         if (pBuffer) {
@@ -1807,35 +1807,49 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
     case StandardAlgebraic:
     {
-        // detect if disambiguation is required
-        bool disambiguateRank = true;
-        bool disambiguateFile = true;
+        bool showFromRank = false;
+        bool showFromFile = false;
 
-        if (movelist) {
-            disambiguateRank = false;
-            disambiguateFile = false;
-            const ChessMove *mm = movelist;
-            while (!mm->EndOfMoveList && (mm - movelist < MOVELIST_SIZE)) {
-                if (mm->Piece == M.Piece && mm->ToSquare == M.ToSquare && mm->FromSquare != M.FromSquare) {
-                    disambiguateRank = ((mm->ToSquare & 0x7) == (M.ToSquare & 0x7));
-                    disambiguateFile = ((mm->ToSquare & 0x34) == (M.ToSquare & 0x34));
+        if ((M.Piece & 7) == WPAWN) {
+            showFromFile = (M.Capture || M.EnPassantCapture);
+        } else {
+            sprintf(s, "%c", p);
+
+            if (movelist) {
+                // detect if disambiguation is required
+                showFromRank = false;
+                showFromFile = false;
+                const ChessMove *mm = movelist;
+                int ambiguities = 0;
+                while (!mm->EndOfMoveList && (mm - movelist < MOVELIST_SIZE)) {
+                    if (mm->Piece == M.Piece && mm->ToSquare == M.ToSquare && mm->FromSquare != M.FromSquare) {
+                        if (++ambiguities > 1) {
+                            showFromRank = true;
+                            showFromFile = true;
+                            break;
+                        }
+
+                        bool sameFile = ((mm->ToSquare & 0x7) == (M.ToSquare & 0x7));
+                        if (sameFile) {
+                            showFromRank = true;
+                            showFromFile = false;
+                        } else {
+                            showFromRank = false;
+                            showFromFile = true;
+
+                        }
+                    }
+                    mm++;
                 }
-                mm++;
             }
         }
 
-        if ((M.Piece & 7) == WPAWN) {
-            disambiguateFile = (M.Capture || M.EnPassantCapture);
-        } else {
-            sprintf(s, "%c", p);
-        }
-
-        if (disambiguateFile) {
+        if (showFromFile) {
             sprintf(s + strlen(s), "%c", ch1);
         }
 
-        if (disambiguateRank) {
-            sprintf(s + strlen(s), "%d", (M.FromSquare >> 3));
+        if (showFromRank) {
+            sprintf(s + strlen(s), "%d", 1 + (M.FromSquare >> 3));
         }
 
         // Format with 'x' for captures
