@@ -1829,7 +1829,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
                             break;
                         }
 
-                        bool sameFile = ((mm->ToSquare & 0x7) == (M.ToSquare & 0x7));
+                        bool sameFile = ((mm->FromSquare & 0x7) == (M.FromSquare & 0x7));
                         if (sameFile) {
                             showFromRank = true;
                             showFromFile = false;
