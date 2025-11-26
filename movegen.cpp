@@ -928,12 +928,6 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 		Q.C &= O;
 		Q.D &= O;
 
-		//// Populate new square (Branchless method, BitBoard input):
-		// Q.A |= to & -( static_cast<int64_t>(piece) & 1);
-		// Q.B |= to & -((static_cast<int64_t>(piece) & 2) >> 1);
-		// Q.C |= to & -((static_cast<int64_t>(piece) & 4) >> 2);
-		// Q.D |= to & -((static_cast<int64_t>(piece) & 8) >> 3);
-
 		// Populate new square (Branchless method):
 		Q.A |= static_cast<int64_t>(piece & 1) << pM->ToSquare;
 		Q.B |= static_cast<int64_t>((piece & 2) >> 1) << pM->ToSquare;
@@ -1242,7 +1236,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 #if !defined(_OLD_METHOD_FOR_SLIDING_PIECES)
 				std::bitset<64> bs = getDiagonalMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
 				BITSET_LOOP(addBlackMoveToListIfLegal(P, pM, q, 1ULL << bit, piece))
-		#else
+#else
 
 				toSq = fromSQ;
 				do{ /* Diagonal UpRight */
@@ -1277,7 +1271,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 #if !defined(_OLD_METHOD_FOR_SLIDING_PIECES)
 				std::bitset<64> bs = getStraightMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
 				BITSET_LOOP(addBlackMoveToListIfLegal(P, pM, q, 1ULL << bit, piece))
-		#else
+#else
 				toSq = fromSQ;
 				do{ /* Up */
 					toSq = moveUpSingleOccluded(toSq, BlackFree);
@@ -1372,13 +1366,21 @@ inline void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t
 		pM->Flags = 0;
 }
 
+// todo:
+// 1. change func signature to take char from, char to, BitBoard Mask. get rid of flags param (could even squeeze from & to into one char - only needs 3 bits each !)
+// 2. all calls to addBlackMove...() to send a square index instead of BitBoard (use the index lookups instead of BB lookups)
+// 3. consolidate all the addMove..() variants into one function. Decide whether castle/promote/normal by from, to squares
+// 4. consider moving calls to isInCheck() out of here. Go to a propose / approve model (test for check in 2nd pass). Still need to ability to get out early when only testing for one move
+// 5. consider a unit test to check that the index-lookup tables aways match the bitboard lookup tables
+// 6. do all the same for White (obviously)
+
 inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
 {
 	if (to != 0)
 	{
 		ChessPosition Q = P;
 		pM->FromSquare = fromsquare;
-		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to));
+		pM->ToSquare = static_cast<unsigned char>(getSquareIndex(to)); // <-- horrible; we converted index to bitboard and back to index again using a bitscan
 		pM->Flags = flags;
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
