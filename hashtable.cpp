@@ -43,7 +43,7 @@ namespace juddperft {
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
 		// with a uniform distribution of ints
 		std::random_device rd;
-        std::mt19937_64 rng(rd());
+		std::mt19937_64 rng(rd());
 		std::uniform_int_distribution<unsigned long long int> dist(0, 0xffffffffffffffff);
 		//
 		for (int n = 0; n < 16; ++n) {

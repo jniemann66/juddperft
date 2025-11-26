@@ -52,7 +52,7 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	if (depth == maxdepth)
 	{
 		pM = MoveList;
-        for (int i = 0; i < movecount; i++, pM++)
+		for (int i = 0; i < movecount; i++, pM++)
 		{
 			pI->nMoves++;
 			if (pM->Capture) {
@@ -82,9 +82,9 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				pI->nCheck++;
 			}
 
-            if (pM->Checkmate) {
-                pI->nCheckmate++;
-            }
+			if (pM->Checkmate) {
+				pI->nCheckmate++;
+			}
 		}
 	}
 
@@ -132,45 +132,45 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 {
-    ChessMove moveList[MOVELIST_SIZE];
-    ChessPosition Q = P;
-    nodecount_t orig_nNodes = nNodes;
+	ChessMove moveList[MOVELIST_SIZE];
+	ChessPosition Q = P;
+	nodecount_t orig_nNodes = nNodes;
 
 #ifdef _USE_HASH
-    // Consult the HashTable:
-    HashKey hk = Q.HK^zobristKeys.zkPerftDepth[depth];
-    std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk);		// get address of atomic record
-    PerftTableEntry retrievedRecord = pAtomicRecord->load();						// Load a copy of the record
-    if (retrievedRecord.Hash == hk) {
-        nNodes += retrievedRecord.count;
-        return;
-    }
+	// Consult the HashTable:
+	HashKey hk = Q.HK^zobristKeys.zkPerftDepth[depth];
+	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk);		// get address of atomic record
+	PerftTableEntry retrievedRecord = pAtomicRecord->load();						// Load a copy of the record
+	if (retrievedRecord.Hash == hk) {
+		nNodes += retrievedRecord.count;
+		return;
+	}
 
-    PerftTableEntry newRecord;
-    newRecord.Hash = hk;
-    newRecord.depth = depth;
+	PerftTableEntry newRecord;
+	newRecord.Hash = hk;
+	newRecord.depth = depth;
 #endif // _USE_HASH
 
-    if (depth == 1) { /* Leaf Node*/
-        generateMoves(P, moveList);
-        int movecount = moveList->MoveCount;
-        newRecord.count = movecount;
-        nNodes += movecount;
-    } else { /* Branch Node */
-        generateMoves(P, moveList);
-        int movecount = moveList->MoveCount;
-        for (int i = 0; i < movecount; i++) {
-            Q = P; // unmake move
-            Q.performMove(moveList[i]).switchSides(); // make move
-            perftFast(Q, depth - 1, nNodes);
-        }
-        newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
-    }
+	if (depth == 1) { /* Leaf Node*/
+		generateMoves(P, moveList);
+		int movecount = moveList->MoveCount;
+		newRecord.count = movecount;
+		nNodes += movecount;
+	} else { /* Branch Node */
+		generateMoves(P, moveList);
+		int movecount = moveList->MoveCount;
+		for (int i = 0; i < movecount; i++) {
+			Q = P; // unmake move
+			Q.performMove(moveList[i]).switchSides(); // make move
+			perftFast(Q, depth - 1, nNodes);
+		}
+		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
+	}
 
 #ifdef _USE_HASH
-    do {
-        // if (RetrievedRecord has changed) {} // do something (if we care)
-    } while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+	do {
+		// if (RetrievedRecord has changed) {} // do something (if we care)
+	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
 #endif
 
 }
@@ -272,7 +272,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 {
-    nNodes = 0;
+	nNodes = 0;
 
 	if (depth == 0) {
 		nNodes = 1;
@@ -295,7 +295,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 
 	unsigned int nThreads = std::min(std::thread::hardware_concurrency(), std::min(theEngine.nNumCores, static_cast<unsigned int>(MAX_THREADS)));
 	std::vector<std::thread> threads;
-    std::vector<int64_t> subTotal(nThreads, 0);
+	std::vector<int64_t> subTotal(nThreads, 0);
 	std::queue<ChessMove> MoveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
@@ -312,7 +312,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {
-                nodecount_t s = 0; 							// local accumulator for thread
+				nodecount_t s = 0; 							// local accumulator for thread
 				ChessPosition Q = P;							// Set up position
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
@@ -341,7 +341,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	}
 
 	// add up total:
-    nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0ull);
+	nNodes = std::accumulate(subTotal.begin(), subTotal.end(), 0ull);
 }
 
 } // namespace juddperft
