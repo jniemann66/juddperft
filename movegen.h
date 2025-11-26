@@ -66,18 +66,18 @@ SOFTWARE.
 
 #if defined (_USE_BITSET_FIND_FIRST) && defined(__GNUC__) &&!defined(__clang__)
 #define BITSET_LOOP(x) \
-size_t bit; \
-while ((bit = bs._Find_first()) != 64) { \
+	size_t bit; \
+	while ((bit = bs._Find_first()) != 64) { \
 	(x); \
 	bs.reset(bit); \
-}
+	}
 #else
 #define BITSET_LOOP(x) \
-for (int bit = 0; bit < 64; bit++) { \
+	for (int bit = 0; bit < 64; bit++) { \
 	if (bs[bit]) { \
-		(x); \
+	(x); \
 	} \
-}
+	}
 #endif
 
 // #define _OLD_METHOD_FOR_SLIDING_PIECES
@@ -316,18 +316,18 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 // White Move-Generation Functions:
 void genWhiteMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genBlackAttacks(const ChessPosition& Z);
-BitBoard isWhiteInCheck(const ChessPosition & Z);
+BitBoard isWhiteInCheck(const ChessPosition & Z, BitBoard extend = 0);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
-void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
+void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to);
 
 // Black Move-Generation Functions:
 void genBlackMoves(const ChessPosition& P, ChessMove*);
 inline BitBoard genWhiteAttacks(const ChessPosition& Z);
-BitBoard isBlackInCheck(const ChessPosition & Z);
+BitBoard isBlackInCheck(const ChessPosition & Z, BitBoard extend = 0);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
-void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
+void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
 void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to);
 
@@ -400,7 +400,7 @@ const int pieceMaterialValue[16] =
 // all the square indexes
 enum class SquareIndex : unsigned char {
 	h1 = 0,
-		g1, f1, e1, d1, c1, b1, a1,
+	g1, f1, e1, d1, c1, b1, a1,
 	h2, g2, f2, e2, d2, c2, b2, a2,
 	h3, g3, f3, e3, d3, c3, b3, a3,
 	h4, g4, f4, e4, d4, c4, b4, a4,
@@ -509,12 +509,16 @@ enum Regions : BitBoard {
 	UPPER_CENTRE = 0x0000001800000000,
 	LOWER_CENTRE = 0x0000000018000000,
 
-	WHITECASTLEZONE	= 0x0000000000000006,
-	BLACKCASTLEZONE	= 0x0600000000000000,
-	WHITECASTLELONGZONE	= 0x0000000000000070,
-	BLACKCASTLELONGZONE	= 0x7000000000000000,
-	WHITEOUTPOSTZONE = 0x0000ffffff000000,
-	BLACKOUTPOSTZONE = 0x000000ffffff0000,
+	WHITECASTLEZONE				= 0x0000000000000006, // for white to castle, this region must be clear
+	WHITECASTLECHECKZONE		= 0x0000000000000006, // for white to castle, the king would not be in check on these squares
+	BLACKCASTLEZONE				= 0x0600000000000000, // for black to castle, this region must be clear
+	BLACKCASTLECHECKZONE		= 0x0600000000000000, // for black to castle, the king would not be in check on these squares
+	WHITECASTLELONGZONE			= 0x0000000000000070, // for white to castle-long, this region must be clear
+	WHITECASTLELONGCHECKZONE	= 0x0000000000000030, // for white to castle-long, the king would not be in check on these squares
+	BLACKCASTLELONGZONE			= 0x7000000000000000, // for black to castle-long, this region must be clear
+	BLACKCASTLELONGCHECKZONE	= 0x3000000000000000, // for black to castle-long, the king would not be in check on these squares
+	WHITEOUTPOSTZONE			= 0x0000ffffff000000,
+	BLACKOUTPOSTZONE			= 0x000000ffffff0000,
 
 	WHITEQRPOS = 0x0000000000000080,
 	WHITEQNPOS = 0x0000000000000040,
@@ -936,7 +940,7 @@ inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 	//i = g; j = p; j &= m2; y = i; y >>= 1; y &= j; i |= y; z = j; z >>= 1; j &= z; y = i; y >>= 2; y &= j;
 	//i |= y; z = j; z >>= 2; j &= z; y = i; y >>= 4; y &= j; i |= y; r |= i;
 	//r &= ~g;
-//	return r;
+	//	return r;
 }
 
 ////////////////////////////////////////////
@@ -1261,7 +1265,7 @@ inline int popCount(const BitBoard & B)
 	BitBoard A;
 	A = B - ((B >> 1) & 0x5555555555555555);
 	A = (A & 0x3333333333333333) +
-		((A >> 2) & 0x3333333333333333);
+			((A >> 2) & 0x3333333333333333);
 	A = (A + (A >> 4)) & 0x0f0f0f0f0f0f0f0f;
 	return static_cast<int>((A * 0x0101010101010101) >> 56);
 #endif
@@ -1274,16 +1278,16 @@ inline unsigned long getSquareIndex(BitBoard b)
 	// note: bit scans performed terribly in this context (at least, on my machine),
 	// so just going with the DeBruijn Multiplication
 
-// #if defined(_USE_BITSCAN_INSTRUCTIONS)
+	// #if defined(_USE_BITSCAN_INSTRUCTIONS)
 
-// #if defined(_MSC_VER)
-//     // Important: a and b must be initialised first !
-//     _BitScanForward64(&n, b);
-// #elif defined(__GNUC__) || defined(__clang__)
-//     n = __builtin_ctzll(b);
-// #endif
+	// #if defined(_MSC_VER)
+	//     // Important: a and b must be initialised first !
+	//     _BitScanForward64(&n, b);
+	// #elif defined(__GNUC__) || defined(__clang__)
+	//     n = __builtin_ctzll(b);
+	// #endif
 
-// #else
+	// #else
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
@@ -1305,64 +1309,64 @@ inline unsigned long getSquareIndex(BitBoard b)
 	// BitScanForward:
 	n = tbl[((b ^ (b - 1)) * db64) >> 58];
 
-// #endif // defined(_USE_BITSCAN_INSTRUCTIONS)
+			// #endif // defined(_USE_BITSCAN_INSTRUCTIONS)
 
-	// todo: can also try our old friend, std::bitset::_Find_first()
-	// also, C++20 has some bit-scanning functions now in the <bit> header ...
+			// todo: can also try our old friend, std::bitset::_Find_first()
+			// also, C++20 has some bit-scanning functions now in the <bit> header ...
 
-	return n;
+			return n;
 }
 
-// getFirstAndLastPiece()
-// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
-inline void getFirstAndLastPiece(const BitBoard& B, unsigned long& a, unsigned long& b)
-{
+			// getFirstAndLastPiece()
+			// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
+			inline void getFirstAndLastPiece(const BitBoard& B, unsigned long& a, unsigned long& b)
+	{
 
-#if defined(_USE_BITSCAN_INSTRUCTIONS)
-	// perform Bitscans to determine start and finish squares;
-#if defined(_MSC_VER)
-	// Important: a and b must be initialised first !
-	_BitScanReverse64(&b, B);
-	_BitScanForward64(&a, B);
-#elif defined(__GNUC__) || defined(__clang__)
-	b = 63 - __builtin_clzll(B);
-	a = __builtin_ctzll(B);
-#endif
+		#if defined(_USE_BITSCAN_INSTRUCTIONS)
+			// perform Bitscans to determine start and finish squares;
+		#if defined(_MSC_VER)
+			// Important: a and b must be initialised first !
+			_BitScanReverse64(&b, B);
+			_BitScanForward64(&a, B);
+		#elif defined(__GNUC__) || defined(__clang__)
+			b = 63 - __builtin_clzll(B);
+			a = __builtin_ctzll(B);
+		#endif
 
-#else
+		#else
 
-	// alternative method for non-x86-64, using DeBruijn Multiplication:
-	// see (https://chessprogramming.wikispaces.com/BitScan)
-	// credit: Kim Walisch, Gerd Isenberg et al.
+			// alternative method for non-x86-64, using DeBruijn Multiplication:
+			// see (https://chessprogramming.wikispaces.com/BitScan)
+			// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x03f79d71b4cb0a89;
+			const BitBoard db64 = 0x03f79d71b4cb0a89;
 
-	const int tbl[64] = {
-		0, 47,  1, 56, 48, 27,  2, 60,
-		57, 49, 41, 37, 28, 16,  3, 61,
-		54, 58, 35, 52, 50, 42, 21, 44,
-		38, 32, 29, 23, 17, 11,  4, 62,
-		46, 55, 26, 59, 40, 36, 15, 53,
-		34, 51, 20, 43, 31, 22, 10, 45,
-		25, 39, 14, 33, 19, 30,  9, 24,
-		13, 18,  8, 12,  7,  6,  5, 63
-	};
+			const int tbl[64] = {
+			0, 47,  1, 56, 48, 27,  2, 60,
+			57, 49, 41, 37, 28, 16,  3, 61,
+			54, 58, 35, 52, 50, 42, 21, 44,
+			38, 32, 29, 23, 17, 11,  4, 62,
+			46, 55, 26, 59, 40, 36, 15, 53,
+			34, 51, 20, 43, 31, 22, 10, 45,
+			25, 39, 14, 33, 19, 30,  9, 24,
+			13, 18,  8, 12,  7,  6,  5, 63
+};
 
-	// BitScanForward:
-	a = tbl[((B ^ (B - 1)) * db64) >> 58];
+			// BitScanForward:
+			a = tbl[((B ^ (B - 1)) * db64) >> 58];
 
-	// BitScanReverse:
-	BitBoard A = B;
-	A |= A >> 1;
-	A |= A >> 2;
-	A |= A >> 4;
-	A |= A >> 8;
-	A |= A >> 16;
-	A |= A >> 32;
-	b = tbl[(A * db64) >> 58];
+			// BitScanReverse:
+			BitBoard A = B;
+			A |= A >> 1;
+			A |= A >> 2;
+			A |= A >> 4;
+			A |= A >> 8;
+			A |= A >> 16;
+			A |= A >> 32;
+			b = tbl[(A * db64) >> 58];
 
-#endif
+		#endif
 }
 
 } // namespace juddperft
-#endif // _MOVEGEN
+		#endif // _MOVEGEN

@@ -677,6 +677,7 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		case WEMPTY:
 		case BEMPTY:
 			continue;
+
 		case WPAWN:
 		{
 			// single move forward
@@ -732,55 +733,40 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 		case WKING:
 		{
-			toSq = MoveUp[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveLeft[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveUpLeft[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveUp[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveUpRight[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveRight[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveDownRight[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveDown[q] & WhiteFree, piece);
+			addWhiteMoveToListIfLegal(P, pM, q, MoveDownLeft[q] & WhiteFree, piece);
 
-			toSq = MoveRight[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
+			if (fromSQ == E1) { // King still in original position
+				// Conditionally generate O-O move:
+				if (P.WhiteCanCastle && // White still has castle rights
+						(~P.A & ~P.B & P.C & ~P.D & H1) && // Kingside rook is in correct position
+						(WHITECASTLEZONE & Occupied) == 0 && // Castle Zone (f1, g1) is clear
+						!isWhiteInCheck(P, WHITECASTLECHECKZONE)) // King is not in Check (in e1, f1, g1)
+				{
+					// OK to Castle
+					M.ClearFlags();
+					M.Castle = 1;
+					addWhiteCastlingMove(P, pM, M.Flags);
+				}
 
-			// Conditionally generate O-O move:
-			if ((P.WhiteCanCastle) &&								// White still has castle rights AND
-					(fromSQ == WHITEKINGPOS) &&					// King is in correct Position AND
-					((~P.A & ~P.B & P.C & ~P.D & WHITEKRPOS) != 0) &&	// KRook is in correct Position AND
-					(pM->IllegalMove == 0) &&							// Last generated move (1 step to right) was legal AND
-					(WHITECASTLEZONE & Occupied) == 0 &&				// Castle Zone (f1, g1) is clear AND
-					!isWhiteInCheck(P)									// King is not in Check
-					)
-			{
-				// OK to Castle
-				M.ClearFlags();
-				M.Castle = 1;
-				addWhiteCastlingMoveIfLegal(P, pM, M.Flags);
+				// Conditionally generate O-O-O move:
+				if (P.WhiteCanCastleLong && // White still has castle-long rights
+						(~P.A & ~P.B & P.C & ~P.D & A1) && // Queenside rook is in correct Position
+						(WHITECASTLELONGZONE & Occupied) == 0 && // Castle-long zone (b1, c1, d1) is clear
+						!isWhiteInCheck(P, WHITECASTLELONGCHECKZONE)) // King is not in check (in e1, d1, c1)
+				{
+					// Ok to Castle Long
+					M.ClearFlags();
+					M.CastleLong = 1;
+					addWhiteCastlingMove(P, pM, M.Flags);
+				}
 			}
-
-			toSq = MoveDown[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
-
-			toSq = MoveLeft[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
-
-			// Conditionally generate O-O-O move:
-			if ((P.WhiteCanCastleLong)	&&							// White still has castle-long rights AND
-					(fromSQ == WHITEKINGPOS) &&					// King is in correct Position AND
-					((~P.A & ~P.B & P.C & ~P.D & WHITEQRPOS) != 0) &&	// QRook is in correct Position AND
-					(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
-					(WHITECASTLELONGZONE & Occupied) == 0 &&	 		// Castle Long Zone (b1, c1, d1) is clear AND
-					!isWhiteInCheck(P)									// King is not in Check
-					)
-			{
-				// Ok to Castle Long
-				M.ClearFlags();
-				M.CastleLong = 1;
-				addWhiteCastlingMoveIfLegal(P, pM, M.Flags);
-			}
-			toSq = MoveUpRight[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveDownRight[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveDownLeft[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveUpLeft[q] & WhiteFree;
-			addWhiteMoveToListIfLegal(P, pM, q, toSq, piece);
 		}
 			break;
 
@@ -897,7 +883,7 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 	}
 }
 
-inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags)
+inline void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags)
 {
 	ChessPosition Q = P;
 	pM->FromSquare = static_cast<unsigned char>(SquareIndex::e1);
@@ -918,14 +904,9 @@ inline void addWhiteCastlingMoveIfLegal(const ChessPosition& P, ChessMove*& pM, 
 		pM->ToSquare = static_cast<unsigned char>(SquareIndex::g1);
 	}
 
-	if (isWhiteInCheck(Q)) {
-		pM->IllegalMove = 1;
-	} else {
-		scanWhiteMoveForChecks(Q, pM);
-		pM++; // Add to list (advance pointer)
-		pM->Piece = WKING;
-		pM->Flags = 0;
-	}
+	scanWhiteMoveForChecks(Q, pM);
+	pM++; // Add to list (advance pointer)
+	pM->Flags = 0;
 }
 
 inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
@@ -981,9 +962,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			pM->IllegalMove = 1;
 		} else {
 			scanWhiteMoveForChecks(Q, pM);
-			const auto piece = pM->Piece;
 			pM++; // Add to list (advance pointer)
-			pM->Piece = piece;
 			pM->Flags = 0;
 		}
 	}
@@ -1048,7 +1027,6 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			scanWhiteMoveForChecks(Q, pM);
 
 			pM++;
-			pM->Piece = WPAWN;
 			pM->Flags = 0;
 		}
 	}
@@ -1089,9 +1067,9 @@ inline BitBoard genBlackAttacks(const ChessPosition& Z)
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-inline BitBoard isWhiteInCheck(const ChessPosition& Z)
+inline BitBoard isWhiteInCheck(const ChessPosition& Z, BitBoard extend)
 {
-	BitBoard WhiteKing = Z.A & Z.B & Z.C & ~Z.D;
+	BitBoard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
 	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 WhiteKing |			// White King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
@@ -1214,56 +1192,40 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 		case BKING:
 		{
-			toSq = MoveUp[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveLeft[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveUpLeft[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveUp[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveUpRight[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveRight[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveDownRight[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveDown[q] & BlackFree, piece);
+			addBlackMoveToListIfLegal(P, pM, q, MoveDownLeft[q] & BlackFree, piece);
 
-			toSq = MoveRight[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
+			if (fromSQ == E8) { // King still in original position
+				// Conditionally generate O-O move:
+				if (P.BlackCanCastle && // Black still has castle rights
+						(~P.A & ~P.B & P.C & P.D & H8) && // Kingside rook is in correct position
+						(BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
+						!isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
+				{
+					// OK to Castle
+					M.ClearFlags();
+					M.Castle = 1;
+					addBlackCastlingMove(P, pM, M.Flags);
+				}
 
-			// Conditionally generate O-O move:
-			if ((P.BlackCanCastle) &&								// Black still has castle rights AND
-					(fromSQ == BLACKKINGPOS) &&					// King is in correct Position AND
-					((~P.A & ~P.B & P.C & P.D & BLACKKRPOS) != 0) &&	// KRook is in correct Position AND
-					(pM->IllegalMove == 0) &&							// Last generated move (1 step to right) was legal AND
-					(BLACKCASTLEZONE & Occupied) == 0 &&				// Castle Zone (f8, g8) is clear	AND
-					!isBlackInCheck(P)									// King is not in Check
-					)
-			{
-				// OK to Castle
-				M.ClearFlags();
-				M.Castle = 1;
-				addBlackCastlingMoveToListIfLegal(P, pM, M.Flags);
+				// Conditionally generate O-O-O move:
+				if (P.BlackCanCastleLong && // Black still has castle-long rights
+						((~P.A & ~P.B & P.C & P.D & BLACKQRPOS) != 0) && // Queenside rook is in correct Position
+						(BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
+						!isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
+				{
+					// OK to castle Long
+					M.ClearFlags();
+					M.CastleLong = 1;
+					addBlackCastlingMove(P, pM, M.Flags);
+				}
 			}
-
-			toSq = MoveDown[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
-
-			toSq = MoveLeft[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
-
-			// Conditionally generate O-O-O move:
-			if ((P.BlackCanCastleLong) &&							// Black still has castle-long rights AND
-					(fromSQ == BLACKKINGPOS) &&					// King is in correct Position AND
-					((~P.A & ~P.B & P.C & P.D & BLACKQRPOS) != 0) &&	// QRook is in correct Position AND
-					(pM->IllegalMove == 0) &&							// Last generated move (1 step to left) was legal AND
-					(BLACKCASTLELONGZONE & Occupied) == 0 &&			// Castle Long Zone (b8, c8, d8) is clear
-					!isBlackInCheck(P)									// King is not in Check
-					)
-			{
-				// OK to castle Long
-				M.ClearFlags();
-				M.CastleLong = 1;
-				addBlackCastlingMoveToListIfLegal(P, pM, M.Flags);
-			}
-
-			toSq = MoveUpRight[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveDownRight[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveDownLeft[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
-			toSq = MoveUpLeft[q] & BlackFree;
-			addBlackMoveToListIfLegal(P, pM, q, toSq, piece);
 		}
 			break;
 
@@ -1383,7 +1345,7 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 	}
 }
 
-inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, int32_t flags /*=0*/)
+inline void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags /*=0*/)
 {
 	ChessPosition Q = P;
 	pM->FromSquare = static_cast<unsigned char>(SquareIndex::e8);
@@ -1405,14 +1367,9 @@ inline void addBlackCastlingMoveToListIfLegal(const ChessPosition& P, ChessMove*
 		pM->ToSquare = static_cast<unsigned char>(SquareIndex::g8);
 	}
 
-	if (isBlackInCheck(Q)) {
-		pM->IllegalMove = 1;
-	} else {
 		scanBlackMoveForChecks(Q, pM);
 		pM++; // Add to list (advance pointer)
 		pM->Flags = 0;
-		pM->Piece = BKING;
-	}
 }
 
 inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
@@ -1463,9 +1420,7 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 			pM->IllegalMove = 1;
 		} else {
 			scanBlackMoveForChecks(Q, pM);
-			const auto piece = pM->Piece;
 			pM++; // Add to list (advance pointer)
-			pM->Piece = piece;
 			pM->Flags = 0;
 		}
 	}
@@ -1532,7 +1487,6 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			scanBlackMoveForChecks(Q, pM);
 
 			pM++;
-			pM->Piece = BPAWN;
 			pM->Flags = 0;
 		}
 	}
@@ -1573,10 +1527,9 @@ inline BitBoard genWhiteAttacks(const ChessPosition& Z)
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-
-inline BitBoard isBlackInCheck(const ChessPosition& Z)
+inline BitBoard isBlackInCheck(const ChessPosition& Z, BitBoard extend)
 {
-	BitBoard BlackKing = Z.A & Z.B & Z.C & Z.D;
+	BitBoard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
 	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 BlackKing |			// Black King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
