@@ -25,12 +25,12 @@ SOFTWARE.
 */
 
 #include "juddperft.h"
-#include "movegen.h"
+#include "diagnostics.h"
 #include "fen.h"
+#include "hashtable.h"
+#include "movegen.h"
 #include "search.h"
 #include "winboard.h"
-#include "diagnostics.h"
-#include "hashtable.h"
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -61,9 +61,10 @@ int main(int argc, char *argv[], char *envp[])
 #endif
     setProcessPriority();
 
-    ChessPosition X;
+    // ChessPosition X;
     // readFen(&X, "r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1");
     // readFen(&X, "1rb5/4r3/3p1npb/3kp1P1/1P3P1P/5nR1/2Q1BK2/bN4NR w - - 3 61");
+    // readFen(&X, "6k1/8/8/Q1Q1Q3/8/Q1q1Q3/8/Q1Q1Q1K1 w - -");
     // dumpChessPosition(X);
     // ChessMove movelist[MOVELIST_SIZE];
     // X.getLegalMoves(movelist);

@@ -41,6 +41,7 @@ SOFTWARE.
 #include <cassert>
 #include <mutex>
 #include <bitset>
+#include <set>
 
 namespace juddperft {
 
@@ -1703,13 +1704,14 @@ void dumpChessPosition(ChessPosition p)
 // A number of notation styles are supported. Usually CoOrdinate should be used
 // for WinBoard.
 //////////////////////////////////////////////////////////////////////////////////
-void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer, const ChessMove *movelist)
+void dumpMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer, const ChessMove *movelist)
 {
     char ch1, ch2, p;
+    const unsigned char p7 = mv.Piece & 0x7;
 
     if (style != CoOrdinate)
     {
-        if (M.Castle == 1)
+        if (mv.Castle == 1)
         {
             if (pBuffer == nullptr)
                 printf(" O-O\n");
@@ -1718,7 +1720,7 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
             return;
         }
 
-        if (M.CastleLong == 1)
+        if (mv.CastleLong == 1)
         {
             if (pBuffer == nullptr)
                 printf(" O-O-O\n");
@@ -1728,11 +1730,11 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
         }
     }
 
-    ch1 = 'h' - (M.FromSquare % 8);
-    ch2 = 'h' - (M.ToSquare % 8);
+    ch1 = 'h' - (mv.FromSquare % 8);
+    ch2 = 'h' - (mv.ToSquare % 8);
 
     // Determine piece and assign character p accordingly:
-    switch (M.Piece & 7)
+    switch (p7)
     {
     case WPAWN:
         p = ' ';
@@ -1767,27 +1769,27 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
     case Diagnostic:
     {
         // Determine if move is a capture
-        if (M.Capture || M.EnPassantCapture) {
-            sprintf(s, "%c%c%dx%c%d", p, ch1, 1 + (M.FromSquare >> 3), ch2, 1 + (M.ToSquare >> 3));
+        if (mv.Capture || mv.EnPassantCapture) {
+            sprintf(s, "%c%c%dx%c%d", p, ch1, 1 + (mv.FromSquare >> 3), ch2, 1 + (mv.ToSquare >> 3));
         } else {
-            sprintf(s, "%c%c%d-%c%d", p, ch1, 1 + (M.FromSquare >> 3), ch2, 1 + (M.ToSquare >> 3));
+            sprintf(s, "%c%c%d-%c%d", p, ch1, 1 + (mv.FromSquare >> 3), ch2, 1 + (mv.ToSquare >> 3));
         }
 
         // Promotions:
-        if (M.PromoteQueen) {
+        if (mv.PromoteQueen) {
             strcat(s, "=Q");
-        } else if (M.PromoteBishop) {
+        } else if (mv.PromoteBishop) {
             strcat(s, "=B");
-        } else if (M.PromoteKnight) {
+        } else if (mv.PromoteKnight) {
             strcat(s, "=N");
-        } else if (M.PromoteRook) {
+        } else if (mv.PromoteRook) {
             strcat(s, "=R");
         }
 
         // checks
-        if (M.Checkmate) {
+        if (mv.Checkmate) {
             strcat(s, "#");
-        } else if (M.Check) {
+        } else if (mv.Check) {
             strcat(s, "+");
         }
 
@@ -1807,73 +1809,79 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
 
     case StandardAlgebraic:
     {
-        bool showFromRank = false;
-        bool showFromFile = false;
+        bool showOriginRank = false;
+        bool showOriginFile = false;
 
-        if ((M.Piece & 7) == WPAWN) {
-            showFromFile = (M.Capture || M.EnPassantCapture);
+        if (p7 == WPAWN) {
+            // for pawns, piece type is not shown, and originating file is only shown in captures
+            showOriginFile = (mv.Capture || mv.EnPassantCapture);
         } else {
+            // print the piece type
             sprintf(s, "%c", p);
 
-            if (movelist) {
+            if (p7 >= WBISHOP && p7 <= WQUEEN) { // potentialy ambiguous piece
                 // detect if disambiguation is required
-                showFromRank = false;
-                showFromFile = false;
-                const ChessMove *mm = movelist;
-                int ambiguities = 0;
-                while (!mm->EndOfMoveList && (mm - movelist < MOVELIST_SIZE)) {
-                    if (mm->Piece == M.Piece && mm->ToSquare == M.ToSquare && mm->FromSquare != M.FromSquare) {
-                        if (++ambiguities > 1) {
-                            showFromRank = true;
-                            showFromFile = true;
-                            break;
+                if (movelist) {
+                    const ChessMove *mm = movelist;
+                    std::set<unsigned char> other_origin_ranks;
+                    std::set<unsigned char> other_origin_files;
+                    while (!mm->EndOfMoveList && (mm - movelist < MOVELIST_SIZE)) {
+                        if (mm->Piece == mv.Piece && mm->ToSquare == mv.ToSquare && mm->FromSquare != mv.FromSquare) {
+                            // same type of piece, same destination, different origin
+                            other_origin_ranks.insert(mm->FromSquare >> 3);
+                            other_origin_files.insert(mm->FromSquare & 0x7);
                         }
+                        mm++;
+                    }
 
-                        bool sameFile = ((mm->FromSquare & 0x7) == (M.FromSquare & 0x7));
-                        if (sameFile) {
-                            showFromRank = true;
-                            showFromFile = false;
-                        } else {
-                            showFromRank = false;
-                            showFromFile = true;
-
+                    if (!other_origin_ranks.empty() || !other_origin_files.empty()) {
+                        const bool sharesOriginFile{other_origin_files.count(mv.FromSquare & 0x7) > 0};
+                        const bool sharesOriginRank{other_origin_ranks.count(mv.FromSquare >> 3) > 0};
+                        if (!sharesOriginFile && !sharesOriginRank) {
+                            showOriginFile = true;
+                        } else  {
+                            showOriginFile = sharesOriginRank;
+                            showOriginRank = sharesOriginFile;
                         }
                     }
-                    mm++;
+                } else {
+                    // if there is no movelist supplied (not recommended for SAN), originating rank and file must both be shown
+                    showOriginRank = true;
+                    showOriginFile = true;
                 }
             }
         }
 
-        if (showFromFile) {
+        if (showOriginFile) {
             sprintf(s + strlen(s), "%c", ch1);
         }
 
-        if (showFromRank) {
-            sprintf(s + strlen(s), "%d", 1 + (M.FromSquare >> 3));
+        if (showOriginRank) {
+            sprintf(s + strlen(s), "%d", 1 + (mv.FromSquare >> 3));
         }
 
         // Format with 'x' for captures
-        if (M.Capture || M.EnPassantCapture) {
-            sprintf(s + strlen(s), "x%c%d", ch2, 1 + (M.ToSquare >> 3));
+        if (mv.Capture || mv.EnPassantCapture) {
+            sprintf(s + strlen(s), "x%c%d", ch2, 1 + (mv.ToSquare >> 3));
         } else {
-            sprintf(s + strlen(s), "%c%d", ch2, 1 + (M.ToSquare >> 3));
+            sprintf(s + strlen(s), "%c%d", ch2, 1 + (mv.ToSquare >> 3));
         }
 
         // Promotions:
-        if (M.PromoteQueen) {
+        if (mv.PromoteQueen) {
             strcat(s, "=Q");
-        } else if (M.PromoteBishop) {
+        } else if (mv.PromoteBishop) {
             strcat(s, "=B");
-        } else if (M.PromoteKnight) {
+        } else if (mv.PromoteKnight) {
             strcat(s, "=N");
-        } else if (M.PromoteRook) {
+        } else if (mv.PromoteRook) {
             strcat(s, "=R");
         }
 
         // checks
-        if (M.Checkmate) {
+        if (mv.Checkmate) {
             strcat(s, "#");
-        } else if (M.Check) {
+        } else if (mv.Check) {
             strcat(s, "+");
         }
 
@@ -1888,15 +1896,15 @@ void dumpMove(ChessMove M, MoveNotationStyle style /* = LongAlgebraic */, char* 
         break;
     case CoOrdinate:
     {
-        sprintf(s, "%c%d%c%d", ch1, 1 + (M.FromSquare >> 3), ch2, 1 + (M.ToSquare >> 3));
+        sprintf(s, "%c%d%c%d", ch1, 1 + (mv.FromSquare >> 3), ch2, 1 + (mv.ToSquare >> 3));
         // Promotions:
-        if (M.PromoteBishop) {
+        if (mv.PromoteBishop) {
             strcat(s, "b");
-        } else if (M.PromoteKnight) {
+        } else if (mv.PromoteKnight) {
             strcat(s, "n");
-        } else if (M.PromoteRook) {
+        } else if (mv.PromoteRook) {
             strcat(s, "r");
-        } else if (M.PromoteQueen) {
+        } else if (mv.PromoteQueen) {
             strcat(s, "q");
         }
 

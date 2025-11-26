@@ -334,7 +334,7 @@ void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, u
 // Dump I/O functions:
 void dumpBitBoard(BitBoard b);
 void dumpChessPosition(ChessPosition p);
-void dumpMove(ChessMove M, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr, const ChessMove *movelist = nullptr);
+void dumpMove(const ChessMove& mv, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr, const ChessMove *movelist = nullptr);
 void dumpMoveList(ChessMove * pMoveList, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr);
 
 // Compound Bitboard Fill operations:
