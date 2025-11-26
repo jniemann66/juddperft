@@ -25,18 +25,18 @@ SOFTWARE.
 */
 
 #include "search.h"
-#include "movegen.h"
 #include "engine.h"
+#include "movegen.h"
 
-#include <thread>
-#include <cassert>
-#include <vector>
-#include <queue>
-#include <numeric>
-#include <condition_variable>
-#include <string>
 #include <algorithm>
+#include <cassert>
 #include <chrono>
+#include <condition_variable>
+#include <numeric>
+#include <queue>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace juddperft {
 

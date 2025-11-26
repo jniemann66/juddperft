@@ -533,7 +533,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		return *this;
 	}
 
-	// En-Passant Captures	////
+	// En-Passant Captures
 	else if (M.EnPassantCapture)
 	{
 		// remove the actual pawn (it is different to the capture square)
@@ -1763,7 +1763,6 @@ void dumpMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic */
 		p = '?';
 	} // ends switch
 
-	static constexpr size_t S = SMALL_BUFFER_SIZE - 1;
 	char s[SMALL_BUFFER_SIZE];  // output string
 	*s = 0;
 
@@ -1807,7 +1806,7 @@ void dumpMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic */
 		if (pBuffer) {
 			strcpy(pBuffer, s);
 		} else {
-			printf("%s", s, S);
+			printf("%s", s);
 		}
 	}
 		break;
@@ -1895,10 +1894,11 @@ void dumpMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic */
 		if (pBuffer) {
 			strcpy(pBuffer, s);
 		} else {
-			printf("%s", s, S);
+			printf("%s", s);
 		}
 	}
 		break;
+
 	case CoOrdinate:
 	{
 		sprintf(s, "%c%d%c%d", ch1, 1 + (mv.FromSquare >> 3), ch2, 1 + (mv.ToSquare >> 3));
