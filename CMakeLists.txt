@@ -7,7 +7,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx -DNDEBUG")
 
 # Find the threads package
 find_package(Threads REQUIRED)
@@ -46,7 +46,7 @@ set_property(TARGET juddperft PROPERTY
 target_link_libraries(juddperft PRIVATE Threads::Threads)
 
 if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-    target_link_libraries(juddperft PRIVATE atomic)
+	target_link_libraries(juddperft PRIVATE atomic)
 endif()
 
 include(GNUInstallDirs)
