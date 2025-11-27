@@ -46,6 +46,10 @@ SOFTWARE.
 
 #include <cstdint>
 #include <vector>
+#include <stdexcept>
+#include <string>
+#include <sstream>
+#include <iostream>
 
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
@@ -121,7 +125,7 @@ enum Piece : piece_t {
 	BKING = 15
 };
 
-typedef uint64_t BitBoard;
+typedef uint64_t Bitboard;
 typedef uint64_t HashKey;
 
 // ChessMove{} - Compact move format packed into 64 bits
@@ -195,10 +199,10 @@ class ChessPosition
 	---------------------------------------------------------------*/
 
 public:
-	BitBoard A;
-	BitBoard B;
-	BitBoard C;
-	BitBoard D;
+	Bitboard A;
+	Bitboard B;
+	Bitboard C;
+	Bitboard D;
 	union{
 		struct{
 			uint32_t BlackToMove : 1;
@@ -245,7 +249,7 @@ public:
 
 	ChessPosition& setPieceAtSquare(const piece_t& piece,  unsigned int s)
 	{
-		const BitBoard S = 1LL << s;
+		const Bitboard S = 1LL << s;
 
 		// clear the square
 		A &= ~S;
@@ -268,9 +272,9 @@ public:
 
 	piece_t getPieceAtSquare(unsigned int q) const
 	{
-		const BitBoard S = 1LL << q;
+		const Bitboard S = 1LL << q;
 
-		BitBoard V = (D & S) >> q;
+		Bitboard V = (D & S) >> q;
 		V <<= 1;
 		V |= (C & S) >> q;
 		V <<= 1;
@@ -315,63 +319,63 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
 // White Move-Generation Functions:
 void genWhiteMoves(const ChessPosition& P, ChessMove*);
-inline BitBoard genBlackAttacks(const ChessPosition& Z);
-BitBoard isWhiteInCheck(const ChessPosition & Z, BitBoard extend = 0);
+inline Bitboard genBlackAttacks(const ChessPosition& Z);
+Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
 void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
-void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
-void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to);
+void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags = 0);
+void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to);
 
 // Black Move-Generation Functions:
 void genBlackMoves(const ChessPosition& P, ChessMove*);
-inline BitBoard genWhiteAttacks(const ChessPosition& Z);
-BitBoard isBlackInCheck(const ChessPosition & Z, BitBoard extend = 0);
+inline Bitboard genWhiteAttacks(const ChessPosition& Z);
+Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
 void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
-void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags = 0);
-void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, BitBoard to);
+void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags = 0);
+void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to);
 
 // Dump I/O functions:
-void dumpBitBoard(BitBoard b);
+void dumpBitBoard(Bitboard b);
 void dumpChessPosition(ChessPosition p);
 void dumpMove(const ChessMove& mv, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr, const ChessMove *movelist = nullptr);
 void dumpMoveList(ChessMove * pMoveList, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr);
 
 // Compound Bitboard Fill operations:
-BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p);
-BitBoard fillKingAttacks(BitBoard g);
-BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p);
+Bitboard fillStraightAttacksOccluded(Bitboard g, Bitboard p);
+Bitboard fillDiagonalAttacksOccluded(Bitboard g, Bitboard p);
+Bitboard fillKingAttacksOccluded(Bitboard g, Bitboard p);
+Bitboard fillKingAttacks(Bitboard g);
+Bitboard fillKnightAttacksOccluded(Bitboard g, Bitboard p);
 
 // Fill and Move Bitboard Operations:
-BitBoard fillRightOccluded(BitBoard g, BitBoard p);
-BitBoard fillLeftOccluded(BitBoard g, BitBoard p);
-BitBoard fillUpOccluded(BitBoard g, BitBoard p);
-BitBoard fillDownOccluded(BitBoard g, BitBoard p);
+Bitboard fillRightOccluded(Bitboard g, Bitboard p);
+Bitboard fillLeftOccluded(Bitboard g, Bitboard p);
+Bitboard fillUpOccluded(Bitboard g, Bitboard p);
+Bitboard fillDownOccluded(Bitboard g, Bitboard p);
 
-BitBoard fillUpRightOccluded(BitBoard g, BitBoard p);
-BitBoard fillDownRightOccluded(BitBoard g, BitBoard p);
-BitBoard fillDownLeftOccluded(BitBoard g, BitBoard p);
-BitBoard fillUpLeftOccluded(BitBoard g, BitBoard p);
+Bitboard fillUpRightOccluded(Bitboard g, Bitboard p);
+Bitboard fillDownRightOccluded(Bitboard g, Bitboard p);
+Bitboard fillDownLeftOccluded(Bitboard g, Bitboard p);
+Bitboard fillUpLeftOccluded(Bitboard g, Bitboard p);
 
-BitBoard moveUpSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveUpRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveDownRightSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveDownSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveDownLeftSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveLeftSingleOccluded(BitBoard g, BitBoard p);
-BitBoard moveUpLeftSingleOccluded(BitBoard g, BitBoard p);
+Bitboard moveUpSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveUpRightSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveRightSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveDownRightSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveDownSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveDownLeftSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveLeftSingleOccluded(Bitboard g, Bitboard p);
+Bitboard moveUpLeftSingleOccluded(Bitboard g, Bitboard p);
 
-BitBoard moveKnight1Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight2Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight3Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight4Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight5Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight6Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight7Occluded(BitBoard g, BitBoard p);
-BitBoard moveKnight8Occluded(BitBoard g, BitBoard p);
+Bitboard moveKnight1Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight2Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight3Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight4Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight5Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight6Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight7Occluded(Bitboard g, Bitboard p);
+Bitboard moveKnight8Occluded(Bitboard g, Bitboard p);
 
 /* --------------------------------------------------------------
 Deafault material values of Pieces:
@@ -486,7 +490,7 @@ enum SQUARES : uint64_t {
 };
 
 // Common board regions in binary (Bitboard) format
-enum Regions : BitBoard {
+enum Regions : Bitboard {
 	RANK1 = 0x00000000000000ff,
 	RANK2 = 0x000000000000ff00,
 	RANK3 = 0x0000000000ff0000,
@@ -544,7 +548,7 @@ enum Regions : BitBoard {
 
 // Pre-calculated move tables: BitBoards
 
-const BitBoard MoveUp[64] = {
+const Bitboard MoveUp[64] = {
 	0x0000000000000100, 0x0000000000000200, 0x0000000000000400, 0x0000000000000800, 0x00000000001000, 0x0000000000002000, 0x0000000000004000, 0x0000000000008000,
 	0x0000000000010000, 0x0000000000020000, 0x0000000000040000, 0x0000000000080000, 0x00000000100000, 0x0000000000200000, 0x0000000000400000, 0x0000000000800000,
 	0x0000000001000000, 0x0000000002000000, 0x0000000004000000, 0x0000000008000000, 0x00000010000000, 0x0000000020000000, 0x0000000040000000, 0x0000000080000000,
@@ -555,7 +559,7 @@ const BitBoard MoveUp[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveUpRight[64] = {
+const Bitboard MoveUpRight[64] = {
 	000000000000000000, 0x0000000000000100, 0x0000000000000200, 0x0000000000000400, 0x00000000000800, 0x0000000000001000, 0x0000000000002000, 0x0000000000004000,
 	000000000000000000, 0x0000000000010000, 0x0000000000020000, 0x0000000000040000, 0x00000000080000, 0x0000000000100000, 0x0000000000200000, 0x0000000000400000,
 	000000000000000000, 0x0000000001000000, 0x0000000002000000, 0x0000000004000000, 0x00000008000000, 0x0000000010000000, 0x0000000020000000, 0x0000000040000000,
@@ -566,7 +570,7 @@ const BitBoard MoveUpRight[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveRight[64] = {
+const Bitboard MoveRight[64] = {
 	000000000000000000, 0x0000000000000001, 0x0000000000000002, 0x0000000000000004, 0x00000000000008, 0x0000000000000010, 0x0000000000000020, 0x0000000000000040,
 	000000000000000000, 0x0000000000000100, 0x0000000000000200, 0x0000000000000400, 0x00000000000800, 0x0000000000001000, 0x0000000000002000, 0x0000000000004000,
 	000000000000000000, 0x0000000000010000, 0x0000000000020000, 0x0000000000040000, 0x00000000080000, 0x0000000000100000, 0x0000000000200000, 0x0000000000400000,
@@ -577,7 +581,7 @@ const BitBoard MoveRight[64] = {
 	000000000000000000, 0x0100000000000000, 0x0200000000000000, 0x0400000000000000, 0x800000000000000, 0x1000000000000000, 0x2000000000000000, 0x4000000000000000
 };
 
-const BitBoard MoveDownRight[64] = {
+const Bitboard MoveDownRight[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	000000000000000000, 0x0000000000000001, 0x0000000000000002, 0x0000000000000004, 0x00000000000008, 0x0000000000000010, 0x0000000000000020, 0x0000000000000040,
 	000000000000000000, 0x0000000000000100, 0x0000000000000200, 0x0000000000000400, 0x00000000000800, 0x0000000000001000, 0x0000000000002000, 0x0000000000004000,
@@ -588,7 +592,7 @@ const BitBoard MoveDownRight[64] = {
 	000000000000000000, 0x0001000000000000, 0x0002000000000000, 0x0004000000000000, 0x08000000000000, 0x0010000000000000, 0x0020000000000000, 0x0040000000000000
 };
 
-const BitBoard MoveDown[64] = {
+const Bitboard MoveDown[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	0x0000000000000001, 0x0000000000000002, 0x0000000000000004, 0x0000000000000008, 0x00000000000010, 0x0000000000000020, 0x0000000000000040, 0x0000000000000080,
 	0x0000000000000100, 0x0000000000000200, 0x0000000000000400, 0x0000000000000800, 0x00000000001000, 0x0000000000002000, 0x0000000000004000, 0x0000000000008000,
@@ -599,7 +603,7 @@ const BitBoard MoveDown[64] = {
 	0x0001000000000000, 0x0002000000000000, 0x0004000000000000, 0x0008000000000000, 0x10000000000000, 0x0020000000000000, 0x0040000000000000, 0x0080000000000000
 };
 
-const BitBoard MoveDownLeft[64] = {
+const Bitboard MoveDownLeft[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	0x0000000000000002, 0x0000000000000004, 0x0000000000000008, 0x0000000000000010, 0x00000000000020, 0x0000000000000040, 0x0000000000000080, 000000000000000000,
 	0x0000000000000200, 0x0000000000000400, 0x0000000000000800, 0x0000000000001000, 0x00000000002000, 0x0000000000004000, 0x0000000000008000, 000000000000000000,
@@ -610,7 +614,7 @@ const BitBoard MoveDownLeft[64] = {
 	0x0002000000000000, 0x0004000000000000, 0x0008000000000000, 0x0010000000000000, 0x20000000000000, 0x0040000000000000, 0x0080000000000000, 000000000000000000
 };
 
-const BitBoard MoveLeft[64] = {
+const Bitboard MoveLeft[64] = {
 	0x0000000000000002, 0x0000000000000004, 0x0000000000000008, 0x0000000000000010, 0x00000000000020, 0x0000000000000040, 0x0000000000000080, 000000000000000000,
 	0x0000000000000200, 0x0000000000000400, 0x0000000000000800, 0x0000000000001000, 0x00000000002000, 0x0000000000004000, 0x0000000000008000, 000000000000000000,
 	0x0000000000020000, 0x0000000000040000, 0x0000000000080000, 0x0000000000100000, 0x00000000200000, 0x0000000000400000, 0x0000000000800000, 000000000000000000,
@@ -621,7 +625,7 @@ const BitBoard MoveLeft[64] = {
 	0x0200000000000000, 0x0400000000000000, 0x0800000000000000, 0x1000000000000000, 0x2000000000000000, 0x4000000000000000, 0x8000000000000000, 000000000000000000
 };
 
-const BitBoard MoveUpLeft[64] = {
+const Bitboard MoveUpLeft[64] = {
 	0x0000000000000200, 0x0000000000000400, 0x0000000000000800, 0x0000000000001000, 0x00000000002000, 0x0000000000004000, 0x0000000000008000, 000000000000000000,
 	0x0000000000020000, 0x0000000000040000, 0x0000000000080000, 0x0000000000100000, 0x00000000200000, 0x0000000000400000, 0x0000000000800000, 000000000000000000,
 	0x0000000002000000, 0x0000000004000000, 0x0000000008000000, 0x0000000010000000, 0x00000020000000, 0x0000000040000000, 0x0000000080000000, 000000000000000000,
@@ -632,7 +636,23 @@ const BitBoard MoveUpLeft[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight1[64] = {
+/*
+representations of Knight moves as Bitboards
+They go in a clockwise direction, starting with 2xup, 1xright
+eg, if starting square was e4, relative N moves are:
+
+. . . . . . . .
+. . . . . . . .
+. . . 8 . 1 . .
+. . 7 . . . 2 .
+. . . . o . . .
+. . 6 . . . 3 .
+. . . 5 . 4 . .
+. . . . . . . .
+
+*/
+
+const Bitboard MoveKnight1[64] = {
 	000000000000000000, 0x0000000000010000, 0x0000000000020000, 0x0000000000040000, 0x00000000080000, 0x0000000000100000, 0x0000000000200000, 0x0000000000400000,
 	000000000000000000, 0x0000000001000000, 0x0000000002000000, 0x0000000004000000, 0x00000008000000, 0x0000000010000000, 0x0000000020000000, 0x0000000040000000,
 	000000000000000000, 0x0000000100000000, 0x0000000200000000, 0x0000000400000000, 0x00000800000000, 0x0000001000000000, 0x0000002000000000, 0x0000004000000000,
@@ -643,7 +663,7 @@ const BitBoard MoveKnight1[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight2[64] = {
+const Bitboard MoveKnight2[64] = {
 	000000000000000000, 000000000000000000, 0x0000000000000100, 0x0000000000000200, 0x00000000000400, 0x0000000000000800, 0x0000000000001000, 0x0000000000002000,
 	000000000000000000, 000000000000000000, 0x0000000000010000, 0x0000000000020000, 0x00000000040000, 0x0000000000080000, 0x0000000000100000, 0x0000000000200000,
 	000000000000000000, 000000000000000000, 0x0000000001000000, 0x0000000002000000, 0x00000004000000, 0x0000000008000000, 0x0000000010000000, 0x0000000020000000,
@@ -654,7 +674,7 @@ const BitBoard MoveKnight2[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight3[64] = {
+const Bitboard MoveKnight3[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	000000000000000000, 000000000000000000, 0x0000000000000001, 0x0000000000000002, 0x00000000000004, 0x0000000000000008, 0x0000000000000010, 0x0000000000000020,
 	000000000000000000, 000000000000000000, 0x0000000000000100, 0x0000000000000200, 0x00000000000400, 0x0000000000000800, 0x0000000000001000, 0x0000000000002000,
@@ -665,7 +685,7 @@ const BitBoard MoveKnight3[64] = {
 	000000000000000000, 000000000000000000, 0x0001000000000000, 0x0002000000000000, 0x04000000000000, 0x0008000000000000, 0x0010000000000000, 0x0020000000000000
 };
 
-const BitBoard MoveKnight4[64] = {
+const Bitboard MoveKnight4[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	000000000000000000, 0x0000000000000001, 0x0000000000000002, 0x0000000000000004, 0x00000000000008, 0x0000000000000010, 0x0000000000000020, 0x0000000000000040,
@@ -676,7 +696,7 @@ const BitBoard MoveKnight4[64] = {
 	000000000000000000, 0x0000010000000000, 0x0000020000000000, 0x0000040000000000, 0x00080000000000, 0x0000100000000000, 0x0000200000000000, 0x0000400000000000
 };
 
-const BitBoard MoveKnight5[64] = {
+const Bitboard MoveKnight5[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	0x0000000000000002, 0x0000000000000004, 0x0000000000000008, 0x0000000000000010, 0x00000000000020, 0x0000000000000040, 0x0000000000000080, 000000000000000000,
@@ -687,7 +707,7 @@ const BitBoard MoveKnight5[64] = {
 	0x0000020000000000, 0x0000040000000000, 0x0000080000000000, 0x0000100000000000, 0x00200000000000, 0x0000400000000000, 0x0000800000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight6[64] = {
+const Bitboard MoveKnight6[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000,
 	0x0000000000000004, 0x0000000000000008, 0x0000000000000010, 0x0000000000000020, 0x00000000000040, 0x0000000000000080, 000000000000000000, 000000000000000000,
 	0x0000000000000400, 0x0000000000000800, 0x0000000000001000, 0x0000000000002000, 0x00000000004000, 0x0000000000008000, 000000000000000000, 000000000000000000,
@@ -698,7 +718,7 @@ const BitBoard MoveKnight6[64] = {
 	0x0004000000000000, 0x0008000000000000, 0x0010000000000000, 0x0020000000000000, 0x40000000000000, 0x0080000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight7[64] = {
+const Bitboard MoveKnight7[64] = {
 	0x0000000000000400, 0x0000000000000800, 0x0000000000001000, 0x0000000000002000, 0x00000000004000, 0x0000000000008000, 000000000000000000, 000000000000000000,
 	0x0000000000040000, 0x0000000000080000, 0x0000000000100000, 0x0000000000200000, 0x00000000400000, 0x0000000000800000, 000000000000000000, 000000000000000000,
 	0x0000000004000000, 0x0000000008000000, 0x0000000010000000, 0x0000000020000000, 0x00000040000000, 0x0000000080000000, 000000000000000000, 000000000000000000,
@@ -709,7 +729,7 @@ const BitBoard MoveKnight7[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-const BitBoard MoveKnight8[64] = {
+const Bitboard MoveKnight8[64] = {
 	0x0000000000020000, 0x0000000000040000, 0x0000000000080000, 0x0000000000100000, 0x00000000200000, 0x0000000000400000, 0x0000000000800000, 000000000000000000,
 	0x0000000002000000, 0x0000000004000000, 0x0000000008000000, 0x0000000010000000, 0x00000020000000, 0x0000000040000000, 0x0000000080000000, 000000000000000000,
 	0x0000000200000000, 0x0000000400000000, 0x0000000800000000, 0x0000001000000000, 0x00002000000000, 0x0000004000000000, 0x0000008000000000, 000000000000000000,
@@ -720,9 +740,11 @@ const BitBoard MoveKnight8[64] = {
 	000000000000000000, 000000000000000000, 000000000000000000, 000000000000000000, 0000000000000000, 000000000000000000, 000000000000000000, 000000000000000000
 };
 
-// Pre-Calculated Move tables: Square-Index
+// Pre-Calculated Move tables: Square-Index (the logarithm of the bitboard versions)
 
-const int MoveUpSquareIndex[64] = {
+static constexpr int xx = -1; // value for "no square"
+
+const int MoveUpIndex[64] = {
 	8, 9, 10, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 20, 21, 22, 23,
 	24, 25, 26, 27, 28, 29, 30, 31,
@@ -730,44 +752,44 @@ const int MoveUpSquareIndex[64] = {
 	40, 41, 42, 43, 44, 45, 46, 47,
 	48, 49, 50, 51, 52, 53, 54, 55,
 	56, 57, 58, 59, 60, 61, 62, 63,
-	56, 57, 58, 59, 60, 61, 62, 63
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int MoveUpRightSquareIndex[64] = {
-	0, 8, 9, 10, 11, 12, 13, 14,
-	8, 16, 17, 18, 19, 20, 21, 22,
-	16, 24, 25, 26, 27, 28, 29, 30,
-	24, 32, 33, 34, 35, 36, 37, 38,
-	32, 40, 41, 42, 43, 44, 45, 46,
-	40, 48, 49, 50, 51, 52, 53, 54,
-	48, 56, 57, 58, 59, 60, 61, 62,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveUpRightIndex[64] = {
+	xx, 8, 9, 10, 11, 12, 13, 14,
+	xx, 16, 17, 18, 19, 20, 21, 22,
+	xx, 24, 25, 26, 27, 28, 29, 30,
+	xx, 32, 33, 34, 35, 36, 37, 38,
+	xx, 40, 41, 42, 43, 44, 45, 46,
+	xx, 48, 49, 50, 51, 52, 53, 54,
+	xx, 56, 57, 58, 59, 60, 61, 62,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int MoveRightSquareIndex[64] = {
-	0, 0, 1, 2, 3, 4, 5, 6,
-	8, 8, 9, 10, 11, 12, 13, 14,
-	16, 16, 17, 18, 19, 20, 21, 22,
-	24, 24, 25, 26, 27, 28, 29, 30,
-	32, 32, 33, 34, 35, 36, 37, 38,
-	40, 40, 41, 42, 43, 44, 45, 46,
-	48, 48, 49, 50, 51, 52, 53, 54,
-	56, 56, 57, 58, 59, 60, 61, 62
+const int MoveRightIndex[64] = {
+	xx, 0, 1, 2, 3, 4, 5, 6,
+	xx, 8, 9, 10, 11, 12, 13, 14,
+	xx, 16, 17, 18, 19, 20, 21, 22,
+	xx, 24, 25, 26, 27, 28, 29, 30,
+	xx, 32, 33, 34, 35, 36, 37, 38,
+	xx, 40, 41, 42, 43, 44, 45, 46,
+	xx, 48, 49, 50, 51, 52, 53, 54,
+	xx, 56, 57, 58, 59, 60, 61, 62
 };
 
-const int MoveDownRightSquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	8, 0, 1, 2, 3, 4, 5, 6,
-	16, 8, 9, 10, 11, 12, 13, 14,
-	24, 16, 17, 18, 19, 20, 21, 22,
-	32, 24, 25, 26, 27, 28, 29, 30,
-	40, 32, 33, 34, 35, 36, 37, 38,
-	48, 40, 41, 42, 43, 44, 45, 46,
-	56, 48, 49, 50, 51, 52, 53, 54
+const int MoveDownRightIndex[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, 0, 1, 2, 3, 4, 5, 6,
+	xx, 8, 9, 10, 11, 12, 13, 14,
+	xx, 16, 17, 18, 19, 20, 21, 22,
+	xx, 24, 25, 26, 27, 28, 29, 30,
+	xx, 32, 33, 34, 35, 36, 37, 38,
+	xx, 40, 41, 42, 43, 44, 45, 46,
+	xx, 48, 49, 50, 51, 52, 53, 54
 };
 
-const int MoveDownSquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
+const int MoveDownIndex[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
 	0, 1, 2, 3, 4, 5, 6, 7,
 	8, 9, 10, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 20, 21, 22, 23,
@@ -777,129 +799,173 @@ const int MoveDownSquareIndex[64] = {
 	48, 49, 50, 51, 52, 53, 54, 55
 };
 
-const int MoveDownLeftSquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	1, 2, 3, 4, 5, 6, 7, 15,
-	9, 10, 11, 12, 13, 14, 15, 23,
-	17, 18, 19, 20, 21, 22, 23, 31,
-	25, 26, 27, 28, 29, 30, 31, 39,
-	33, 34, 35, 36, 37, 38, 39, 47,
-	41, 42, 43, 44, 45, 46, 47, 55,
-	49, 50, 51, 52, 53, 54, 55, 63
+const int MoveDownLeftIndex[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	1, 2, 3, 4, 5, 6, 7, xx,
+	9, 10, 11, 12, 13, 14, 15, xx,
+	17, 18, 19, 20, 21, 22, 23, xx,
+	25, 26, 27, 28, 29, 30, 31, xx,
+	33, 34, 35, 36, 37, 38, 39, xx,
+	41, 42, 43, 44, 45, 46, 47, xx,
+	49, 50, 51, 52, 53, 54, 55, xx
 };
 
-const int MoveLeftSquareIndex[64] = {
-	1, 2, 3, 4, 5, 6, 7, 7,
-	9, 10, 11, 12, 13, 14, 15, 15,
-	17, 18, 19, 20, 21, 22, 23, 23,
-	25, 26, 27, 28, 29, 30, 31, 31,
-	33, 34, 35, 36, 37, 38, 39, 39,
-	41, 42, 43, 44, 45, 46, 47, 47,
-	49, 50, 51, 52, 53, 54, 55, 55,
-	57, 58, 59, 60, 61, 62, 63, 63
+const int MoveLeftIndex[64] = {
+	1, 2, 3, 4, 5, 6, 7, xx,
+	9, 10, 11, 12, 13, 14, 15, xx,
+	17, 18, 19, 20, 21, 22, 23, xx,
+	25, 26, 27, 28, 29, 30, 31, xx,
+	33, 34, 35, 36, 37, 38, 39, xx,
+	41, 42, 43, 44, 45, 46, 47, xx,
+	49, 50, 51, 52, 53, 54, 55, xx,
+	57, 58, 59, 60, 61, 62, 63, xx
 };
 
-const int MoveUpLeftSquareIndex[64] = {
-	9, 10, 11, 12, 13, 14, 15, 7,
-	17, 18, 19, 20, 21, 22, 23, 15,
-	25, 26, 27, 28, 29, 30, 31, 23,
-	33, 34, 35, 36, 37, 38, 39, 31,
-	41, 42, 43, 44, 45, 46, 47, 39,
-	49, 50, 51, 52, 53, 54, 55, 47,
-	57, 58, 59, 60, 61, 62, 63, 55,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveUpLeftIndex[64] = {
+	9, 10, 11, 12, 13, 14, 15, xx,
+	17, 18, 19, 20, 21, 22, 23, xx,
+	25, 26, 27, 28, 29, 30, 31, xx,
+	33, 34, 35, 36, 37, 38, 39, xx,
+	41, 42, 43, 44, 45, 46, 47, xx,
+	49, 50, 51, 52, 53, 54, 55, xx,
+	57, 58, 59, 60, 61, 62, 63, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int MoveKnight1SquareIndex[64] = {
-	0, 16, 17, 18, 19, 20, 21, 22,
-	8, 24, 25, 26, 27, 28, 29, 30,
-	16, 32, 33, 34, 35, 36, 37, 38,
-	24, 40, 41, 42, 43, 44, 45, 46,
-	32, 48, 49, 50, 51, 52, 53, 54,
-	40, 56, 57, 58, 59, 60, 61, 62,
-	48, 49, 50, 51, 52, 53, 54, 55,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveKnight1Index[64] = {
+	xx, 16, 17, 18, 19, 20, 21, 22,
+	xx, 24, 25, 26, 27, 28, 29, 30,
+	xx, 32, 33, 34, 35, 36, 37, 38,
+	xx, 40, 41, 42, 43, 44, 45, 46,
+	xx, 48, 49, 50, 51, 52, 53, 54,
+	xx, 56, 57, 58, 59, 60, 61, 62,
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int  MoveKnight2SquareIndex[64] = {
-	0, 1, 8, 9, 10, 11, 12, 13,
-	8, 9, 16, 17, 18, 19, 20, 21,
-	16, 17, 24, 25, 26, 27, 28, 29,
-	24, 25, 32, 33, 34, 35, 36, 37,
-	32, 33, 40, 41, 42, 43, 44, 45,
-	40, 41, 48, 49, 50, 51, 52, 53,
-	48, 49, 56, 57, 58, 59, 60, 61,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveKnight2Index[64] = {
+	xx, xx, 8, 9, 10, 11, 12, 13,
+	xx, xx, 16, 17, 18, 19, 20, 21,
+	xx, xx, 24, 25, 26, 27, 28, 29,
+	xx, xx, 32, 33, 34, 35, 36, 37,
+	xx, xx, 40, 41, 42, 43, 44, 45,
+	xx, xx, 48, 49, 50, 51, 52, 53,
+	xx, xx, 56, 57, 58, 59, 60, 61,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int  MoveKnight3SquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	8, 9, 0, 1, 2, 3, 4, 5,
-	16, 17, 8, 9, 10, 11, 12, 13,
-	24, 25, 16, 17, 18, 19, 20, 21,
-	32, 33, 24, 25, 26, 27, 28, 29,
-	40, 41, 32, 33, 34, 35, 36, 37,
-	48, 49, 40, 41, 42, 43, 44, 45,
-	56, 57, 48, 49, 50, 51, 52, 53
+const int MoveKnight3Index[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, xx, 0, 1, 2, 3, 4, 5,
+	xx, xx, 8, 9, 10, 11, 12, 13,
+	xx, xx, 16, 17, 18, 19, 20, 21,
+	xx, xx, 24, 25, 26, 27, 28, 29,
+	xx, xx, 32, 33, 34, 35, 36, 37,
+	xx, xx, 40, 41, 42, 43, 44, 45,
+	xx, xx, 48, 49, 50, 51, 52, 53
 };
 
-const int  MoveKnight4SquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	8, 9, 10, 11, 12, 13, 14, 15,
-	16, 0, 1, 2, 3, 4, 5, 6,
-	24, 8, 9, 10, 11, 12, 13, 14,
-	32, 16, 17, 18, 19, 20, 21, 22,
-	40, 24, 25, 26, 27, 28, 29, 30,
-	48, 32, 33, 34, 35, 36, 37, 38,
-	56, 40, 41, 42, 43, 44, 45, 46
+const int MoveKnight4Index[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, 0, 1, 2, 3, 4, 5, 6,
+	xx, 8, 9, 10, 11, 12, 13, 14,
+	xx, 16, 17, 18, 19, 20, 21, 22,
+	xx, 24, 25, 26, 27, 28, 29, 30,
+	xx, 32, 33, 34, 35, 36, 37, 38,
+	xx, 40, 41, 42, 43, 44, 45, 46
 };
 
-const int  MoveKnight5SquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	8, 9, 10, 11, 12, 13, 14, 15,
-	1, 2, 3, 4, 5, 6, 7, 23,
-	9, 10, 11, 12, 13, 14, 15, 31,
-	17, 18, 19, 20, 21, 22, 23, 39,
-	25, 26, 27, 28, 29, 30, 31, 47,
-	33, 34, 35, 36, 37, 38, 39, 55,
-	41, 42, 43, 44, 45, 46, 47, 63
+const int MoveKnight5Index[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	1, 2, 3, 4, 5, 6, 7, xx,
+	9, 10, 11, 12, 13, 14, 15, xx,
+	17, 18, 19, 20, 21, 22, 23, xx,
+	25, 26, 27, 28, 29, 30, 31, xx,
+	33, 34, 35, 36, 37, 38, 39, xx,
+	41, 42, 43, 44, 45, 46, 47, xx
 };
 
-const int  MoveKnight6SquareIndex[64] = {
-	0, 1, 2, 3, 4, 5, 6, 7,
-	2, 3, 4, 5, 6, 7, 14, 15,
-	10, 11, 12, 13, 14, 15, 22, 23,
-	18, 19, 20, 21, 22, 23, 30, 31,
-	26, 27, 28, 29, 30, 31, 38, 39,
-	34, 35, 36, 37, 38, 39, 46, 47,
-	42, 43, 44, 45, 46, 47, 54, 55,
-	50, 51, 52, 53, 54, 55, 62, 63
+const int MoveKnight6Index[64] = {
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	2, 3, 4, 5, 6, 7, xx, xx,
+	10, 11, 12, 13, 14, 15, xx, xx,
+	18, 19, 20, 21, 22, 23, xx, xx,
+	26, 27, 28, 29, 30, 31, xx, xx,
+	34, 35, 36, 37, 38, 39, xx, xx,
+	42, 43, 44, 45, 46, 47, xx, xx,
+	50, 51, 52, 53, 54, 55, xx, xx
 };
 
-const int  MoveKnight7SquareIndex[64] = {
-	10, 11, 12, 13, 14, 15, 6, 7,
-	18, 19, 20, 21, 22, 23, 14, 15,
-	26, 27, 28, 29, 30, 31, 22, 23,
-	34, 35, 36, 37, 38, 39, 30, 31,
-	42, 43, 44, 45, 46, 47, 38, 39,
-	50, 51, 52, 53, 54, 55, 46, 47,
-	58, 59, 60, 61, 62, 63, 54, 55,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveKnight7Index[64] = {
+	10, 11, 12, 13, 14, 15, xx, xx,
+	18, 19, 20, 21, 22, 23, xx, xx,
+	26, 27, 28, 29, 30, 31, xx, xx,
+	34, 35, 36, 37, 38, 39, xx, xx,
+	42, 43, 44, 45, 46, 47, xx, xx,
+	50, 51, 52, 53, 54, 55, xx, xx,
+	58, 59, 60, 61, 62, 63, xx, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-const int  MoveKnight8SquareIndex[64] = {
-	17, 18, 19, 20, 21, 22, 23, 7,
-	25, 26, 27, 28, 29, 30, 31, 15,
-	33, 34, 35, 36, 37, 38, 39, 23,
-	41, 42, 43, 44, 45, 46, 47, 31,
-	49, 50, 51, 52, 53, 54, 55, 39,
-	57, 58, 59, 60, 61, 62, 63, 47,
-	48, 49, 50, 51, 52, 53, 54, 55,
-	56, 57, 58, 59, 60, 61, 62, 63
+const int MoveKnight8Index[64] = {
+	17, 18, 19, 20, 21, 22, 23, xx,
+	25, 26, 27, 28, 29, 30, 31, xx,
+	33, 34, 35, 36, 37, 38, 39, xx,
+	41, 42, 43, 44, 45, 46, 47, xx,
+	49, 50, 51, 52, 53, 54, 55, xx,
+	57, 58, 59, 60, 61, 62, 63, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx,
+	xx, xx, xx, xx, xx, xx, xx, xx
 };
+
+// unit test to check that the lookup tables are in agreement
+inline bool testMoveTables()
+{
+	auto t = [](std::string name, int q, Bitboard bitboard, int sqindex) -> void {
+		const bool ok = ((bitboard == 0 && sqindex == xx) || (bitboard == (1ULL << sqindex)));
+		if (!ok) {
+			std::stringstream e;
+			e << __func__ << "(): name=" << name << " failed at index " << q << ": " << "index=" << sqindex << " bitboard="<<  std::hex << bitboard;
+			throw std::invalid_argument(e.str());
+		}
+	};
+
+	try {
+		for (int q = 0; q < 64; q++) {
+			// K
+			t("Up", q, MoveUp[q], MoveUpIndex[q]);
+			t("UpRight", q, MoveUpRight[q], MoveUpRightIndex[q]);
+			t("Right", q, MoveRight[q], MoveRightIndex[q]);
+			t("DownRight", q, MoveDownRight[q], MoveDownRightIndex[q]);
+			t("Down", q, MoveDown[q], MoveDownIndex[q]);
+			t("DownLeft", q, MoveDownLeft[q], MoveDownLeftIndex[q]);
+			t("Left", q, MoveLeft[q], MoveLeftIndex[q]);
+			t("UpLeft", q, MoveUpLeft[q], MoveUpLeftIndex[q]);
+
+			// N
+			t("MoveKnight1", q, MoveKnight1[q], MoveKnight1Index[q]);
+			t("MoveKnight2", q, MoveKnight2[q], MoveKnight2Index[q]);
+			t("MoveKnight3", q, MoveKnight3[q], MoveKnight3Index[q]);
+			t("MoveKnight4", q, MoveKnight4[q], MoveKnight4Index[q]);
+			t("MoveKnight5", q, MoveKnight5[q], MoveKnight5Index[q]);
+			t("MoveKnight6", q, MoveKnight6[q], MoveKnight6Index[q]);
+			t("MoveKnight7", q, MoveKnight7[q], MoveKnight7Index[q]);
+			t("MoveKnight8", q, MoveKnight8[q], MoveKnight8Index[q]);
+		}
+	} catch (const std::invalid_argument& e) {
+		std::cout << e.what() << std::endl;
+		return false;
+	}
+
+	std::cout << __func__ << "() passed" << std::endl;
+	return true;
+}
+
 
 // Note : Inline Functions to follow
-inline unsigned long getSquareIndex(BitBoard b);
+inline unsigned long getSquareIndex(Bitboard b);
 
 //////// Fill Functions ////////////////////
 
@@ -908,10 +974,10 @@ inline unsigned long getSquareIndex(BitBoard b);
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
 
-inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillStraightAttacksOccluded(Bitboard g, Bitboard p)
 {
 
-	BitBoard a;
+	Bitboard a;
 	a =fillRightOccluded(g, p);
 	a |= fillLeftOccluded(g, p);
 	a |= fillUpOccluded(g, p);
@@ -947,10 +1013,10 @@ inline BitBoard fillStraightAttacksOccluded(BitBoard g, BitBoard p)
 // Fill in diagonal attacks               //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillDiagonalAttacksOccluded(Bitboard g, Bitboard p)
 {
 
-	BitBoard a;
+	Bitboard a;
 	a =  fillUpRightOccluded(g, p);
 	a |= fillDownRightOccluded(g, p);
 	a |= fillDownLeftOccluded(g, p);
@@ -986,7 +1052,7 @@ inline BitBoard fillDiagonalAttacksOccluded(BitBoard g, BitBoard p)
 // S = space available to attacker (including capture squares),
 // V = victims (capturable squares - ie all enemy units except K and EP squares)
 
-inline BitBoard getDiagonalMoveSquares(BitBoard A, BitBoard S, BitBoard V)
+inline Bitboard getDiagonalMoveSquares(Bitboard A, Bitboard S, Bitboard V)
 {
 	return (fillUpRightOccluded(A, S & ~(RIGHTMASK & (V << 7)))
 			| fillDownRightOccluded(A, S & ~(RIGHTMASK & (V >> 9)))
@@ -995,7 +1061,7 @@ inline BitBoard getDiagonalMoveSquares(BitBoard A, BitBoard S, BitBoard V)
 			& ~A;
 }
 
-inline BitBoard getStraightMoveSquares(BitBoard A, BitBoard S, BitBoard V)
+inline Bitboard getStraightMoveSquares(Bitboard A, Bitboard S, Bitboard V)
 {
 	return (fillRightOccluded(A, S & ~(RIGHTMASK & (V >> 1)))
 			| fillLeftOccluded(A, S & ~(LEFTMASK & (V << 1)))
@@ -1008,20 +1074,20 @@ inline BitBoard getStraightMoveSquares(BitBoard A, BitBoard S, BitBoard V)
 // Fill in king attacks                   //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard fillKingAttacksOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillKingAttacksOccluded(Bitboard g, Bitboard p)
 {
-	BitBoard a, b;
-	BitBoard t, u;
+	Bitboard a, b;
+	Bitboard t, u;
 	a = g; t = g; t <<= 1; t &= LEFTMASK; a |= t;
 	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= RIGHTMASK; a |= u;
 	b = a; b >>= 8; a |= b; a &= ~g; a &= p;
 	return a;
 }
 
-inline BitBoard fillKingAttacks(BitBoard g)
+inline Bitboard fillKingAttacks(Bitboard g)
 {
-	BitBoard a, b;
-	BitBoard t, u;
+	Bitboard a, b;
+	Bitboard t, u;
 	a = g; t = g; t <<= 1; t &= LEFTMASK; a |= t;
 	b = a; b <<= 8; a |= b; u = a; u >>= 1; u &= RIGHTMASK; a |= u;
 	b = a; b >>= 8; a |= b; a &= ~g;
@@ -1032,30 +1098,30 @@ inline BitBoard fillKingAttacks(BitBoard g)
 // Fill in knight attacks                 //
 // Note: Fill excludes attacking piece(s) //
 ////////////////////////////////////////////
-inline BitBoard fillKnightAttacksOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillKnightAttacksOccluded(Bitboard g, Bitboard p)
 {
-	BitBoard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
-	BitBoard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;
-	BitBoard r1 = (g << 1) & 0xfefefefefefefefe;
-	BitBoard r2 = (g << 2) & 0xfcfcfcfcfcfcfcfc;
-	BitBoard h1 = l1 | r1;
-	BitBoard h2 = l2 | r2;
+	Bitboard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
+	Bitboard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;
+	Bitboard r1 = (g << 1) & 0xfefefefefefefefe;
+	Bitboard r2 = (g << 2) & 0xfcfcfcfcfcfcfcfc;
+	Bitboard h1 = l1 | r1;
+	Bitboard h2 = l2 | r2;
 	return p &((h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8));
 
 }
 
-inline BitBoard FillKnightAttacks(BitBoard g)
+inline Bitboard FillKnightAttacks(Bitboard g)
 {
-	BitBoard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
-	BitBoard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;
-	BitBoard r1 = (g << 1) & 0xfefefefefefefefe;
-	BitBoard r2 = (g << 2) & 0xfcfcfcfcfcfcfcfc;
-	BitBoard h1 = l1 | r1;
-	BitBoard h2 = l2 | r2;
+	Bitboard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
+	Bitboard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;
+	Bitboard r1 = (g << 1) & 0xfefefefefefefefe;
+	Bitboard r2 = (g << 2) & 0xfcfcfcfcfcfcfcfc;
+	Bitboard h1 = l1 | r1;
+	Bitboard h2 = l2 | r2;
 	return (h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8);
 }
 
-inline BitBoard fillUpOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillUpOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	g |= p & (g <<  8);
@@ -1066,7 +1132,7 @@ inline BitBoard fillUpOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillDownOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillDownOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	g |= p & (g >>  8);
@@ -1077,7 +1143,7 @@ inline BitBoard fillDownOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillLeftOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillLeftOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0xfefefefefefefefe;
@@ -1089,7 +1155,7 @@ inline BitBoard fillLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillRightOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillRightOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f;
@@ -1101,7 +1167,7 @@ inline BitBoard fillRightOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillUpRightOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillUpRightOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
@@ -1113,7 +1179,7 @@ inline BitBoard fillUpRightOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillDownRightOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillDownRightOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0x7f7f7f7f7f7f7f7f; // left wall
@@ -1126,7 +1192,7 @@ inline BitBoard fillDownRightOccluded(BitBoard g, BitBoard p)
 }
 
 
-inline BitBoard fillDownLeftOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillDownLeftOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0xfefefefefefefefe; // right wall
@@ -1138,7 +1204,7 @@ inline BitBoard fillDownLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard fillUpLeftOccluded(BitBoard g, BitBoard p)
+inline Bitboard fillUpLeftOccluded(Bitboard g, Bitboard p)
 {
 	// Note: Fill includes pieces.
 	p &= 0xfefefefefefefefe; // right wall
@@ -1150,119 +1216,119 @@ inline BitBoard fillUpLeftOccluded(BitBoard g, BitBoard p)
 	return g;
 }
 
-inline BitBoard moveUpSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveUpSingleOccluded(Bitboard g, Bitboard p)
 {
 	return (p & (g << 8));
 }
 
-inline BitBoard moveUpRightSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveUpRightSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g << 7));
 }
 
-inline BitBoard moveRightSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveRightSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 1));
 }
 
-inline BitBoard moveDownRightSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveDownRightSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0x7f7f7f7f7f7f7f7f;
 	return (p & (g >> 9));
 }
 
-inline BitBoard moveDownSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveDownSingleOccluded(Bitboard g, Bitboard p)
 {
 	return (p & (g >> 8));
 }
 
-inline BitBoard moveDownLeftSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveDownLeftSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g >> 7));
 }
 
-inline BitBoard moveLeftSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveLeftSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g << 1));
 }
 
-inline BitBoard moveUpLeftSingleOccluded(BitBoard g, BitBoard p)
+inline Bitboard moveUpLeftSingleOccluded(Bitboard g, Bitboard p)
 {
 	p &= 0xfefefefefefefefe;
 	return (p & (g << 9));
 }
 
-inline BitBoard MoveDownLeftRightSingle(BitBoard g)
+inline Bitboard MoveDownLeftRightSingle(Bitboard g)
 {
 	return	(0xfefefefefefefefe & (g >> 7)) |	// DownLeft
 			(0x7f7f7f7f7f7f7f7f & (g >> 9));		// DownRight
 }
 
-inline BitBoard MoveUpLeftRightSingle(BitBoard g) {
+inline Bitboard MoveUpLeftRightSingle(Bitboard g) {
 	return	(0xfefefefefefefefe & (g << 9)) |	// UpLeft
 			(0x7f7f7f7f7f7f7f7f & (g << 7));		// UpRight
 }
 
-inline BitBoard moveKnight1Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight1Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x8080808080808000;
 	return (p & (g << 15));
 }
 
-inline BitBoard moveKnight2Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight2Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0xC0C0C0C0C0C0C0C0;
 	return (p & (g << 6));
 }
 
-inline BitBoard moveKnight3Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight3Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0000C0C0C0C0C0C0;
 	return (p & (g >> 10));
 }
 
-inline BitBoard moveKnight4Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight4Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0000008080808080;
 	return (p & (g >> 17));
 }
 
-inline BitBoard moveKnight5Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight5Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0001010101010101;
 	return (p & (g >> 15));
 }
 
-inline BitBoard moveKnight6Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight6Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0303030303030303;
 	return (p & (g >> 6));
 }
 
-inline BitBoard moveKnight7Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight7Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0303030303030000;
 	return (p & (g << 10));
 }
 
-inline BitBoard moveKnight8Occluded(BitBoard g, BitBoard p)
+inline Bitboard moveKnight8Occluded(Bitboard g, Bitboard p)
 {
 	p &= ~0x0101010101000000;
 	return (p & (g << 17));
 }
 
-inline int popCount(const BitBoard & B)
+inline int popCount(const Bitboard & B)
 {
 #if defined( _USE_POPCNT_INSTRUCTION) && defined(_WIN64) && defined(_MSC_VER)
 	return static_cast<int>(__popcnt64(B));
 #else
 	// This routine comes from:
 	// Knuth, TAoCP Vol 4: Fascicle 1, (no. 62)
-	BitBoard A;
+	Bitboard A;
 	A = B - ((B >> 1) & 0x5555555555555555);
 	A = (A & 0x3333333333333333) +
 			((A >> 2) & 0x3333333333333333);
@@ -1271,7 +1337,7 @@ inline int popCount(const BitBoard & B)
 #endif
 }
 
-inline unsigned long getSquareIndex(BitBoard b)
+inline unsigned long getSquareIndex(Bitboard b)
 {
 	unsigned long n = 0;
 
@@ -1293,7 +1359,7 @@ inline unsigned long getSquareIndex(BitBoard b)
 	// see (https://chessprogramming.wikispaces.com/BitScan)
 	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const BitBoard db64 = 0x03f79d71b4cb0a89;
+	const Bitboard db64 = 0x03f79d71b4cb0a89;
 
 	const int tbl[64] = {
 		0, 47,  1, 56, 48, 27,  2, 60,
@@ -1317,56 +1383,78 @@ inline unsigned long getSquareIndex(BitBoard b)
 			return n;
 }
 
-			// getFirstAndLastPiece()
-			// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
-			inline void getFirstAndLastPiece(const BitBoard& B, unsigned long& a, unsigned long& b)
+		// getFirstAndLastPiece()
+		// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
+		inline void getFirstAndLastPiece(const Bitboard& B, unsigned long& a, unsigned long& b)
 	{
 
-		#if defined(_USE_BITSCAN_INSTRUCTIONS)
-			// perform Bitscans to determine start and finish squares;
-		#if defined(_MSC_VER)
-			// Important: a and b must be initialised first !
-			_BitScanReverse64(&b, B);
-			_BitScanForward64(&a, B);
-		#elif defined(__GNUC__) || defined(__clang__)
-			b = 63 - __builtin_clzll(B);
-			a = __builtin_ctzll(B);
-		#endif
+	#if defined(_USE_BITSCAN_INSTRUCTIONS)
+		// perform Bitscans to determine start and finish squares;
+	#if defined(_MSC_VER)
+		// Important: a and b must be initialised first !
+		_BitScanReverse64(&b, B);
+		_BitScanForward64(&a, B);
+	#elif defined(__GNUC__) || defined(__clang__)
+		b = 63 - __builtin_clzll(B);
+		a = __builtin_ctzll(B);
+	#endif
 
-		#else
+	#else
 
-			// alternative method for non-x86-64, using DeBruijn Multiplication:
-			// see (https://chessprogramming.wikispaces.com/BitScan)
-			// credit: Kim Walisch, Gerd Isenberg et al.
+		// alternative method for non-x86-64, using DeBruijn Multiplication:
+		// see (https://chessprogramming.wikispaces.com/BitScan)
+		// credit: Kim Walisch, Gerd Isenberg et al.
 
-			const BitBoard db64 = 0x03f79d71b4cb0a89;
+		const BitBoard db64 = 0x03f79d71b4cb0a89;
 
-			const int tbl[64] = {
-			0, 47,  1, 56, 48, 27,  2, 60,
-			57, 49, 41, 37, 28, 16,  3, 61,
-			54, 58, 35, 52, 50, 42, 21, 44,
-			38, 32, 29, 23, 17, 11,  4, 62,
-			46, 55, 26, 59, 40, 36, 15, 53,
-			34, 51, 20, 43, 31, 22, 10, 45,
-			25, 39, 14, 33, 19, 30,  9, 24,
-			13, 18,  8, 12,  7,  6,  5, 63
+		const int tbl[64] = {
+							0, 47,  1, 56, 48, 27,  2, 60,
+							57, 49, 41, 37, 28, 16,  3, 61,
+							54, 58, 35, 52, 50, 42, 21, 44,
+							38, 32, 29, 23, 17, 11,  4, 62,
+							46, 55, 26, 59, 40, 36, 15, 53,
+							34, 51, 20, 43, 31, 22, 10, 45,
+							25, 39, 14, 33, 19, 30,  9, 24,
+							13, 18,  8, 12,  7,  6,  5, 63
 };
 
-			// BitScanForward:
-			a = tbl[((B ^ (B - 1)) * db64) >> 58];
+		// BitScanForward:
+		a = tbl[((B ^ (B - 1)) * db64) >> 58];
 
-			// BitScanReverse:
-			BitBoard A = B;
-			A |= A >> 1;
-			A |= A >> 2;
-			A |= A >> 4;
-			A |= A >> 8;
-			A |= A >> 16;
-			A |= A >> 32;
-			b = tbl[(A * db64) >> 58];
+		// BitScanReverse:
+		BitBoard A = B;
+		A |= A >> 1;
+		A |= A >> 2;
+		A |= A >> 4;
+		A |= A >> 8;
+		A |= A >> 16;
+		A |= A >> 32;
+		b = tbl[(A * db64) >> 58];
 
-		#endif
+	#endif
+}
+
+inline bool genIdxTbl(std::string name, const Bitboard *bb)
+{
+	std::cout << "const int " << name << "[64] = {\n";
+	for (int r = 0; r < 64; r+= 8) {
+		std::cout << "\t";
+		for (int f = 0; f < 8; f++) {
+			int q = r | f;
+
+			if (bb[q] == 0) {
+				std::cout << "xx";
+			} else {
+				std::cout << getSquareIndex(bb[q]);
+			}
+			if (q != 63) {
+				std::cout << ", ";
+			}
+		}
+		std::cout << "\n";
+	}
+	std::cout << "};" << std::endl;
 }
 
 } // namespace juddperft
-		#endif // _MOVEGEN
+	#endif // _MOVEGEN

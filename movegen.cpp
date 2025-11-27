@@ -169,8 +169,8 @@ int ChessPosition::calculateMaterial() const
 
 ChessPosition& ChessPosition::performMove(ChessMove M)
 {
-	BitBoard To = 1LL << M.ToSquare;
-	const BitBoard O = ~((1LL << M.FromSquare) | To);
+	Bitboard To = 1LL << M.ToSquare;
+	const Bitboard O = ~((1LL << M.FromSquare) | To);
 	unsigned long nFromSquare = M.FromSquare;
 	unsigned long nToSquare = M.ToSquare;
 
@@ -185,7 +185,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 
 	// CLEAR EP SQUARES :
 	// clear any enpassant squares
-	const BitBoard EnPassant = A & B & ~C;
+	const Bitboard EnPassant = A & B & ~C;
 	ChessPosition::A &= ~EnPassant;
 	ChessPosition::B &= ~EnPassant;
 	ChessPosition::C &= ~EnPassant;
@@ -650,27 +650,27 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	}
 
 	ChessMove* pFirstMove = pM;
-	const BitBoard Occupied = P.A | P.B | P.C;								// all squares occupied by something
-	const BitBoard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
+	const Bitboard Occupied = P.A | P.B | P.C;								// all squares occupied by something
+	const Bitboard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
 	assert(WhiteOccupied != 0);
-	const BitBoard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
-	const BitBoard WhiteFree // all squares where W is free to move
+	const Bitboard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
+	const Bitboard WhiteFree // all squares where W is free to move
 			= (P.A & P.B & ~P.C)        // any EP square
 			  |	~(Occupied)				// any vacant square
 			  |	(~P.A & P.D)			// Black Bishop, Rook or Queen
 			  |	(~P.B & P.D);			// Black Pawn or Knight
 
-	const BitBoard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
+	const Bitboard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
 
 	unsigned long firstSq = 0;
 	unsigned long lastSq = 63;
 	getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
 
 	for (unsigned int q = firstSq; q <= lastSq; q++) {
-		const BitBoard fromSQ = 1LL << q;
+		const Bitboard fromSQ = 1LL << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
-		BitBoard toSq;
+		Bitboard toSq;
 		ChessMove M; // Dummy Move object used for setting flags.
 
 		switch (piece) {
@@ -774,8 +774,8 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		case WROOK:
 		case WQUEEN:
 		{
-			const BitBoard B = P.B & fromSQ;
-			const BitBoard C = P.C & fromSQ;
+			const Bitboard B = P.B & fromSQ;
+			const Bitboard C = P.C & fromSQ;
 
 			if (B != 0)
 			{	/* diagonal slider (either B or Q) */
@@ -909,7 +909,7 @@ inline void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t
 	pM->Flags = 0;
 }
 
-inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags)
+inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags)
 {
 	if (to != 0)
 	{
@@ -920,7 +920,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 		pM->Flags = flags;
 		pM->Piece = piece;
 
-		const BitBoard O = ~((1LL << fromsquare) | to);
+		const Bitboard O = ~((1LL << fromsquare) | to);
 
 		// clear old and new square:
 		Q.A &= O;
@@ -935,7 +935,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 		Q.D |= static_cast<int64_t>((piece & 8) >> 3) << pM->ToSquare;
 
 		// Test for capture:
-		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
+		Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
 		if (to & P.D) {
 
 			if (to & ~PAB) // Only considered a capture if dest is not an enpassant or king.
@@ -962,7 +962,7 @@ inline void addWhiteMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 	}
 }
 
-inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to)
+inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, Bitboard to)
 {
 	if (to != 0) {
 		pM->FromSquare = fromsquare;
@@ -972,11 +972,11 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		pM->Piece = WPAWN;
 
 		// Test for capture:
-		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
+		Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
 		pM->Capture = (to & P.D & ~PAB) ? 1 : 0;
 
 		ChessPosition Q = P;
-		BitBoard O = ~((1LL << fromsquare) | to);
+		Bitboard O = ~((1LL << fromsquare) | to);
 
 		// clear old and new square:
 		Q.A &= O;
@@ -1026,59 +1026,59 @@ inline void addWhitePromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 	}
 }
 
-inline BitBoard genBlackAttacks(const ChessPosition& Z)
+inline Bitboard genBlackAttacks(const ChessPosition& Z)
 {
-	BitBoard Occupied = Z.A | Z.B | Z.C;
-	BitBoard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	Bitboard Occupied = Z.A | Z.B | Z.C;
+	Bitboard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 					 ~Occupied;							// All Unoccupied squares
 
-	BitBoard PotentialCapturesForBlack = Occupied & ~Z.D; // White Pieces (including Kings)
+	Bitboard PotentialCapturesForBlack = Occupied & ~Z.D; // White Pieces (including Kings)
 
-	BitBoard A = Z.A & Z.D;				// Black A-Plane
-	BitBoard B = Z.B & Z.D;				// Black B-Plane
-	BitBoard C = Z.C & Z.D;				// Black C-Plane
+	Bitboard A = Z.A & Z.D;				// Black A-Plane
+	Bitboard B = Z.B & Z.D;				// Black B-Plane
+	Bitboard C = Z.C & Z.D;				// Black C-Plane
 
-	BitBoard S = C & ~A;				// Straight-moving Pieces
-	BitBoard D = B & ~A;				// Diagonal-moving Pieces
-	BitBoard K = A & B & C;				// King
-	BitBoard P = A & ~B & ~C;			// Pawns
-	BitBoard N = A & ~B & C;			// Knights
+	Bitboard S = C & ~A;				// Straight-moving Pieces
+	Bitboard D = B & ~A;				// Diagonal-moving Pieces
+	Bitboard K = A & B & C;				// King
+	Bitboard P = A & ~B & ~C;			// Pawns
+	Bitboard N = A & ~B & C;			// Knights
 
-	BitBoard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	Bitboard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 
-	BitBoard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	Bitboard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 
-	BitBoard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
-	BitBoard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
-	BitBoard PawnAttacks = MoveDownLeftRightSingle(P) & (Empty | PotentialCapturesForBlack);
+	Bitboard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
+	Bitboard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
+	Bitboard PawnAttacks = MoveDownLeftRightSingle(P) & (Empty | PotentialCapturesForBlack);
 
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-inline BitBoard isWhiteInCheck(const ChessPosition& Z, BitBoard extend)
+inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 {
-	BitBoard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
-	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	Bitboard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
+	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 WhiteKing |			// White King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
 
-	BitBoard A = Z.A & Z.D;				// Black A-Plane
-	BitBoard B = Z.B & Z.D;				// Black B-Plane
-	BitBoard C = Z.C & Z.D;				// Black C-Plane
+	Bitboard A = Z.A & Z.D;				// Black A-Plane
+	Bitboard B = Z.B & Z.D;				// Black B-Plane
+	Bitboard C = Z.C & Z.D;				// Black C-Plane
 
-	BitBoard S = C & ~A;				// Straight-moving Pieces
-	BitBoard D = B & ~A;				// Diagonal-moving Pieces
-	BitBoard K = A & B & C;				// King
-	BitBoard P = A & ~B & ~C;			// Pawns
-	BitBoard N = A & ~B & C;			// Knights
+	Bitboard S = C & ~A;				// Straight-moving Pieces
+	Bitboard D = B & ~A;				// Diagonal-moving Pieces
+	Bitboard K = A & B & C;				// King
+	Bitboard P = A & ~B & ~C;			// Pawns
+	Bitboard N = A & ~B & C;			// Knights
 
-	BitBoard X = fillStraightAttacksOccluded(S, V);
+	Bitboard X = fillStraightAttacksOccluded(S, V);
 	X |= fillDiagonalAttacksOccluded(D, V);
 	X |= fillKingAttacks(K);
 	X |= FillKnightAttacks(N);
@@ -1105,27 +1105,27 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	}
 
 	ChessMove* pFirstMove = pM;
-	const BitBoard Occupied = P.A | P.B | P.C; // all squares occupied by something
-	const BitBoard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
+	const Bitboard Occupied = P.A | P.B | P.C; // all squares occupied by something
+	const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
 	assert(BlackOccupied != 0);
-	const BitBoard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
-	const BitBoard BlackFree // all squares where B is free to move
+	const Bitboard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
+	const Bitboard BlackFree // all squares where B is free to move
 			= (P.A & P.B & ~P.C)		// any EP square
 			  | ~(Occupied)				// any vacant square
 			  | (~P.A & ~P.D)				// White Bishop, Rook or Queen
 			  | (~P.B & ~P.D);			// White Pawn or Knight
 
-	const BitBoard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
+	const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
 
 	unsigned long firstSq = 0;
 	unsigned long lastSq = 63;
 	getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
 	for (unsigned int q = firstSq; q <= lastSq; ++q) {
-		const BitBoard fromSQ = 1LL << q;
+		const Bitboard fromSQ = 1LL << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
-		BitBoard toSq;
+		Bitboard toSq;
 		ChessMove M; // Dummy Move object used for setting flags.
 
 		switch (piece) {
@@ -1227,8 +1227,8 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 		case BROOK:
 		case BQUEEN:
 		{
-			const BitBoard B = P.B & fromSQ;
-			const BitBoard C = P.C & fromSQ;
+			const Bitboard B = P.B & fromSQ;
+			const Bitboard C = P.C & fromSQ;
 
 			if (B != 0)
 			{ /* diagonal slider (either B or Q) */
@@ -1374,7 +1374,7 @@ inline void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t
 // 5. consider a unit test to check that the index-lookup tables aways match the bitboard lookup tables
 // 6. do all the same for White (obviously)
 
-inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to, int32_t piece, int32_t flags/*=0*/)
+inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags/*=0*/)
 {
 	if (to != 0)
 	{
@@ -1385,7 +1385,7 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 		pM->BlackToMove = 1;
 		pM->Piece = piece;
 
-		const BitBoard O = ~((1LL << fromsquare) | to);
+		const Bitboard O = ~((1LL << fromsquare) | to);
 
 		// clear old and new square
 		Q.A &= O;
@@ -1400,8 +1400,8 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 		Q.D |= static_cast<int64_t>((piece & 8) >> 3) << pM->ToSquare;
 
 		// Test for capture:
-		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
-		BitBoard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+		Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
+		Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
 		if (to &  WhiteOccupied) {
 
 			if (to & ~PAB) // Only considered a capture if dest is not an enpassant or king.
@@ -1428,7 +1428,7 @@ inline void addBlackMoveToListIfLegal(const ChessPosition& P, ChessMove*& pM, un
 	}
 }
 
-inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, BitBoard to)
+inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, Bitboard to)
 {
 	if (to != 0) {
 		pM->FromSquare = fromsquare;
@@ -1438,12 +1438,12 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 		pM->Piece = BPAWN;
 
 		// Test for capture:
-		BitBoard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
-		BitBoard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+		Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
+		Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
 		pM->Capture = (to & WhiteOccupied & ~PAB) ? 1 : 0;
 
 		ChessPosition Q = P;
-		const BitBoard O = ~((1LL << fromsquare) | to);
+		const Bitboard O = ~((1LL << fromsquare) | to);
 
 		// clear old and new square
 		Q.A &= O;
@@ -1494,59 +1494,59 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 	}
 }
 
-inline BitBoard genWhiteAttacks(const ChessPosition& Z)
+inline Bitboard genWhiteAttacks(const ChessPosition& Z)
 {
-	BitBoard Occupied = Z.A | Z.B | Z.C;
-	BitBoard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	Bitboard Occupied = Z.A | Z.B | Z.C;
+	Bitboard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 					 ~Occupied;							// All Unoccupied squares
 
-	BitBoard PotentialCapturesForWhite = Occupied & Z.D; // Black Pieces (including Kings)
+	Bitboard PotentialCapturesForWhite = Occupied & Z.D; // Black Pieces (including Kings)
 
-	BitBoard A = Z.A & ~Z.D;			// White A-Plane
-	BitBoard B = Z.B & ~Z.D;			// White B-Plane
-	BitBoard C = Z.C & ~Z.D;			// White C-Plane
+	Bitboard A = Z.A & ~Z.D;			// White A-Plane
+	Bitboard B = Z.B & ~Z.D;			// White B-Plane
+	Bitboard C = Z.C & ~Z.D;			// White C-Plane
 
-	BitBoard S = C & ~A;				// Straight-moving Pieces
-	BitBoard D = B & ~A;				// Diagonal-moving Pieces
-	BitBoard K = A & B & C;				// King
-	BitBoard P = A & ~B & ~C;			// Pawns
-	BitBoard N = A & ~B & C;			// Knights
+	Bitboard S = C & ~A;				// Straight-moving Pieces
+	Bitboard D = B & ~A;				// Diagonal-moving Pieces
+	Bitboard K = A & B & C;				// King
+	Bitboard P = A & ~B & ~C;			// Pawns
+	Bitboard N = A & ~B & C;			// Knights
 
-	BitBoard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForWhite);
+	Bitboard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForWhite);
 	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForWhite);
 	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForWhite);
 	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForWhite);
 
-	BitBoard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
+	Bitboard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
 	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForWhite);
 	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
 	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForWhite);
 
-	BitBoard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForWhite);
-	BitBoard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForWhite);
-	BitBoard PawnAttacks = MoveUpLeftRightSingle(P) & (Empty | PotentialCapturesForWhite);
+	Bitboard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForWhite);
+	Bitboard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForWhite);
+	Bitboard PawnAttacks = MoveUpLeftRightSingle(P) & (Empty | PotentialCapturesForWhite);
 
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-inline BitBoard isBlackInCheck(const ChessPosition& Z, BitBoard extend)
+inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 {
-	BitBoard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
-	BitBoard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
+	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 BlackKing |			// Black King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
 
-	BitBoard A = Z.A & ~Z.D;			// White A-Plane
-	BitBoard B = Z.B & ~Z.D;			// White B-Plane
-	BitBoard C = Z.C & ~Z.D;			// White C-Plane
+	Bitboard A = Z.A & ~Z.D;			// White A-Plane
+	Bitboard B = Z.B & ~Z.D;			// White B-Plane
+	Bitboard C = Z.C & ~Z.D;			// White C-Plane
 
-	BitBoard S = C & ~A;				// Straight-moving Pieces
-	BitBoard D = B & ~A;				// Diagonal-moving Pieces
-	BitBoard K = A & B & C;				// King
-	BitBoard P = A & ~B & ~C;			// Pawns
-	BitBoard N = A & ~B & C;			// Knights
+	Bitboard S = C & ~A;				// Straight-moving Pieces
+	Bitboard D = B & ~A;				// Diagonal-moving Pieces
+	Bitboard K = A & B & C;				// King
+	Bitboard P = A & ~B & ~C;			// Pawns
+	Bitboard N = A & ~B & C;			// Knights
 
-	BitBoard X = fillStraightAttacksOccluded(S, V);
+	Bitboard X = fillStraightAttacksOccluded(S, V);
 	X |= fillDiagonalAttacksOccluded(D, V);
 	X |= fillKingAttacks(K);
 	X |= FillKnightAttacks(N);
@@ -1566,7 +1566,7 @@ inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
 
 // Text Dump functions //////////////////
 
-void dumpBitBoard(BitBoard b)
+void dumpBitBoard(Bitboard b)
 {
 	std::cout << "\n";
 	for (int q = 63; q >= 0; q--)

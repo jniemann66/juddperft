@@ -61,6 +61,8 @@ int main(int argc, char *argv[], char *envp[])
 #endif
 	setProcessPriority();
 
+	// testMoveTables();
+
 	// ChessPosition X;
 	// readFen(&X, "r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1");
 	// readFen(&X, "1rb5/4r3/3p1npb/3kp1P1/1P3P1P/5nR1/2Q1BK2/bN4NR w - - 3 61");
