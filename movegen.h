@@ -72,15 +72,15 @@ SOFTWARE.
 #define BITSET_LOOP(x) \
 	size_t bit; \
 	while ((bit = bs._Find_first()) != 64) { \
-        (x); \
-        bs.reset(bit); \
+		(x); \
+		bs.reset(bit); \
 	}
 #else
 #define BITSET_LOOP(x) \
 	for (int bit = 0; bit < 64; bit++) { \
-        if (bs[bit]) { \
-            (x); \
-        } \
+		if (bs[bit]) { \
+			(x); \
+		} \
 	}
 #endif
 
@@ -334,7 +334,7 @@ Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
 void addBlackCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addBlackMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags = 0);
-inline void addBlackMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
+inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 void addBlackPromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to);
 
 // Dump I/O functions:
@@ -1456,6 +1456,7 @@ inline bool genIdxTbl(std::string name, const Bitboard *bb)
 		std::cout << "\n";
 	}
 	std::cout << "};" << std::endl;
+	return true;
 }
 
 } // namespace juddperft
