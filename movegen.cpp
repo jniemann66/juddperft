@@ -616,9 +616,9 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 #endif
 
 	if (P.BlackToMove) {
-		genBlackMoves(P, pM);
+		genBlackMoves2(P, pM);
 	} else {
-		genWhiteMoves(P, pM);
+		genWhiteMoves2(P, pM);
 	}
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
@@ -865,6 +865,186 @@ void genWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
+void genWhiteMoves2(const ChessPosition& P, ChessMove* pM)
+{
+	if (P.WhiteIsCheckmated || P.WhiteIsStalemated) {
+		pM->MoveCount = 0;
+		pM->FromSquare = 0;
+		pM->ToSquare = 0;
+		pM->Piece = 0;
+		pM->EndOfMoveList = 1;
+		return;
+	}
+
+	ChessMove* pFirstMove = pM;
+	const Bitboard Occupied = P.A | P.B | P.C;								// all squares occupied by something
+	const Bitboard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
+	const Bitboard WhiteFree // all squares where W is free to move
+			= (P.A & P.B & ~P.C)        // any EP square
+			  |	~(Occupied)				// any vacant square
+			  |	(~P.A & P.D)			// Black Bishop, Rook or Queen
+			  |	(~P.B & P.D);			// Black Pawn or Knight
+
+	const Bitboard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
+
+	unsigned long firstSq = 0;
+	unsigned long lastSq = 63;
+
+	const Bitboard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
+	assert(WhiteOccupied != 0);
+	getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
+
+	for (unsigned int q = firstSq; q <= lastSq; q++) {
+		const Bitboard fromSQ = 1ULL << q;
+		const piece_t piece = P.getPieceAtSquare(q);
+
+		switch (piece) {
+		case WEMPTY:
+		case BEMPTY:
+			continue;
+
+		case WPAWN:
+		{
+			const Bitboard marchZone =  WhiteFree & ~BlackOccupied;
+			const int step1 = MoveUpIndex[q];
+			addWhiteMove(P, pM, q, step1, marchZone, WPAWN);   // single pawn advance
+			if (fromSQ & RANK2 && ((1ULL << step1) & marchZone)) {
+				const int step2 = MoveUpIndex[step1];
+				addWhiteMove(P, pM, q, step2, marchZone, WPAWN); // double pawn advance
+			}
+
+			const Bitboard captureZone = WhiteFree & BlackOccupied;  // area into which pawns may capture
+			addWhiteMove(P, pM, q, MoveUpLeftIndex[q], captureZone, WPAWN); // capture left
+			addWhiteMove(P, pM, q, MoveUpRightIndex[q], captureZone, WPAWN); // capture right
+		}
+			break;
+
+		case WENPASSANT:
+			continue;
+
+		case WKNIGHT:
+		{
+			addWhiteMove(P, pM, q, MoveKnight1Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight2Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight3Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight4Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight5Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight6Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight7Index[q], WhiteFree, WKNIGHT);
+			addWhiteMove(P, pM, q, MoveKnight8Index[q], WhiteFree, WKNIGHT);
+		}
+			break;
+
+		case WKING:
+		{
+			addWhiteMove(P, pM, q, MoveLeftIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveUpLeftIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveUpIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveUpRightIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveRightIndex[q],  WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveDownRightIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveDownIndex[q], WhiteFree, WKING);
+			addWhiteMove(P, pM, q, MoveDownLeftIndex[q], WhiteFree, WKING);
+		}
+			break;
+
+		case WBISHOP:
+		case WROOK:
+		case WQUEEN:
+		{
+			const Bitboard B = P.B & fromSQ;
+			const Bitboard C = P.C & fromSQ;
+
+			if (B != 0) {
+				/* diagonal slider (either B or Q) */
+				std::bitset<64> bs = getDiagonalMoveSquares(fromSQ, WhiteFree, SolidBlackPiece);
+				BITSET_LOOP(addWhiteMove(P, pM, q, bit, WhiteFree, piece))
+			}
+
+			if (C != 0) {
+				/* straight slider (either R or Q) */
+				std::bitset<64> bs =  getStraightMoveSquares(fromSQ, WhiteFree, SolidBlackPiece);
+				BITSET_LOOP(addWhiteMove(P, pM, q, bit, WhiteFree, piece))
+			}
+		}
+			break;
+
+		default:
+			continue;
+
+		} // ends switch
+
+		if (P.DontGenerateAllMoves && pM > pFirstMove) {
+			break;
+		}
+
+	} // ends loop over q
+
+	// castling
+	if (P.A & P.B & P.C & ~P.D & E1) { // King still in original position
+
+		// Conditionally generate O-O move:
+		if (P.WhiteCanCastle && // White still has castle rights
+				(~P.A & ~P.B & P.C & ~P.D & H1) && // Kingside rook is in correct position
+				(WHITECASTLEZONE & Occupied) == 0 && // Castle Zone (f1, g1) is clear
+				!isWhiteInCheck(P, WHITECASTLECHECKZONE)) // King is not in Check (in e1, f1, g1)
+		{
+			ChessPosition Q = P;
+			pM->Piece = WKING;
+			pM->FromSquare = static_cast<unsigned char>(SquareIndex::e1);
+			pM->ToSquare = static_cast<unsigned char>(SquareIndex::g1);
+			pM->Flags = 0;
+			pM->BlackToMove = 0;
+			pM->Castle = 1;
+
+			Q.A ^= 0x000000000000000a;
+			Q.B ^= 0x000000000000000a;
+			Q.C ^= 0x000000000000000f;
+			Q.D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+
+			scanWhiteMoveForChecks(Q, pM);
+			pM++; // Add to list (advance pointer)
+			pM->Flags = 0;
+		}
+
+		// Conditionally generate O-O-O move:
+		if (P.WhiteCanCastleLong && // White still has castle-long rights
+				(~P.A & ~P.B & P.C & ~P.D & A1) && // Queenside rook is in correct Position
+				(WHITECASTLELONGZONE & Occupied) == 0 && // Castle-long zone (b1, c1, d1) is clear
+				!isWhiteInCheck(P, WHITECASTLELONGCHECKZONE)) // King is not in check (in e1, d1, c1)
+		{
+			// Ok to Castle Long
+			ChessPosition Q = P;
+			pM->Piece = WKING;
+			pM->FromSquare = static_cast<unsigned char>(SquareIndex::e1);
+			pM->ToSquare = static_cast<unsigned char>(SquareIndex::c1);
+			pM->Flags = 0;
+			pM->BlackToMove = 0;
+			pM->CastleLong = 1;
+
+			Q.A ^= 0x0000000000000028;
+			Q.B ^= 0x0000000000000028;
+			Q.C ^= 0x00000000000000b8;
+			Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
+
+			scanWhiteMoveForChecks(Q, pM);
+			pM++; // Add to list (advance pointer)
+			pM->Flags = 0;
+		}
+	} // ends castling
+
+
+	// put the move count into the first move
+	pFirstMove->MoveCount = pM - pFirstMove;
+
+	// Create 'no more moves' move to mark end of list
+	pM->FromSquare = 0;
+	pM->ToSquare = 0;
+	pM->Piece = 0;
+	pM->EndOfMoveList = 1;
+}
+
+
 inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
 	// test if white's move will put black in check or checkmate
@@ -873,7 +1053,7 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 		Q.BlackToMove = 1;
 		ChessMove blacksMoves[MOVELIST_SIZE];
 		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
-		genBlackMoves(Q, blacksMoves);
+		genBlackMoves2(Q, blacksMoves);
 		if (blacksMoves->MoveCount == 0) { // black will be in check with no legal moves
 			pM->Checkmate = 1; // this move is a checkmating move
 		}
@@ -905,6 +1085,114 @@ inline void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t
 	}
 
 	scanWhiteMoveForChecks(Q, pM);
+	pM++; // Add to list (advance pointer)
+	pM->Flags = 0;
+}
+
+inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
+{
+	if (tosquare > 63) {
+		return;
+	}
+
+	Bitboard to = (1ULL << tosquare) & F;
+	if (to == 0) {
+		return;
+	}
+
+	const Bitboard from = (1ULL << fromsquare);
+
+	ChessPosition Q = P;
+	pM->FromSquare = fromsquare;
+	pM->ToSquare = tosquare;
+	pM->Flags = 0;
+	pM->BlackToMove = 0;
+	pM->Piece = piece;
+
+	bool promote = false;
+	if (piece == WPAWN) {
+		if (from & RANK2 && to & RANK4) {
+			pM->DoublePawnMove = 1;
+		} else if (to & RANK8) {
+			promote = true;
+		}
+	}
+
+	// clear old and new square:
+	const Bitboard O = ~((1LL << fromsquare) | to);
+
+	Q.A &= O;
+	Q.B &= O;
+	Q.C &= O;
+	Q.D &= O;
+
+	if (promote) {
+		// promote to queen
+		Q.B |= to;
+		Q.C |= to;
+	} else {
+		// Populate new square with piece
+		Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
+		Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
+		Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
+		Q.D |= static_cast<int64_t>((piece & 8) >> 3) << tosquare;
+	}
+
+	// Test for capture:
+	Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings:
+	if (to & P.D) {
+		if (to & ~PAB) { // Only considered a capture if dest is not an enpassant or king.
+			pM->Capture = 1;
+		} else if ((piece == WPAWN) && (to & P.D & PAB & ~P.C)) {
+			pM->EnPassantCapture = 1;
+			// remove the actual pawn (dest was EP square)
+			to >>= 8;
+			Q.A &= ~to;
+			Q.B &= ~to;
+			Q.C &= ~to;
+			Q.D &= ~to;
+		}
+	}
+
+	// test if doing all this puts white in check. If so, move isn't legal
+	if (isWhiteInCheck(Q)) {
+		pM->IllegalMove = 1;
+		return;
+	}
+
+	if (!promote) {
+		scanWhiteMoveForChecks(Q, pM);
+	} else {
+		// make an additional 3 copies for the underpromotions
+		*(pM + 1) = *pM;
+		*(pM + 2) = *pM;
+		*(pM + 3) = *pM;
+
+		pM->PromoteQueen = 1;
+		scanWhiteMoveForChecks(Q, pM);
+
+		// rook underpromotion
+		pM++;
+		pM->PromoteRook = 1;
+		Q.B &= ~to;
+		scanWhiteMoveForChecks(Q, pM);
+
+		// bishop underpromotion
+		pM++;
+		pM->PromoteBishop = 1;
+		Q.C &= ~to;
+		Q.B |= to;
+		scanWhiteMoveForChecks(Q, pM);
+
+		// knight underpromotion
+		pM++;
+		pM->PromoteKnight = 1;
+		Q.A |= to;
+		Q.B &= ~to;
+		Q.C |= to;
+		scanWhiteMoveForChecks(Q, pM);
+	}
+
 	pM++; // Add to list (advance pointer)
 	pM->Flags = 0;
 }
@@ -1122,7 +1410,7 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
 	for (unsigned int q = firstSq; q <= lastSq; ++q) {
-		const Bitboard fromSQ = 1LL << q;
+		const Bitboard fromSQ = 1ULL << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
 		Bitboard toSq;
@@ -1334,22 +1622,24 @@ void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
 
 	ChessMove* pFirstMove = pM;
 	const Bitboard Occupied = P.A | P.B | P.C; // all squares occupied by something
-	const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
-	assert(BlackOccupied != 0);
+
 	const Bitboard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
 	const Bitboard BlackFree // all squares where B is free to move
 			= (P.A & P.B & ~P.C)		// any EP square
 			  | ~(Occupied)				// any vacant square
-			  | (~P.A & ~P.D)				// White Bishop, Rook or Queen
+			  | (~P.A & ~P.D)			// White Bishop, Rook or Queen
 			  | (~P.B & ~P.D);			// White Pawn or Knight
 
 	const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
 
 	unsigned long firstSq = 0;
 	unsigned long lastSq = 63;
+
+	const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
+	assert(BlackOccupied != 0);
 	getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
-	for (unsigned int q = firstSq; q <= lastSq; ++q) {
+	for (unsigned int q = firstSq; q <= lastSq; q++) {
 		const Bitboard fromSQ = 1ULL << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
@@ -1444,7 +1734,6 @@ void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
 				(BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
 				!isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
 		{
-			// OK to Castle
 			ChessPosition Q = P;
 			pM->Piece = BKING;
 			pM->FromSquare = static_cast<unsigned char>(SquareIndex::e8);
@@ -1465,7 +1754,7 @@ void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
 
 		// Conditionally generate O-O-O move:
 		if (P.BlackCanCastleLong && // Black still has castle-long rights
-				((~P.A & ~P.B & P.C & P.D & A8) != 0) && // Queenside rook is in correct Position
+				(~P.A & ~P.B & P.C & P.D & A8) && // Queenside rook is in correct Position
 				(BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
 				!isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
 		{
@@ -1507,7 +1796,7 @@ inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 		Q.BlackToMove = 0;
 		ChessMove whitesMoves[MOVELIST_SIZE];
 		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
-		genWhiteMoves(Q, whitesMoves);
+		genWhiteMoves2(Q, whitesMoves);
 		if (whitesMoves->MoveCount == 0) { // white will be in check with no legal moves
 			pM->Checkmate = 1; // this move is a checkmating move
 		}
@@ -1715,10 +2004,10 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		Q.C |= to;
 	} else {
 		// Populate new square with piece
-		Q.A |= static_cast<int64_t>(piece & 1) << pM->ToSquare;
-		Q.B |= static_cast<int64_t>((piece & 2) >> 1) << pM->ToSquare;
-		Q.C |= static_cast<int64_t>((piece & 4) >> 2) << pM->ToSquare;
-		Q.D |= static_cast<int64_t>((piece & 8) >> 3) << pM->ToSquare;
+		Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
+		Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
+		Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
+		Q.D |= static_cast<int64_t>((piece & 8) >> 3) << tosquare;
 	}
 
 	// Test for capture:

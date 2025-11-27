@@ -44,12 +44,13 @@ SOFTWARE.
 #include <x86intrin.h>
 #endif
 
+#include <bitset>
 #include <cstdint>
-#include <vector>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
-#include <iostream>
+#include <vector>
 
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
@@ -68,7 +69,7 @@ SOFTWARE.
 // this is typically used to get the indices of "on" squares in a BitBoard
 // expected: an initialised std::bitset<64> called 'bs' ;-)
 
-#if defined (_USE_BITSET_FIND_FIRST) && defined(__GNUC__) &&!defined(__clang__)
+#if defined (_USE_BITSET_FIND_FIRST) && defined(_GLIBCXX_BITSET)
 #define BITSET_LOOP(x) \
 	size_t bit; \
 	while ((bit = bs._Find_first()) != 64) { \
@@ -95,7 +96,6 @@ SOFTWARE.
 #define STALEMATE -1
 
 //#define COUNT_MOVEGEN_CPU_CYCLES
-
 
 namespace juddperft {
 
@@ -319,9 +319,11 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
 // White Move-Generation Functions:
 void genWhiteMoves(const ChessPosition& P, ChessMove*);
+void genWhiteMoves2(const ChessPosition& P, ChessMove*);
 inline Bitboard genBlackAttacks(const ChessPosition& Z);
 Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
+inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 void addWhiteCastlingMove(const ChessPosition& P, ChessMove*& pM, int32_t flags = 0);
 void addWhiteMoveToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to, int32_t piece, int32_t flags = 0);
 void addWhitePromotionsToListIfLegal(const ChessPosition & P, ChessMove *& pM, unsigned char fromsquare, Bitboard to);
@@ -1341,27 +1343,78 @@ inline int popCount(const Bitboard & B)
 
 inline unsigned long getSquareIndex(Bitboard b)
 {
-	unsigned long n = 0;
+	enum BitscanMethod {
+		DeBruijn,
+		CompilerSpecificIntrinsic,
+		StdBitset
+	};
 
-	// note: bit scans performed terribly in this context (at least, on my machine),
-	// so just going with the DeBruijn Multiplication
+	static constexpr BitscanMethod bitscanMethod = DeBruijn;
 
-	// #if defined(_USE_BITSCAN_INSTRUCTIONS)
+	if constexpr (bitscanMethod == DeBruijn) {
+		// see (https://chessprogramming.wikispaces.com/BitScan)
+		// credit: Kim Walisch, Gerd Isenberg et al.
 
-	// #if defined(_MSC_VER)
-	//     // Important: a and b must be initialised first !
-	//     _BitScanForward64(&n, b);
-	// #elif defined(__GNUC__) || defined(__clang__)
-	//     n = __builtin_ctzll(b);
-	// #endif
+		const Bitboard db64 = 0x03f79d71b4cb0a89;
 
-	// #else
+		const int tbl[64] = {
+			0, 47,  1, 56, 48, 27,  2, 60,
+			57, 49, 41, 37, 28, 16,  3, 61,
+			54, 58, 35, 52, 50, 42, 21, 44,
+			38, 32, 29, 23, 17, 11,  4, 62,
+			46, 55, 26, 59, 40, 36, 15, 53,
+			34, 51, 20, 43, 31, 22, 10, 45,
+			25, 39, 14, 33, 19, 30,  9, 24,
+			13, 18,  8, 12,  7,  6,  5, 63
+		};
+
+		// BitScanForward:
+		return tbl[(((b ^ (b - 1)) * db64) >> 58)];
+	} else if (bitscanMethod == CompilerSpecificIntrinsic) {
+
+		unsigned long n;
+#if defined(_MSC_VER)
+		_BitScanForward64(&n, b);
+#elif defined(__GNUC__) || defined(__clang__)
+		n = __builtin_ctzll(b);
+#endif
+		return n;
+
+	} else if (bitscanMethod == StdBitset) {
+		std::bitset<64> bs(b);
+
+#if defined(_GLIBCXX_BITSET)
+		return bs._Find_first();
+#else
+
+#endif
+
+	}
+}
+
+// getFirstAndLastPiece()
+// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
+inline void getFirstAndLastPiece(const Bitboard& B, unsigned long& a, unsigned long& b)
+{
+
+#if defined(_USE_BITSCAN_INSTRUCTIONS)
+	// perform Bitscans to determine start and finish squares;
+#if defined(_MSC_VER)
+	// Important: a and b must be initialised first !
+	_BitScanReverse64(&b, B);
+	_BitScanForward64(&a, B);
+#elif defined(__GNUC__) || defined(__clang__)
+	b = 63 - __builtin_clzll(B);
+	a = __builtin_ctzll(B);
+#endif
+
+#else
 
 	// alternative method for non-x86-64, using DeBruijn Multiplication:
 	// see (https://chessprogramming.wikispaces.com/BitScan)
 	// credit: Kim Walisch, Gerd Isenberg et al.
 
-	const Bitboard db64 = 0x03f79d71b4cb0a89;
+	const BitBoard db64 = 0x03f79d71b4cb0a89;
 
 	const int tbl[64] = {
 		0, 47,  1, 56, 48, 27,  2, 60,
@@ -1375,67 +1428,22 @@ inline unsigned long getSquareIndex(Bitboard b)
 	};
 
 	// BitScanForward:
-	n = tbl[((b ^ (b - 1)) * db64) >> 58];
+	a = tbl[(((B ^ (B - 1)) * db64) >> 58)];
 
-			// #endif // defined(_USE_BITSCAN_INSTRUCTIONS)
+	// BitScanReverse:
+	BitBoard A = B;
+	A |= A >> 1;
+	A |= A >> 2;
+	A |= A >> 4;
+	A |= A >> 8;
+	A |= A >> 16;
+	A |= A >> 32;
+	b = tbl[((A * db64) >> 58)];
 
-			// todo: can also try our old friend, std::bitset::_Find_first()
-			// also, C++20 has some bit-scanning functions now in the <bit> header ...
-
-			return n;
+#endif
 }
 
-		// getFirstAndLastPiece()
-		// Note: starts from Bottom Right (H1 / bit 0), ends Top-Left (A8 / bit 63)
-		inline void getFirstAndLastPiece(const Bitboard& B, unsigned long& a, unsigned long& b)
-	{
-
-	#if defined(_USE_BITSCAN_INSTRUCTIONS)
-		// perform Bitscans to determine start and finish squares;
-	#if defined(_MSC_VER)
-		// Important: a and b must be initialised first !
-		_BitScanReverse64(&b, B);
-		_BitScanForward64(&a, B);
-	#elif defined(__GNUC__) || defined(__clang__)
-		b = 63 - __builtin_clzll(B);
-		a = __builtin_ctzll(B);
-	#endif
-
-	#else
-
-		// alternative method for non-x86-64, using DeBruijn Multiplication:
-		// see (https://chessprogramming.wikispaces.com/BitScan)
-		// credit: Kim Walisch, Gerd Isenberg et al.
-
-		const BitBoard db64 = 0x03f79d71b4cb0a89;
-
-		const int tbl[64] = {
-							0, 47,  1, 56, 48, 27,  2, 60,
-							57, 49, 41, 37, 28, 16,  3, 61,
-							54, 58, 35, 52, 50, 42, 21, 44,
-							38, 32, 29, 23, 17, 11,  4, 62,
-							46, 55, 26, 59, 40, 36, 15, 53,
-							34, 51, 20, 43, 31, 22, 10, 45,
-							25, 39, 14, 33, 19, 30,  9, 24,
-							13, 18,  8, 12,  7,  6,  5, 63
-};
-
-		// BitScanForward:
-		a = tbl[((B ^ (B - 1)) * db64) >> 58];
-
-		// BitScanReverse:
-		BitBoard A = B;
-		A |= A >> 1;
-		A |= A >> 2;
-		A |= A >> 4;
-		A |= A >> 8;
-		A |= A >> 16;
-		A |= A >> 32;
-		b = tbl[(A * db64) >> 58];
-
-	#endif
-}
-
+// utility function to generate the move lookup index tables from the move lookup bitboard tables
 inline bool genIdxTbl(std::string name, const Bitboard *bb)
 {
 	std::cout << "const int " << name << "[64] = {\n";
@@ -1460,4 +1468,5 @@ inline bool genIdxTbl(std::string name, const Bitboard *bb)
 }
 
 } // namespace juddperft
-	#endif // _MOVEGEN
+
+#endif // _MOVEGEN

@@ -7,7 +7,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx2 -DNDEBUG")
 
 # Find the threads package
 find_package(Threads REQUIRED)
