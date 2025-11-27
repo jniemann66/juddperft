@@ -37,10 +37,8 @@ SOFTWARE.
 #include <x86intrin.h>
 #endif
 
-#include <algorithm>
 #include <bitset>
 #include <cassert>
-#include <mutex>
 #include <set>
 
 namespace juddperft {
@@ -602,6 +600,7 @@ void ChessPosition::clear(void)
 #endif
 }
 
+
 ////////////////////////////////////////////
 // Move Generation Functions
 // generateMoves()
@@ -616,9 +615,9 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 #endif
 
 	if (P.BlackToMove) {
-		genBlackMoves2(P, pM);
+		generateBlackMoves(P, pM);
 	} else {
-		genWhiteMoves2(P, pM);
+		generateWhiteMoves(P, pM);
 	}
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
@@ -631,14 +630,24 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 
 }
 
+// isInCheck() - Given a position, determines if player is in check -
+// set IsBlack to true to test if Black is in check
+// set IsBlack to false to test if White is in check.
+
+inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
+{
+	return bIsBlack ? isBlackInCheck(P) != 0 : isWhiteInCheck(P) != 0;
+}
+
 //////////////////////////////////////////
-// White Move Generation Functions:		//
-// genWhiteMoves(), 					//
-// addWhiteMoveToListIfLegal(), 		//
-// genBlackAttacks()					//
+// White Move Generation Functions:     //
+// generateWhiteMoves(),                //
+// addWhiteMove(),                      //
+// isWhiteInCheck(),                    //
+// genBlackAttacks()                    //
 //////////////////////////////////////////
 
-void genWhiteMoves2(const ChessPosition& P, ChessMove* pM)
+void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.WhiteIsCheckmated || P.WhiteIsStalemated) {
 		pM->MoveCount = 0;
@@ -817,24 +826,6 @@ void genWhiteMoves2(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
-inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
-{
-	// test if white's move will put black in check or checkmate
-	if (isBlackInCheck(Q))	{
-		pM->Check = 1;
-		Q.BlackToMove = 1;
-		ChessMove blacksMoves[MOVELIST_SIZE];
-		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
-		genBlackMoves2(Q, blacksMoves);
-		if (blacksMoves->MoveCount == 0) { // black will be in check with no legal moves
-			pM->Checkmate = 1; // this move is a checkmating move
-		}
-	} else {
-		pM->Check = 0;
-		pM->Checkmate = 0;
-	}
-}
-
 inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
 {
 	if (tosquare > 63) {
@@ -943,41 +934,6 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	pM->Flags = 0;
 }
 
-inline Bitboard genBlackAttacks(const ChessPosition& Z)
-{
-	Bitboard Occupied = Z.A | Z.B | Z.C;
-	Bitboard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
-					 ~Occupied;							// All Unoccupied squares
-
-	Bitboard PotentialCapturesForBlack = Occupied & ~Z.D; // White Pieces (including Kings)
-
-	Bitboard A = Z.A & Z.D;				// Black A-Plane
-	Bitboard B = Z.B & Z.D;				// Black B-Plane
-	Bitboard C = Z.C & Z.D;				// Black C-Plane
-
-	Bitboard S = C & ~A;				// Straight-moving Pieces
-	Bitboard D = B & ~A;				// Diagonal-moving Pieces
-	Bitboard K = A & B & C;				// King
-	Bitboard P = A & ~B & ~C;			// Pawns
-	Bitboard N = A & ~B & C;			// Knights
-
-	Bitboard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForBlack);
-
-	Bitboard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
-
-	Bitboard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
-	Bitboard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
-	Bitboard PawnAttacks = MoveDownLeftRightSingle(P) & (Empty | PotentialCapturesForBlack);
-
-	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
-}
-
 inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 {
 	Bitboard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
@@ -1003,14 +959,34 @@ inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 	return X & WhiteKing;
 }
 
+inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
+{
+	// test if white's move will put black in check or checkmate
+	if (isBlackInCheck(Q))	{
+		pM->Check = 1;
+		Q.BlackToMove = 1;
+		ChessMove blacksMoves[MOVELIST_SIZE];
+		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
+		generateBlackMoves(Q, blacksMoves);
+		if (blacksMoves->MoveCount == 0) { // black will be in check with no legal moves
+			pM->Checkmate = 1; // this move is a checkmating move
+		}
+	} else {
+		pM->Check = 0;
+		pM->Checkmate = 0;
+	}
+}
+
+
 //////////////////////////////////////////
-// Black Move Generation Functions:		//
-// genBlackMoves(), 					//
-// addBlackMoveToListIfLegal(), 		//
-// genWhiteAttacks()					//
+// Black Move Generation Functions:     //
+// generateBlackMoves(),                //
+// addBlackMove(),                      //
+// isBlackInCheck()                     //
+// scanBlackMoveForChecks()             //
 //////////////////////////////////////////
 
-void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
+void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.BlackIsCheckmated || P.BlackIsStalemated) {
 		pM->MoveCount = 0;
@@ -1189,24 +1165,6 @@ void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
-inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
-{
-	// test if black's move will put white in check or checkmate
-	if (isWhiteInCheck(Q))	{
-		pM->Check = 1;
-		Q.BlackToMove = 0;
-		ChessMove whitesMoves[MOVELIST_SIZE];
-		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
-		genWhiteMoves2(Q, whitesMoves);
-		if (whitesMoves->MoveCount == 0) { // white will be in check with no legal moves
-			pM->Checkmate = 1; // this move is a checkmating move
-		}
-	} else {
-		pM->Check = 0;
-		pM->Checkmate = 0;
-	}
-}
-
 inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
 {
 	if (tosquare > 63) {
@@ -1316,6 +1274,50 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	pM->Flags = 0;
 }
 
+inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
+{
+	Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
+	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+				 BlackKing |			// Black King
+				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
+
+	Bitboard A = Z.A & ~Z.D;			// White A-Plane
+	Bitboard B = Z.B & ~Z.D;			// White B-Plane
+	Bitboard C = Z.C & ~Z.D;			// White C-Plane
+
+	Bitboard S = C & ~A;				// Straight-moving Pieces
+	Bitboard D = B & ~A;				// Diagonal-moving Pieces
+	Bitboard K = A & B & C;				// King
+	Bitboard P = A & ~B & ~C;			// Pawns
+	Bitboard N = A & ~B & C;			// Knights
+
+	Bitboard X = fillStraightAttacksOccluded(S, V);
+	X |= fillDiagonalAttacksOccluded(D, V);
+	X |= fillKingAttacks(K);
+	X |= FillKnightAttacks(N);
+	X |= MoveUpLeftRightSingle(P);
+
+	return X & BlackKing;
+}
+
+inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
+{
+	// test if black's move will put white in check or checkmate
+	if (isWhiteInCheck(Q))	{
+		pM->Check = 1;
+		Q.BlackToMove = 0;
+		ChessMove whitesMoves[MOVELIST_SIZE];
+		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
+		generateWhiteMoves(Q, whitesMoves);
+		if (whitesMoves->MoveCount == 0) { // white will be in check with no legal moves
+			pM->Checkmate = 1; // this move is a checkmating move
+		}
+	} else {
+		pM->Check = 0;
+		pM->Checkmate = 0;
+	}
+}
+
 inline Bitboard genWhiteAttacks(const ChessPosition& Z)
 {
 	Bitboard Occupied = Z.A | Z.B | Z.C;
@@ -1351,16 +1353,17 @@ inline Bitboard genWhiteAttacks(const ChessPosition& Z)
 	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
-inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
+inline Bitboard genBlackAttacks(const ChessPosition& Z)
 {
-	Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
-	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
-				 BlackKing |			// Black King
-				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
+	Bitboard Occupied = Z.A | Z.B | Z.C;
+	Bitboard Empty = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+					 ~Occupied;							// All Unoccupied squares
 
-	Bitboard A = Z.A & ~Z.D;			// White A-Plane
-	Bitboard B = Z.B & ~Z.D;			// White B-Plane
-	Bitboard C = Z.C & ~Z.D;			// White C-Plane
+	Bitboard PotentialCapturesForBlack = Occupied & ~Z.D; // White Pieces (including Kings)
+
+	Bitboard A = Z.A & Z.D;				// Black A-Plane
+	Bitboard B = Z.B & Z.D;				// Black B-Plane
+	Bitboard C = Z.C & Z.D;				// Black C-Plane
 
 	Bitboard S = C & ~A;				// Straight-moving Pieces
 	Bitboard D = B & ~A;				// Diagonal-moving Pieces
@@ -1368,22 +1371,21 @@ inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 	Bitboard P = A & ~B & ~C;			// Pawns
 	Bitboard N = A & ~B & C;			// Knights
 
-	Bitboard X = fillStraightAttacksOccluded(S, V);
-	X |= fillDiagonalAttacksOccluded(D, V);
-	X |= fillKingAttacks(K);
-	X |= FillKnightAttacks(N);
-	X |= MoveUpLeftRightSingle(P);
+	Bitboard StraightAttacks = moveUpSingleOccluded(fillUpOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveRightSingleOccluded(fillRightOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveDownSingleOccluded(fillDownOccluded(S, Empty), Empty | PotentialCapturesForBlack);
+	StraightAttacks |= moveLeftSingleOccluded(fillLeftOccluded(S, Empty), Empty | PotentialCapturesForBlack);
 
-	return X & BlackKing;
-}
+	Bitboard DiagonalAttacks = moveUpRightSingleOccluded(fillUpRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveDownRightSingleOccluded(fillDownRightOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveDownLeftSingleOccluded(fillDownLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
+	DiagonalAttacks |= moveUpLeftSingleOccluded(fillUpLeftOccluded(D, Empty), Empty | PotentialCapturesForBlack);
 
-// isInCheck() - Given a position, determines if player is in check -
-// set IsBlack to true to test if Black is in check
-// set IsBlack to false to test if White is in check.
+	Bitboard KingAttacks = fillKingAttacksOccluded(K, Empty | PotentialCapturesForBlack);
+	Bitboard KnightAttacks = fillKnightAttacksOccluded(N, Empty | PotentialCapturesForBlack);
+	Bitboard PawnAttacks = MoveDownLeftRightSingle(P) & (Empty | PotentialCapturesForBlack);
 
-inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
-{
-	return bIsBlack ? isBlackInCheck(P) != 0 : isWhiteInCheck(P) != 0;
+	return (StraightAttacks | DiagonalAttacks | KingAttacks | KnightAttacks | PawnAttacks);
 }
 
 // Text Dump functions //////////////////

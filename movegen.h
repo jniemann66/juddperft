@@ -85,8 +85,6 @@ SOFTWARE.
 	}
 #endif
 
-// #define _OLD_METHOD_FOR_SLIDING_PIECES
-
 #ifndef SMALL_BUFFER_SIZE
 #define SMALL_BUFFER_SIZE 64
 #endif
@@ -318,18 +316,16 @@ void generateMoves(const ChessPosition & P, ChessMove * pM);
 bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
 // White Move-Generation Functions:
-void genWhiteMoves2(const ChessPosition& P, ChessMove*);
+void generateWhiteMoves(const ChessPosition& P, ChessMove*);
 inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
-inline Bitboard genBlackAttacks(const ChessPosition& Z);
 
 // Black Move-Generation Functions:
-void genBlackMoves2(const ChessPosition& P, ChessMove*);
+void generateBlackMoves(const ChessPosition& P, ChessMove*);
 inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
-inline Bitboard genWhiteAttacks(const ChessPosition& Z);
 
 // Dump I/O functions:
 void dumpBitBoard(Bitboard b);
@@ -343,6 +339,9 @@ Bitboard fillDiagonalAttacksOccluded(Bitboard g, Bitboard p);
 Bitboard fillKingAttacksOccluded(Bitboard g, Bitboard p);
 Bitboard fillKingAttacks(Bitboard g);
 Bitboard fillKnightAttacksOccluded(Bitboard g, Bitboard p);
+
+inline Bitboard genBlackAttacks(const ChessPosition& Z);
+inline Bitboard genWhiteAttacks(const ChessPosition& Z);
 
 // Fill and Move Bitboard Operations:
 Bitboard fillRightOccluded(Bitboard g, Bitboard p);
@@ -916,7 +915,7 @@ const int MoveKnight8Index[64] = {
 	xx, xx, xx, xx, xx, xx, xx, xx
 };
 
-// unit test to check that the lookup tables are in agreement
+// unit test to verify that the lookup tables are in agreement
 inline bool testMoveTables()
 {
 	auto t = [](std::string name, int q, Bitboard bitboard, int sqindex) -> void {
