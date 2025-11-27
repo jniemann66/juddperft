@@ -616,7 +616,7 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 #endif
 
 	if (P.BlackToMove) {
-		genBlackMoves(P, pM);
+        genBlackMoves(P, pM);
 	} else {
 		genWhiteMoves(P, pM);
 	}
@@ -1321,6 +1321,164 @@ void genBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->EndOfMoveList = 1;
 }
 
+void genBlackMoves2(const ChessPosition& P, ChessMove* pM)
+{
+    if (P.BlackIsCheckmated || P.BlackIsStalemated) {
+        pM->MoveCount = 0;
+        pM->FromSquare = 0;
+        pM->ToSquare = 0;
+        pM->Piece = 0;
+        pM->EndOfMoveList = 1;
+        return;
+    }
+
+    ChessMove* pFirstMove = pM;
+    const Bitboard Occupied = P.A | P.B | P.C; // all squares occupied by something
+    const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
+    assert(BlackOccupied != 0);
+    const Bitboard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
+    const Bitboard BlackFree // all squares where B is free to move
+        = (P.A & P.B & ~P.C)		// any EP square
+          | ~(Occupied)				// any vacant square
+          | (~P.A & ~P.D)				// White Bishop, Rook or Queen
+          | (~P.B & ~P.D);			// White Pawn or Knight
+
+    const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
+
+    unsigned long firstSq = 0;
+    unsigned long lastSq = 63;
+    getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
+
+    for (unsigned int q = firstSq; q <= lastSq; ++q) {
+        const Bitboard fromSQ = 1ULL << q;
+        const piece_t piece = P.getPieceAtSquare(q);
+
+        ChessMove M; // Dummy Move object used for setting flags.
+
+        switch (piece) {
+        case WEMPTY:
+        case BEMPTY:
+            continue;
+
+        case BPAWN:
+        {
+            const Bitboard marchZone = BlackFree & ~WhiteOccupied; // area into which pawns may advance
+            const int step1 = MoveDownIndex[q];
+            addBlackMoveToListIfLegal2(P, pM, q, step1, marchZone, BPAWN);   // single pawn advance
+            if (fromSQ & RANK7 && ((1ULL << step1) & marchZone)) {
+                const int step2 = MoveDownIndex[step1];
+                addBlackMoveToListIfLegal2(P, pM, q, step2, marchZone, BPAWN); // double pawn advance
+            }
+
+            const Bitboard captureZone = BlackFree & WhiteOccupied;  // area into which pawns may capture
+            addBlackMoveToListIfLegal2(P, pM, q, MoveDownLeftIndex[q], captureZone, BPAWN); // capture left
+            addBlackMoveToListIfLegal2(P, pM, q, MoveDownRightIndex[q], captureZone, BPAWN); // capture right
+        }
+
+        break;
+        case BENPASSANT:
+            continue;
+
+        case BKNIGHT:
+        {
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight1Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight2Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight3Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight4Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight5Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight6Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight7Index[q], BlackFree, BKNIGHT);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveKnight8Index[q], BlackFree, BKNIGHT);
+        }
+        break;
+
+        case BKING:
+        {
+            addBlackMoveToListIfLegal2(P, pM, q, MoveLeftIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveUpLeftIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveUpIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveUpRightIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveRightIndex[q],  BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveDownRightIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveDownIndex[q], BlackFree, BKING);
+            addBlackMoveToListIfLegal2(P, pM, q, MoveDownLeftIndex[q], BlackFree, BKING);
+
+            // todo: move this out of the loop
+            if (fromSQ == E8) { // King still in original position
+                // Conditionally generate O-O move:
+                if (P.BlackCanCastle && // Black still has castle rights
+                    (~P.A & ~P.B & P.C & P.D & H8) && // Kingside rook is in correct position
+                    (BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
+                    !isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
+                {
+                    // OK to Castle
+                    M.ClearFlags();
+                    M.Castle = 1;
+                    addBlackCastlingMove(P, pM, M.Flags);
+                }
+
+                // Conditionally generate O-O-O move:
+                if (P.BlackCanCastleLong && // Black still has castle-long rights
+                    ((~P.A & ~P.B & P.C & P.D & A8) != 0) && // Queenside rook is in correct Position
+                    (BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
+                    !isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
+                {
+                    // OK to castle Long
+                    M.ClearFlags();
+                    M.CastleLong = 1;
+                    addBlackCastlingMove(P, pM, M.Flags);
+                }
+            }
+        }
+        break;
+
+        case BBISHOP:
+        case BROOK:
+        case BQUEEN:
+        {
+            const Bitboard B = P.B & fromSQ;
+            const Bitboard C = P.C & fromSQ;
+
+            if (B != 0)
+            {
+                /* diagonal slider (either B or Q) */
+                std::bitset<64> bs = getDiagonalMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
+                BITSET_LOOP(addBlackMoveToListIfLegal2(P, pM, q, bit, BlackFree, piece))
+            }
+
+            if (C != 0)
+            {
+                /* straight slider (either R or Q) */
+                std::bitset<64> bs = getStraightMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
+                BITSET_LOOP(addBlackMoveToListIfLegal2(P, pM, q, bit, BlackFree, piece))
+            }
+        }
+        break;
+
+        default:
+            continue;
+
+        } // ends switch
+
+        if (P.DontGenerateAllMoves && pM > pFirstMove) {
+            break;
+        }
+
+    } // ends loop over q;
+
+    // put the move count into the first move
+    pFirstMove->MoveCount = pM - pFirstMove;
+
+    // Create 'no more moves' move to mark end of list
+    pM->FromSquare = 0;
+    pM->ToSquare = 0;
+    pM->Piece = 0;
+    pM->EndOfMoveList = 1;
+}
+
+
+
+
 inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
 	// test if black's move will put white in check or checkmate
@@ -1492,6 +1650,115 @@ inline void addBlackPromotionsToListIfLegal(const ChessPosition& P, ChessMove*& 
 			pM->Flags = 0;
 		}
 	}
+}
+
+inline void addBlackMoveToListIfLegal2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
+{
+    if (tosquare > 63) {
+        return;
+    }
+
+    Bitboard to = (1ULL << tosquare) | F;
+    if (to == 0) {
+        return;
+    }
+
+    const Bitboard from = (1ULL << fromsquare);
+
+    ChessPosition Q = P;
+    pM->FromSquare = fromsquare;
+    pM->ToSquare = tosquare;
+    pM->Flags = 0;
+    pM->BlackToMove = 1;
+    pM->Piece = piece;
+
+    bool promote = false;
+    if (piece == BPAWN) {
+        if (from & RANK7 && to & RANK5) {
+            pM->DoublePawnMove = 1;
+        } else if (to & RANK1) {
+            promote = true;
+        }
+    }
+
+    // clear old and new square
+    const Bitboard O = ~(from | to);
+    Q.A &= O;
+    Q.B &= O;
+    Q.C &= O;
+    Q.D &= O;
+
+    if (promote) {
+        // promote to queen
+        Q.D |= to;
+        Q.B |= to;
+        Q.C |= to;
+    } else {
+        // Populate new square with piece
+        Q.A |= static_cast<int64_t>(piece & 1) << pM->ToSquare;
+        Q.B |= static_cast<int64_t>((piece & 2) >> 1) << pM->ToSquare;
+        Q.C |= static_cast<int64_t>((piece & 4) >> 2) << pM->ToSquare;
+        Q.D |= static_cast<int64_t>((piece & 8) >> 3) << pM->ToSquare;
+    }
+
+    // Test for capture:
+    Bitboard PAB = (P.A & P.B);	// Bitboard containing EnPassants and kings
+    Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+    if (to &  WhiteOccupied) {
+        if (to & ~PAB) { // Only considered a capture if dest is not an enpassant or king.
+            pM->Capture = 1;
+        } else if ((piece == BPAWN) && (to & WhiteOccupied & PAB & ~P.C)) {
+            pM->EnPassantCapture = 1;
+            // remove the actual pawn (dest was EP square)
+            to <<= 8;
+            Q.A &= ~to;
+            Q.B &= ~to;
+            Q.C &= ~to;
+            Q.D &= ~to;
+        }
+    }
+
+    // test if doing all this puts black in check. If so, move isn't legal
+    if (isBlackInCheck(Q)) {
+        pM->IllegalMove = 1;
+        return;
+    }
+
+    if (!promote) {
+        scanBlackMoveForChecks(Q, pM);
+    } else {
+        // make an additional 3 copies for underpromotions
+        *(pM + 1) = *pM;
+        *(pM + 2) = *pM;
+        *(pM + 3) = *pM;
+
+        pM->PromoteQueen = 1;
+        scanBlackMoveForChecks(Q, pM);
+
+        // rook underpromotion
+        pM++;
+        pM->PromoteRook = 1;
+        Q.B &= ~to;
+        scanBlackMoveForChecks(Q, pM);
+
+        // bishop underpromotion
+        pM++;
+        pM->PromoteBishop = 1;
+        Q.C &= ~to;
+        Q.B |= to;
+        scanBlackMoveForChecks(Q, pM);
+
+        // knight underpromotion
+        pM++;
+        pM->PromoteKnight = 1;
+        Q.A |= to;
+        Q.B &= ~to;
+        Q.C |= to;
+        scanBlackMoveForChecks(Q, pM);
+    }
+
+    pM++; // Add to list (advance pointer)
+    pM->Flags = 0;
 }
 
 inline Bitboard genWhiteAttacks(const ChessPosition& Z)
