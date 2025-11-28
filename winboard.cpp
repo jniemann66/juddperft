@@ -126,7 +126,7 @@ int winBoard(Engine* pE)
 	setbuf(stdout, NULL);
 	pE->currentPosition.setupStartPosition();
 	printf("\nSupported Commands:\n");
-	for (int i = 0; i < (sizeof(winboardInputCommands) / sizeof(WinboardInputCommandDefinition)); i++)
+	for (size_t i = 0; i < (sizeof(winboardInputCommands) / sizeof(WinboardInputCommandDefinition)); i++)
 	{
 		if (winboardInputCommands[i].implemented)
 			printf("   %s\n", winboardInputCommands[i].pzCommandString);
@@ -315,7 +315,7 @@ void parse_input_showhash(const char* s, Engine* pE)
 	for (unsigned int d = 0; d < 16; d++) {
 		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
-	printf("Total: %" PRIu64 "\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
+	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
 #endif
 
 }
