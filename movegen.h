@@ -399,7 +399,7 @@ const int pieceMaterialValue[16] =
 };
 
 // all the square indexes
-enum class SquareIndex : unsigned char {
+enum SquareIndex : unsigned char {
 	h1 = 0,
 	g1, f1, e1, d1, c1, b1, a1,
 	h2, g2, f2, e2, d2, c2, b2, a2,

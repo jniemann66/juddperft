@@ -169,8 +169,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 {
 	Bitboard To = 1ull << M.ToSquare;
 	const Bitboard O = ~((1ull << M.FromSquare) | To);
-	unsigned long nFromSquare = M.FromSquare;
-	unsigned long nToSquare = M.ToSquare;
+	const unsigned long nFromSquare = M.FromSquare;
+	const unsigned long nToSquare = M.ToSquare;
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
 	if (M.Checkmate && M.BlackToMove == BlackToMove) {
@@ -181,379 +181,292 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		}
 	}
 
-	// CLEAR EP SQUARES :
 	// clear any enpassant squares
 	const Bitboard EnPassant = A & B & ~C;
-	ChessPosition::A &= ~EnPassant;
-	ChessPosition::B &= ~EnPassant;
-	ChessPosition::C &= ~EnPassant;
-	ChessPosition::D &= ~EnPassant;
+	A &= ~EnPassant;
+	B &= ~EnPassant;
+	C &= ~EnPassant;
+	D &= ~EnPassant;
 
-#ifdef _USE_HASH
-	unsigned long nEPSquare;
-	nEPSquare = getSquareIndex(EnPassant);
-	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
-#endif // _USE_HASH
+	const unsigned long epSquareIdx = getSquareIndex(EnPassant);
+	hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][epSquareIdx]; // Remove EP from nEPSquare
 
-	// APPLY CASTLING MOVES:
-	// we use magic XOR-tricks to do the job ! :
+	switch (M.Piece) {
+	case BKING:
+		if (M.Castle) {
 
-	// The following is for O-O:
-	//
-	//    K..R          .RK.
-	// A: 1000 ^ 1010 = 0010
-	// B: 1000 ^ 1010 = 0010
-	// C: 1001 ^ 1111 = 0110
-	// For Black:
-	// D: 1001 ^ 1111 = 0110
-	// For White:
-	// D &= 0xfffffffffffffff0 (ie clear colour of affected squares from K to KR)
+			// APPLY CASTLING MOVES:
+			// we use magic XOR-tricks to do the job ! :
 
-	// The following is for O-O-O:
-	//
-	//    R... K...                      ..KR ....
-	// A: 0000 1000 ^ 0010 1000 (0x28) = 0010 0000
-	// B: 0000 1000 ^ 0010 1000 (0x28) = 0010 0000
-	// C: 1000 1000 ^ 1011 1000 (0xB8) = 0011 0000
-	// For Black:
-	// D: 1000 1000 ^ 1011 1000 (0xB8) = 0011 0000
-	// For White:
-	// D &= 0xffffffffffffff07 (ie clear colour of affected squares from QR to K)
+			// The following is for O-O:
+			//
+			//    K..R          .RK.
+			// A: 1000 ^ 1010 = 0010
+			// B: 1000 ^ 1010 = 0010
+			// C: 1001 ^ 1111 = 0110
+			// For Black:
+			// D: 1001 ^ 1111 = 0110
+			// For White:
+			// D &= 0xfffffffffffffff0 (ie clear colour of affected squares from K to KR)
 
-	if (M.Piece == BKING)
-	{
-		if (M.Castle)
-		{
-			ChessPosition::A ^= 0x0a00000000000000;
-			ChessPosition::B ^= 0x0a00000000000000;
-			ChessPosition::C ^= 0x0f00000000000000;
-			ChessPosition::D ^= 0x0f00000000000000;
+			// The following is for O-O-O:
+			//
+			//    R... K...                      ..KR ....
+			// A: 0000 1000 ^ 0010 1000 (0x28) = 0010 0000
+			// B: 0000 1000 ^ 0010 1000 (0x28) = 0010 0000
+			// C: 1000 1000 ^ 1011 1000 (0xB8) = 0011 0000
+			// For Black:
+			// D: 1000 1000 ^ 1011 1000 (0xB8) = 0011 0000
+			// For White:
+			// D &= 0xffffffffffffff07 (ie clear colour of affected squares from QR to K)
 
-#ifdef _USE_HASH
+			A ^= 0x0a00000000000000;
+			B ^= 0x0a00000000000000;
+			C ^= 0x0f00000000000000;
+			D ^= 0x0f00000000000000;
+
 			hk ^= zobristKeys.zkDoBlackCastle;
-			if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
-#endif
+			if (BlackCanCastleLong) {
+				hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
+			}
 
-			ChessPosition::BlackDidCastle = 1;
-			ChessPosition::BlackCanCastle = 0;
-			ChessPosition::BlackCanCastleLong = 0;
+			BlackDidCastle = 1;
+			BlackCanCastle = 0;
+			BlackCanCastleLong = 0;
 			return *this;
 		}
-		else if (M.CastleLong)
-		{
-			ChessPosition::A ^= 0x2800000000000000;
-			ChessPosition::B ^= 0x2800000000000000;
-			ChessPosition::C ^= 0xb800000000000000;
-			ChessPosition::D ^= 0xb800000000000000;
 
-#ifdef _USE_HASH
+		if (M.CastleLong) {
+			A ^= 0x2800000000000000;
+			B ^= 0x2800000000000000;
+			C ^= 0xb800000000000000;
+			D ^= 0xb800000000000000;
+
 			hk ^= zobristKeys.zkDoBlackCastleLong;
-			if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-#endif
+			if (BlackCanCastle) {
+				hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+			}
 
-			ChessPosition::BlackDidCastleLong = 1;
-			ChessPosition::BlackCanCastle = 0;
-			ChessPosition::BlackCanCastleLong = 0;
+			BlackDidCastleLong = 1;
+			BlackCanCastle = 0;
+			BlackCanCastleLong = 0;
 			return *this;
 		}
-		else
-		{
-			// ordinary king move
-			if (ChessPosition::BlackCanCastle || ChessPosition::BlackCanCastleLong)
-			{
-				// Black could have castled, but chose to move the King in a non-castling move
 
-#ifdef _USE_HASH
-				if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-				if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
-#endif
-
-				ChessPosition::BlackForfeitedCastle = 1;
-				ChessPosition::BlackForfeitedCastleLong = 1;
-				ChessPosition::BlackCanCastle = 0;
-				ChessPosition::BlackCanCastleLong = 0;
-			}
+		// ordinary king move; Black could have castled,
+		// but chose to move the King in a non-castling move
+		if (BlackCanCastle) {
+			hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
 		}
-	}
 
-	else if (M.Piece == WKING)
-	{
-		// White
-		if (M.Castle)
-		{
-			ChessPosition::A ^= 0x000000000000000a;
-			ChessPosition::B ^= 0x000000000000000a;
-			ChessPosition::C ^= 0x000000000000000f;
-			ChessPosition::D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+		if (BlackCanCastleLong) {
+			hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
+		}
 
-#ifdef _USE_HASH
+		BlackForfeitedCastle = 1;
+		BlackForfeitedCastleLong = 1;
+		BlackCanCastle = 0;
+		BlackCanCastleLong = 0;
+		break;
+
+	case WKING:
+		if (M.Castle) {
+			A ^= 0x000000000000000a;
+			B ^= 0x000000000000000a;
+			C ^= 0x000000000000000f;
+			D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+
 			hk ^= zobristKeys.zkDoWhiteCastle;
-			if (ChessPosition::WhiteCanCastleLong) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
-#endif
+			if (WhiteCanCastleLong) {
+				hk ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
+			}
 
-			ChessPosition::WhiteDidCastle = 1;
-			ChessPosition::WhiteCanCastle = 0;
-			ChessPosition::WhiteCanCastleLong = 0;
+			WhiteDidCastle = 1;
+			WhiteCanCastle = 0;
+			WhiteCanCastleLong = 0;
 			return *this;
 		}
 
-		if (M.CastleLong)
-		{
+		if (M.CastleLong) {
+			A ^= 0x0000000000000028;
+			B ^= 0x0000000000000028;
+			C ^= 0x00000000000000b8;
+			D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
-			ChessPosition::A ^= 0x0000000000000028;
-			ChessPosition::B ^= 0x0000000000000028;
-			ChessPosition::C ^= 0x00000000000000b8;
-			ChessPosition::D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
-
-#ifdef _USE_HASH
 			hk ^= zobristKeys.zkDoWhiteCastleLong;
-			if (ChessPosition::WhiteCanCastle) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
+			if (WhiteCanCastle) {
+				hk ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
+			}
 
-#endif
-
-			ChessPosition::WhiteDidCastleLong = 1;
-			ChessPosition::WhiteCanCastle = 0;
-			ChessPosition::WhiteCanCastleLong = 0;
+			WhiteDidCastleLong = 1;
+			WhiteCanCastle = 0;
+			WhiteCanCastleLong = 0;
 			return *this;
 		}
 
-		else
-		{
-			// ordinary king move
-			if (ChessPosition::WhiteCanCastle) {
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
-#endif
-				ChessPosition::WhiteForfeitedCastle = 1;
-				ChessPosition::WhiteCanCastle = 0;
-
-			}
-			if (ChessPosition::WhiteCanCastleLong) {
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
-#endif
-
-				ChessPosition::WhiteForfeitedCastleLong = 1;
-				ChessPosition::WhiteCanCastleLong = 0;
-			}
+		// ordinary king move; White could have castled,
+		// but chose to move the King in a non-castling move
+		if (WhiteCanCastle) {
+			hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
 		}
-	}
 
-	// LOOK FOR FORFEITED CASTLING RIGHTS DUE to ROOK MOVES:
-	else if (M.Piece == BROOK)
-	{
-		if (nFromSquare == 56)
-		{
+		if (WhiteCanCastleLong) {
+			hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+		}
+
+		WhiteForfeitedCastle = 1;
+		WhiteCanCastle = 0;
+		WhiteForfeitedCastleLong = 1;
+		WhiteCanCastleLong = 0;
+		break;
+
+	case BROOK:
+		if (nFromSquare == SquareIndex::h8) {
 			// Black moved K-side Rook and forfeits right to castle K-side
-			if (ChessPosition::BlackCanCastle){
-				ChessPosition::BlackForfeitedCastle = 1;
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
-#endif
-
-				ChessPosition::BlackCanCastle = 0;
+			if (BlackCanCastle){
+				BlackForfeitedCastle = 1;
+				hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
+				BlackCanCastle = 0;
 			}
-		} else if (nFromSquare == 63) {
+		} else if (nFromSquare == SquareIndex::a8) {
 			// Black moved the QS Rook and forfeits right to castle Q-side
-			if (ChessPosition::BlackCanCastleLong) {
-				ChessPosition::BlackForfeitedCastleLong = 1;
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
-#endif
-
-				ChessPosition::BlackCanCastleLong = 0;
+			if (BlackCanCastleLong) {
+				BlackForfeitedCastleLong = 1;
+				hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
+				BlackCanCastleLong = 0;
 			}
 		}
-	}
+		break;
 
-	else if (M.Piece == WROOK)
-	{
-		if (nFromSquare == 0)
-		{
+	case WROOK:
+		if (nFromSquare == SquareIndex::h1) {
 			// White moved K-side Rook and forfeits right to castle K-side
-			if (ChessPosition::WhiteCanCastle) {
-				ChessPosition::WhiteForfeitedCastle = 1;
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
-#endif
-
-				ChessPosition::WhiteCanCastle = 0;
+			if (WhiteCanCastle) {
+				WhiteForfeitedCastle = 1;
+				hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
+				WhiteCanCastle = 0;
 			}
-		} else if (nFromSquare == 7) {
+		} else if (nFromSquare == SquareIndex::a1) {
 			// White moved the QSide Rook and forfeits right to castle Q-side
-			if (ChessPosition::WhiteCanCastleLong) {
-				ChessPosition::WhiteForfeitedCastleLong = 1;
-
-#ifdef _USE_HASH
-				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
-#endif
-
-				ChessPosition::WhiteCanCastleLong = 0;
+			if (WhiteCanCastleLong) {
+				WhiteForfeitedCastleLong = 1;
+				hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+				WhiteCanCastleLong = 0;
 			}
 		}
-	}
+		break;
+
+	default:
+		break;
+	} // ends switch (M.Piece)
 
 	// Ordinary Captures
-	if (M.Capture)
-	{
-		int capturedpiece;
-		// find out which piece has been captured:
-		capturedpiece =
-				((ChessPosition::D & To) >> nToSquare) << 3
-														  | ((ChessPosition::C & To) >> nToSquare) << 2
-														  | ((ChessPosition::B & To) >> nToSquare) << 1
-														  | ((ChessPosition::A & To) >> nToSquare);
+	if (M.Capture) {
+		// find out what was captured
+		const unsigned int capturedpiece =
+				((D & To) >> nToSquare) << 3
+														  | ((C & To) >> nToSquare) << 2
+														  | ((B & To) >> nToSquare) << 1
+														  | ((A & To) >> nToSquare);
 
-#ifdef _USE_HASH
 		// Update Hash
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
-#endif
+		hk ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
 	}
 
 	// Render "ordinary" moves:
-	ChessPosition::A &= O;
-	ChessPosition::B &= O;
-	ChessPosition::C &= O;
-	ChessPosition::D &= O;
+	A &= O;
+	B &= O;
+	C &= O;
+	D &= O;
 
 	// Populate new square (Branchless method):
-	ChessPosition::A |= static_cast<int64_t>(M.Piece & 1) << M.ToSquare;
-	ChessPosition::B |= static_cast<int64_t>((M.Piece & 2) >> 1) << M.ToSquare;
-	ChessPosition::C |= static_cast<int64_t>((M.Piece & 4) >> 2) << M.ToSquare;
-	ChessPosition::D |= static_cast<int64_t>((M.Piece & 8) >> 3) << M.ToSquare;
+	A |= static_cast<int64_t>(M.Piece & 1) << M.ToSquare;
+	B |= static_cast<int64_t>((M.Piece & 2) >> 1) << M.ToSquare;
+	C |= static_cast<int64_t>((M.Piece & 4) >> 2) << M.ToSquare;
+	D |= static_cast<int64_t>((M.Piece & 8) >> 3) << M.ToSquare;
 
-#ifdef _USE_HASH
 	// Update Hash
-	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
-	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
-#endif
+	hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
+	hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
 
 	// Promotions - Change the piece:
 
-	if (M.PromoteBishop)
-	{
-		ChessPosition::A &= ~To;
-		ChessPosition::B |= To;
-
-#ifdef _USE_HASH
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
-#endif
-
+	if (M.PromoteBishop) {
+		A &= ~To;
+		B |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
 		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
-
 		return *this;
 	}
 
-	else if (M.PromoteKnight)
-	{
-		ChessPosition::C |= To;
-
-#ifdef _USE_HASH
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
-#endif
+	if (M.PromoteKnight) {
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
 		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
-
 		return *this;
 	}
 
-	else if (M.PromoteRook)
-	{
-		ChessPosition::A &= ~To;
-		ChessPosition::C |= To;
-
-#ifdef _USE_HASH
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
-#endif
-
+	if (M.PromoteRook) {
+		A &= ~To;
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
 		M.Piece = M.BlackToMove ? BROOK : WROOK;
-
 		return *this;
 	}
 
-	else if (M.PromoteQueen)
-	{
-		ChessPosition::A &= ~To;
-		ChessPosition::B |= To;
-		ChessPosition::C |= To;
-
-#ifdef _USE_HASH
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
-#endif
-
+	if (M.PromoteQueen) {
+		A &= ~To;
+		B |= To;
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
 		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
 		return *this;
 	}
 
-	// For Double-Pawn Moves, set EP square:
-	else if (M.DoublePawnMove)
-	{
+	// For double-pawn moves, set EP square:
+	if (M.DoublePawnMove) {
 		// Set EnPassant Square
-		if (M.BlackToMove)
-		{
+		if (M.BlackToMove) {
 			To <<= 8;
-			ChessPosition::A |= To;
-			ChessPosition::B |= To;
-			ChessPosition::C &= ~To;
-			ChessPosition::D |= To;
-
-#ifdef _USE_HASH
-			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
-#endif
-		}
-		else
-		{
+			A |= To;
+			B |= To;
+			C &= ~To;
+			D |= To;
+			hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
+		} else {
 			To >>= 8;
-			ChessPosition::A |= To;
-			ChessPosition::B |= To;
-			ChessPosition::C &= ~To;
-			ChessPosition::D &= ~To;
-
-#ifdef _USE_HASH
-			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
-#endif
+			A |= To;
+			B |= To;
+			C &= ~To;
+			D &= ~To;
+			hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
 		}
-
 		return *this;
 	}
 
 	// En-Passant Captures
-	else if (M.EnPassantCapture)
-	{
+	if (M.EnPassantCapture) {
 		// remove the actual pawn (it is different to the capture square)
-		if (M.BlackToMove)
-		{
+		if (M.BlackToMove) {
 			To <<= 8;
-			ChessPosition::A &= ~To; // clear the pawn's square
-			ChessPosition::B &= ~To;
-			ChessPosition::C &= ~To;
-			ChessPosition::D &= ~To;
-
-#ifdef _USE_HASH
-			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
-#endif
-
+			A &= ~To; // clear the pawn's square
+			B &= ~To;
+			C &= ~To;
+			D &= ~To;
+			hk ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
 		} else {
 			To >>= 8;
-			ChessPosition::A &= ~To;
-			ChessPosition::B &= ~To;
-			ChessPosition::C &= ~To;
-			ChessPosition::D &= ~To;
-
-#ifdef _USE_HASH
-			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
-#endif
+			A &= ~To;
+			B &= ~To;
+			C &= ~To;
+			D &= ~To;
+			hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
 		}
 	}
-
 
 	return *this;
 }
@@ -576,11 +489,7 @@ void ChessPosition::getLegalMoves(ChessMove *movelist) const
 void ChessPosition::switchSides()
 {
 	ChessPosition::BlackToMove ^= 1;
-
-#ifdef _USE_HASH
 	ChessPosition::hk ^= zobristKeys.zkBlackToMove;
-#endif
-
 	return;
 }
 
@@ -588,12 +497,8 @@ void ChessPosition::clear(void)
 {
 	A = B = C = D = 0;
 	Flags = 0;
-
-#ifdef _USE_HASH
 	hk = 0;
-#endif
 }
-
 
 ////////////////////////////////////////////
 // Move Generation Functions
