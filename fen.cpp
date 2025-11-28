@@ -231,7 +231,7 @@ namespace juddperft {
 		int EPSquare = 0;
 		char s[1024];
 
-		for (unsigned int square = 63; square >= 0; --square)
+		for (int square = 63; square >= 0; --square)
 		{
 			piece = pP->getPieceAtSquare(square);
 			if ((piece & 0x07) == 0) // Blank
