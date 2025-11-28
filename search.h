@@ -31,8 +31,6 @@ SOFTWARE.
 
 namespace juddperft {
 
-using nodecount_t = uint64_t;
-
 #define PV_SIZE 64
 #define MAX_THREADS 64 // Hard limit for number of threads to use
 
@@ -40,14 +38,14 @@ using nodecount_t = uint64_t;
 
 struct PerftInfo
 {
-    nodecount_t nMoves{0};
-    nodecount_t nCapture{0};
-    nodecount_t nEPCapture{0};
-    nodecount_t nCastle{0};
-    nodecount_t nCastleLong{0};
-    nodecount_t nPromotion{0};
-    nodecount_t nCheck{0};
-    nodecount_t nCheckmate{0};
+	nodecount_t nMoves{0};
+	nodecount_t nCapture{0};
+	nodecount_t nEPCapture{0};
+	nodecount_t nCastle{0};
+	nodecount_t nCastleLong{0};
+	nodecount_t nPromotion{0};
+	nodecount_t nCheck{0};
+	nodecount_t nCheckmate{0};
 };
 
 // perft() : single-threaded; doesn't use hashtable, but does collect stats (EP, capture, checks ... etc)

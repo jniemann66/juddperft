@@ -97,6 +97,8 @@ SOFTWARE.
 
 namespace juddperft {
 
+using nodecount_t = uint64_t;
+
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
 extern uint64_t movegen_call_count;
 extern uint64_t movegen_total_cycles;
@@ -234,7 +236,7 @@ public:
 	}
 
 #ifdef _USE_HASH
-	HashKey HK;
+	HashKey hk;
 #endif
 
 public:

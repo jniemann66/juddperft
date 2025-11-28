@@ -140,14 +140,14 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 		return false;
 	}
 	else {
-        const uint64_t bytes = m_nEntries * sizeof(T);
-        std::cout << "Allocated " << bytes << " bytes ("
-                  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
-                  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
-        m_nCollisions = 0;
-        m_nWrites = 0;
-        HashTable<T>::clear();
-        return true;
+		const uint64_t bytes = m_nEntries * sizeof(T);
+		std::cout << "Allocated " << bytes << " bytes ("
+				  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
+				  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
+		m_nCollisions = 0;
+		m_nWrites = 0;
+		HashTable<T>::clear();
+		return true;
 	}
 }
 
@@ -200,23 +200,24 @@ inline double HashTable<T>::getLoadFactor() const
 template<class T>
 inline void HashTable<T>::clear()
 {
-    if (m_pTable != nullptr)
-        std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
+	if (m_pTable != nullptr) {
+		std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
+	}
 }
 
 struct PerftTableEntry
 {
 	HashKey Hash;
 
-    union {
-        struct {
-            // warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
-            // which only allows up to perft 12 from start position
-            uint64_t depth : 4;
-            uint64_t count : 60;
+	union {
+		struct {
+			// warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
+			// which only allows up to perft 12 from start position
+			uint64_t depth : 4;
+			uint64_t count : 60;
 		};
-        uint64_t data{0};
-    };
+		uint64_t data{0};
+	};
 };
 
 #ifdef _USE_HASH

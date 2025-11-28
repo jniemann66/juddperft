@@ -62,7 +62,7 @@ ChessPosition::ChessPosition()
 	ChessPosition::Flags = 0;
 
 #ifdef _USE_HASH
-	ChessPosition::HK = 0;
+	ChessPosition::hk = 0;
 #endif
 
 }
@@ -100,22 +100,22 @@ ChessPosition& ChessPosition::setupStartPosition()
 #ifdef _USE_HASH
 ChessPosition & ChessPosition::calculateHash()
 {
-	ChessPosition::HK = 0;
+	ChessPosition::hk = 0;
 
 	// Scan the squares:
 	for (unsigned int q = 0; q < 64; q++)
 	{
 		piece_t piece = getPieceAtSquare(q);
 		if (piece & 0x7) {
-			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[piece][q];
+			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[piece][q];
 		}
 	}
 
-	if (ChessPosition::BlackToMove)	ChessPosition::HK ^= zobristKeys.zkBlackToMove;
-	if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;
-	if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;
-	if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;
-	if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;
+	if (ChessPosition::BlackToMove)	ChessPosition::hk ^= zobristKeys.zkBlackToMove;
+	if (ChessPosition::WhiteCanCastle) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;
+	if (ChessPosition::WhiteCanCastleLong) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;
+	if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;
+	if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;
 
 	return *this;
 }
@@ -192,7 +192,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 #ifdef _USE_HASH
 	unsigned long nEPSquare;
 	nEPSquare = getSquareIndex(EnPassant);
-	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
+	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nEPSquare]; // Remove EP from nEPSquare
 #endif // _USE_HASH
 
 	// APPLY CASTLING MOVES:
@@ -230,8 +230,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D ^= 0x0f00000000000000;
 
 #ifdef _USE_HASH
-			HK ^= zobristKeys.zkDoBlackCastle;
-			if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
+			hk ^= zobristKeys.zkDoBlackCastle;
+			if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 
 			ChessPosition::BlackDidCastle = 1;
@@ -247,8 +247,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D ^= 0xb800000000000000;
 
 #ifdef _USE_HASH
-			HK ^= zobristKeys.zkDoBlackCastleLong;
-			if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+			hk ^= zobristKeys.zkDoBlackCastleLong;
+			if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
 #endif
 
 			ChessPosition::BlackDidCastleLong = 1;
@@ -264,8 +264,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				// Black could have castled, but chose to move the King in a non-castling move
 
 #ifdef _USE_HASH
-				if (ChessPosition::BlackCanCastle) ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
-				if (ChessPosition::BlackCanCastleLong) ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
+				if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
+				if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// conditionally flip black castling long
 #endif
 
 				ChessPosition::BlackForfeitedCastle = 1;
@@ -287,8 +287,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
 
 #ifdef _USE_HASH
-			HK ^= zobristKeys.zkDoWhiteCastle;
-			if (ChessPosition::WhiteCanCastleLong) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
+			hk ^= zobristKeys.zkDoWhiteCastle;
+			if (ChessPosition::WhiteCanCastleLong) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
 #endif
 
 			ChessPosition::WhiteDidCastle = 1;
@@ -306,8 +306,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
 #ifdef _USE_HASH
-			HK ^= zobristKeys.zkDoWhiteCastleLong;
-			if (ChessPosition::WhiteCanCastle) ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
+			hk ^= zobristKeys.zkDoWhiteCastleLong;
+			if (ChessPosition::WhiteCanCastle) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
 
 #endif
 
@@ -323,7 +323,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			if (ChessPosition::WhiteCanCastle) {
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
+				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
 #endif
 				ChessPosition::WhiteForfeitedCastle = 1;
 				ChessPosition::WhiteCanCastle = 0;
@@ -332,7 +332,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			if (ChessPosition::WhiteCanCastleLong) {
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
 #endif
 
 				ChessPosition::WhiteForfeitedCastleLong = 1;
@@ -351,7 +351,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				ChessPosition::BlackForfeitedCastle = 1;
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkBlackCanCastle;	// flip black castling
+				ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
 #endif
 
 				ChessPosition::BlackCanCastle = 0;
@@ -362,7 +362,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				ChessPosition::BlackForfeitedCastleLong = 1;
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
+				ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
 #endif
 
 				ChessPosition::BlackCanCastleLong = 0;
@@ -379,7 +379,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				ChessPosition::WhiteForfeitedCastle = 1;
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
+				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
 #endif
 
 				ChessPosition::WhiteCanCastle = 0;
@@ -390,7 +390,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 				ChessPosition::WhiteForfeitedCastleLong = 1;
 
 #ifdef _USE_HASH
-				ChessPosition::HK ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
+				ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
 #endif
 
 				ChessPosition::WhiteCanCastleLong = 0;
@@ -410,7 +410,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 
 #ifdef _USE_HASH
 		// Update Hash
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
 #endif
 	}
 
@@ -426,17 +426,10 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	ChessPosition::C |= static_cast<int64_t>((M.Piece & 4) >> 2) << M.ToSquare;
 	ChessPosition::D |= static_cast<int64_t>((M.Piece & 8) >> 3) << M.ToSquare;
 
-
-	//// Populate new square (Branchless method, BitBoard input):
-	//ChessPosition::A |= To & -( static_cast<int64_t>(M.Piece) & 1);
-	//ChessPosition::B |= To & -((static_cast<int64_t>(M.Piece) & 2) >> 1);
-	//ChessPosition::C |= To & -((static_cast<int64_t>(M.Piece) & 4) >> 2);
-	//ChessPosition::D |= To & -((static_cast<int64_t>(M.Piece) & 8) >> 3);
-
 #ifdef _USE_HASH
 	// Update Hash
-	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
-	ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
+	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
+	ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
 #endif
 
 	// Promotions - Change the piece:
@@ -447,8 +440,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		ChessPosition::B |= To;
 
 #ifdef _USE_HASH
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
 #endif
 
 		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
@@ -461,8 +454,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		ChessPosition::C |= To;
 
 #ifdef _USE_HASH
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
 #endif
 		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
 
@@ -475,8 +468,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		ChessPosition::C |= To;
 
 #ifdef _USE_HASH
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
 #endif
 
 		M.Piece = M.BlackToMove ? BROOK : WROOK;
@@ -491,8 +484,8 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		ChessPosition::C |= To;
 
 #ifdef _USE_HASH
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
 #endif
 
 		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
@@ -512,7 +505,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D |= To;
 
 #ifdef _USE_HASH
-			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
+			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
 #endif
 		}
 		else
@@ -524,7 +517,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D &= ~To;
 
 #ifdef _USE_HASH
-			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
+			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
 #endif
 		}
 
@@ -544,7 +537,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D &= ~To;
 
 #ifdef _USE_HASH
-			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
+			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
 #endif
 
 		} else {
@@ -555,7 +548,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			ChessPosition::D &= ~To;
 
 #ifdef _USE_HASH
-			ChessPosition::HK ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
+			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
 #endif
 		}
 	}
@@ -584,7 +577,7 @@ void ChessPosition::switchSides()
 	ChessPosition::BlackToMove ^= 1;
 
 #ifdef _USE_HASH
-	ChessPosition::HK ^= zobristKeys.zkBlackToMove;
+	ChessPosition::hk ^= zobristKeys.zkBlackToMove;
 #endif
 
 	return;
@@ -596,7 +589,7 @@ void ChessPosition::clear(void)
 	Flags = 0;
 
 #ifdef _USE_HASH
-	HK = 0;
+	hk = 0;
 #endif
 }
 
@@ -1722,5 +1715,16 @@ void dumpMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebra
 		++pM;
 	} while (++i < MOVELIST_SIZE);
 }
+
+// misc
+
+/*
+  // NQR !
+	//// Populate new square (Branchless method, BitBoard input):
+	//ChessPosition::A |= To & -( static_cast<int64_t>(M.Piece) & 1);
+	//ChessPosition::B |= To & -((static_cast<int64_t>(M.Piece) & 2) >> 1);
+	//ChessPosition::C |= To & -((static_cast<int64_t>(M.Piece) & 4) >> 2);
+	//ChessPosition::D |= To & -((static_cast<int64_t>(M.Piece) & 8) >> 3);
+*/
 
 } // namespace juddperft

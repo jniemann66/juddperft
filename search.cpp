@@ -138,7 +138,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 #ifdef _USE_HASH
 	// Consult the HashTable:
-	HashKey hk = Q.HK^zobristKeys.zkPerftDepth[depth];
+	HashKey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
 	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk);		// get address of atomic record
 	PerftTableEntry retrievedRecord = pAtomicRecord->load();						// Load a copy of the record
 	if (retrievedRecord.Hash == hk) {
