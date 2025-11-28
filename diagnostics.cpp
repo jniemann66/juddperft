@@ -30,6 +30,7 @@ SOFTWARE.
 #include "fen.h"
 #include "raiitimer.h"
 
+#include <cinttypes>
 #include <stdio.h>
 
 ////////////////////////////////////////////////////////
@@ -51,7 +52,7 @@ void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_
 
 	nodecount_t n = 0;
 	perftFastMT(P, depth, n);
-	printf("Perft %d: %llu (Correct Answer= %llu)\n", depth, n, correctAnswer);
+	printf("Perft %d: %" PRIu64 " (Correct Answer= %" PRIu64 ")\n", depth, n, correctAnswer);
 
 	if (n != correctAnswer)
 		printf("-== FAIL !!! ==-\n");

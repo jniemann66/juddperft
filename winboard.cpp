@@ -36,11 +36,11 @@ SOFTWARE.
 #include "raiitimer.h"
 #include "search.h"
 
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cinttypes>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <algorithm>
 #include <atomic>
@@ -143,34 +143,30 @@ int winBoard(Engine* pE)
 
 bool waitForInput(Engine* pE)
 {
-	int nRecognizedCommands = sizeof(winboardInputCommands)/sizeof(winboardInputCommands[0]);
+	int nRecognizedCommands = sizeof(winboardInputCommands) / sizeof(winboardInputCommands[0]);
 
 	char* input = NULL;
 	std::string inputStr;
 	std::getline(std::cin, inputStr);
-	if (inputStr.empty())
+	if (inputStr.empty()) {
 		return true;
+	}
 
 	input = strdup(inputStr.c_str()); // damn ugly. to-do: stop using strtok altogether
 
-	if (input != NULL)
-	{
+	if (input != NULL) {
 		char* command;
 		char* args;
 
 		// log input
 		logInput(logfile, input);
 		command = strtok(input, " \n");
-		if (command != NULL)
-		{
+		if (command != NULL) {
 
 			// search for command
-			for (int i = 0; i < nRecognizedCommands; i++)
-			{
-				if (_stricmp(command, winboardInputCommands[i].pzCommandString) == 0)
-				{
-					if (_stricmp(command, "quit") == 0)
-					{
+			for (int i = 0; i < nRecognizedCommands; i++) {
+				if (_stricmp(command, winboardInputCommands[i].pzCommandString) == 0) {
+					if (_stricmp(command, "quit") == 0) {
 						pE->stopSignal = true;
 						return false;
 					}
@@ -187,6 +183,9 @@ bool waitForInput(Engine* pE)
 	}
 	return true;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter" // stfu
 
 /////////////////////////////////////
 // isImplemented() - returns true if
@@ -261,8 +260,9 @@ void parse_input_draw(const char* s, Engine* pE){}
 void parse_input_result(const char* s, Engine* pE){}
 void parse_input_setboard(const char* s, Engine* pE)
 {
-	if (s == NULL)
+	if (s == nullptr) {
 		return;
+	}
 
 	if (!readFen(&pE->currentPosition, s))
 		send_output_tellusererror("Illegal Position", pE);
@@ -298,10 +298,11 @@ void parse_input_showposition(const char* s, Engine* pE)
 }
 void parse_input_showhash(const char* s, Engine* pE)
 {
+
 #ifdef _USE_HASH
-	printf("Perft Table Size: %lld bytes\n", perftTable.getSize());
+	printf("Perft Table Size: %" PRIu64 " bytes\n", perftTable.getSize());
 	uint64_t numEntries = perftTable.getNumEntries();
-	std::vector<int64_t> depthTally(16, 0);
+	std::vector<uint64_t> depthTally(16, 0);
 	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
 	std::atomic<PerftTableEntry> *pAtomicRecord;
 
@@ -312,10 +313,11 @@ void parse_input_showhash(const char* s, Engine* pE)
 	}
 
 	for (unsigned int d = 0; d < 16; d++) {
-		printf("Depth %d: %lld (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
+		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
-	printf("Total: %lld\n", std::accumulate(depthTally.begin(), depthTally.end(), 0));
+	printf("Total: %" PRIu64 "\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
 #endif
+
 }
 
 void parse_input_perft(const char* s, Engine* pE)
@@ -327,28 +329,28 @@ void parse_input_perft(const char* s, Engine* pE)
 	{
 		{
 			RaiiTimer timer;
-			PerftInfo T;
-			perftMT(pE->currentPosition, q, 1, &T);
-			printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+			PerftInfo t;
+			perftMT(pE->currentPosition, q, 1, &t);
+			printf("Perft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
 				   q,
-				   T.nMoves,
-				   T.nCapture + T.nEPCapture,
-				   T.nCastle,
-				   T.nCastleLong,
-				   T.nEPCapture,
-				   T.nPromotion,
-				   T.nCheck,
-				   T.nCheckmate
+				   t.nMoves,
+				   t.nCapture + t.nEPCapture,
+				   t.nCastle,
+				   t.nCastleLong,
+				   t.nEPCapture,
+				   t.nPromotion,
+				   t.nCheck,
+				   t.nCheckmate
 				   );
 			printf("\n");
-			timer.setNodes(T.nMoves);
+			timer.setNodes(t.nMoves);
 		}
 	}
 }
 
 void parse_input_perftfast(const char* s, Engine* pE) {
 
-	if (s == NULL)
+	if (s == nullptr)
 		return;
 
 	for (int q = 1; q <= atoi(s); q++)
@@ -357,7 +359,7 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 			RaiiTimer timer;
 			nodecount_t nNumPositions = 0;
 			perftFastMT(pE->currentPosition, q, nNumPositions);
-			printf("\nPerft %d: %lld \n",
+			printf("\nPerft %d: %" PRIu64 " \n",
 				q, nNumPositions
 				);
 			printf("\n");
@@ -368,8 +370,9 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 
 void parse_input_divide(const char* s, Engine* pE)
 {
-	if (s == NULL)
+	if (s == nullptr) {
 		return;
+	}
 
 	int depth;
 	depth = std::max(2, atoi(s));
@@ -377,7 +380,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessMove MoveList[MOVELIST_SIZE];
 	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
-	PerftInfo GT;
+	PerftInfo gt;
 	ChessPosition Q;
 	RaiiTimer timer;
 
@@ -387,51 +390,52 @@ void parse_input_divide(const char* s, Engine* pE)
 		Q.performMove(*pM);
 		Q.switchSides();
 		dumpMove(*pM, LongAlgebraicNoNewline);
-		PerftInfo T;
-		perftMT(Q, depth-1, 1, &T);
-		printf("Perft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+		PerftInfo t;
+		perftMT(Q, depth-1, 1, &t);
+		printf("Perft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
 			depth-1,
-			T.nMoves,
-			T.nCapture + T.nEPCapture,
-			T.nCastle,
-			T.nCastleLong,
-			T.nEPCapture,
-			T.nPromotion,
-			T.nCheck,
-			T.nCheckmate
+			t.nMoves,
+			t.nCapture + t.nEPCapture,
+			t.nCastle,
+			t.nCastleLong,
+			t.nEPCapture,
+			t.nPromotion,
+			t.nCheck,
+			t.nCheckmate
 			);
 
 		printf("\n");
 
-		GT.nMoves += T.nMoves;
-		GT.nCapture += T.nCapture;
-		GT.nCastle += T.nCastle;
-		GT.nCastleLong += T.nCastleLong;
-		GT.nEPCapture += T.nEPCapture;
-		GT.nPromotion += T.nPromotion;
-		GT.nCheck += T.nCheck;
-		GT.nCheckmate += T.nCheckmate;
+		gt.nMoves += t.nMoves;
+		gt.nCapture += t.nCapture;
+		gt.nCastle += t.nCastle;
+		gt.nCastleLong += t.nCastleLong;
+		gt.nEPCapture += t.nEPCapture;
+		gt.nPromotion += t.nPromotion;
+		gt.nCheck += t.nCheck;
+		gt.nCheckmate += t.nCheckmate;
 
 		pM++;
 	}
 
-	printf("Summary:\nPerft %d: %lld \nTotal Captures= %lld Castles= %lld CastleLongs= %lld EPCaptures= %lld Promotions= %lld Checks= %lld Checkmates= %lld\n",
+	printf("Summary:\nPerft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
 		depth,
-		GT.nMoves,
-		GT.nCapture + GT.nEPCapture,
-		GT.nCastle,
-		GT.nCastleLong,
-		GT.nEPCapture,
-		GT.nPromotion,
-		GT.nCheck,
-		GT.nCheckmate
+		gt.nMoves,
+		gt.nCapture + gt.nEPCapture,
+		gt.nCastle,
+		gt.nCastleLong,
+		gt.nEPCapture,
+		gt.nPromotion,
+		gt.nCheck,
+		gt.nCheckmate
 		);
 }
 
 void parse_input_dividefast(const char* s, Engine* pE)
 {
-	if (s == NULL)
+	if (s == nullptr) {
 		return;
+	}
 
 	int depth;
 	depth = std::max(2, atoi(s));
@@ -440,7 +444,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
-	int64_t grandtotal = 0;
+	nodecount_t grandtotal = 0;
 	RaiiTimer timer;
 
 	while (pM->EndOfMoveList == 0)
@@ -451,14 +455,14 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		dumpMove(*pM, LongAlgebraicNoNewline);
 		nodecount_t nNumPositions = 0;
 		perftFastMT(Q, depth - 1, nNumPositions);
-		printf(" %lld \n",
+		printf(" %" PRIu64 " \n",
 			nNumPositions
 			);
 		grandtotal += nNumPositions;
 		pM++;
 	}
 	timer.setNodes(grandtotal);
-	printf("\nPerft %d: %lld\n", depth, grandtotal);
+	printf("\nPerft %d: %" PRIu64 "\n", depth, grandtotal);
 }
 
 void parse_input_writehash(const char* s, Engine* pE){}
@@ -471,15 +475,17 @@ void parse_input_lookuphash(const char* s, Engine* pE)
 
 void parse_input_memory(const char* s, Engine* pE) {
 	uint64_t BytesRequested = _atoi64(s);
-	if (s == NULL)
+	if (s == nullptr) {
 		return;
+	}
 
 	setMemory(BytesRequested);
 }
 void parse_input_cores(const char* s, Engine* pE) {
 
-	if (s == NULL)
+	if (s == nullptr) {
 		return;
+	}
 
 	pE->nNumCores = std::max(1, std::min(atoi(s), MAX_THREADS));
 }
@@ -487,6 +493,7 @@ void parse_input_egtpath(const char* s, Engine* pE) {}
 void parse_input_option(const char* s, Engine* pE) {}
 
 void parse_input_testExternal(const char* s, Engine* pE) {
+
 #ifdef INCLUDE_DIAGNOSTICS
 	bool badArgs = true; // anticipate the worst :-)
 	if (s != nullptr && strlen(s) != 0) {
@@ -520,7 +527,7 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 		std::cout << "the perft value for the given position\n" << std::endl;
 	}
 
-#endif
+#endif // INCLUDE_DIAGNOSTICS
 }
 
 // ---------------- Output Functions -------------------------------
@@ -602,5 +609,7 @@ void sendReplyMove(const char* s, Engine* pE){}
 
 
 void sendReplyMoveAndPonder(const char* s, Engine* pE) {}
+
+#pragma GCC diagnostic pop
 
 } // namespace juddperft
