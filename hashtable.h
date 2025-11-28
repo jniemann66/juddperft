@@ -30,10 +30,11 @@ SOFTWARE.
 #include "movegen.h"
 #include "utils.h"
 
+#include <cstring>
+
 #include <iostream>
 #include <atomic>
 #include <string>
-#include <cstring> // for std::memset
 
 namespace juddperft {
 

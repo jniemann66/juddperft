@@ -27,9 +27,10 @@ SOFTWARE.
 #include "hashtable.h"
 #include "search.h"
 
+#include <cmath>
+
 #include <iostream>
 #include <random>
-#include <cmath>
 
 namespace juddperft {
 
