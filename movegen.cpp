@@ -167,8 +167,8 @@ int ChessPosition::calculateMaterial() const
 
 ChessPosition& ChessPosition::performMove(ChessMove M)
 {
-	Bitboard To = 1LL << M.ToSquare;
-	const Bitboard O = ~((1LL << M.FromSquare) | To);
+	Bitboard To = 1ull << M.ToSquare;
+	const Bitboard O = ~((1ull << M.FromSquare) | To);
 	unsigned long nFromSquare = M.FromSquare;
 	unsigned long nToSquare = M.ToSquare;
 
@@ -403,10 +403,11 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	{
 		int capturedpiece;
 		// find out which piece has been captured:
-		capturedpiece = ((ChessPosition::D & To) >> nToSquare) << 3
-																  | ((ChessPosition::C & To) >> nToSquare) << 2
-																  | ((ChessPosition::B & To) >> nToSquare) << 1
-																  | ((ChessPosition::A & To) >> nToSquare);
+		capturedpiece =
+				((ChessPosition::D & To) >> nToSquare) << 3
+														  | ((ChessPosition::C & To) >> nToSquare) << 2
+														  | ((ChessPosition::B & To) >> nToSquare) << 1
+														  | ((ChessPosition::A & To) >> nToSquare);
 
 #ifdef _USE_HASH
 		// Update Hash
@@ -473,7 +474,7 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 #endif
 
 		M.Piece = M.BlackToMove ? BROOK : WROOK;
-		//
+
 		return *this;
 	}
 
@@ -670,7 +671,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
 
 	for (unsigned int q = firstSq; q <= lastSq; q++) {
-		const Bitboard fromSQ = 1ULL << q;
+		const Bitboard fromSQ = 1ull << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
 		switch (piece) {
@@ -683,7 +684,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			const Bitboard marchZone =  WhiteFree & ~BlackOccupied;
 			const int step1 = MoveUpIndex[q];
 			addWhiteMove(P, pM, q, step1, marchZone, WPAWN);   // single pawn advance
-			if (fromSQ & RANK2 && ((1ULL << step1) & marchZone)) {
+			if (fromSQ & RANK2 && ((1ull << step1) & marchZone)) {
 				const int step2 = MoveUpIndex[step1];
 				addWhiteMove(P, pM, q, step2, marchZone, WPAWN); // double pawn advance
 			}
@@ -825,12 +826,12 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		return;
 	}
 
-	Bitboard to = (1ULL << tosquare) & F;
+	Bitboard to = (1ull << tosquare) & F;
 	if (to == 0) {
 		return;
 	}
 
-	const Bitboard from = (1ULL << fromsquare);
+	const Bitboard from = (1ull << fromsquare);
 
 	ChessPosition Q = P;
 	pM->FromSquare = fromsquare;
@@ -849,7 +850,7 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	}
 
 	// clear old and new square:
-	const Bitboard O = ~((1LL << fromsquare) | to);
+	const Bitboard O = ~((1ull << fromsquare) | to);
 
 	Q.A &= O;
 	Q.B &= O;
@@ -1010,7 +1011,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
 	for (unsigned int q = firstSq; q <= lastSq; q++) {
-		const Bitboard fromSQ = 1ULL << q;
+		const Bitboard fromSQ = 1ull << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
 		switch (piece) {
@@ -1023,7 +1024,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			const Bitboard marchZone = BlackFree & ~WhiteOccupied; // area into which pawns may advance
 			const int step1 = MoveDownIndex[q];
 			addBlackMove(P, pM, q, step1, marchZone, BPAWN);   // single pawn advance
-			if (fromSQ & RANK7 && ((1ULL << step1) & marchZone)) {
+			if (fromSQ & RANK7 && ((1ull << step1) & marchZone)) {
 				const int step2 = MoveDownIndex[step1];
 				addBlackMove(P, pM, q, step2, marchZone, BPAWN); // double pawn advance
 			}
@@ -1164,12 +1165,12 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		return;
 	}
 
-	Bitboard to = (1ULL << tosquare) & F;
+	Bitboard to = (1ull << tosquare) & F;
 	if (to == 0) {
 		return;
 	}
 
-	const Bitboard from = (1ULL << fromsquare);
+	const Bitboard from = (1ull << fromsquare);
 
 	ChessPosition Q = P;
 	pM->FromSquare = fromsquare;
@@ -1388,7 +1389,7 @@ void dumpBitBoard(Bitboard b)
 	std::cout << "\n";
 	for (int q = 63; q >= 0; q--)
 	{
-		if ((b & (1LL << q)) != 0)
+		if ((b & (1ull << q)) != 0)
 		{
 			std::cout << ("o ");
 		}
@@ -1478,7 +1479,7 @@ void dumpChessPosition(ChessPosition p)
 //////////////////////////////////////////////////////////////////////////////////
 // dumpMove() - Converts a move to ascii and dumps it to stdout, unless a character
 // buffer is supplied, in which case the ascii is written to pBuffer instead.
-// A number of notation styles are supported. Usually CoOrdinate should be used
+// A number of notation styles are supported. Usually, CoOrdinate should be used
 // for WinBoard.
 //////////////////////////////////////////////////////////////////////////////////
 void dumpMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic */, char* pBuffer, const ChessMove *movelist)

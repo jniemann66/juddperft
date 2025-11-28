@@ -32,8 +32,8 @@ SOFTWARE.
 
 #include <cstring>
 
-#include <iostream>
 #include <atomic>
+#include <iostream>
 #include <string>
 
 namespace juddperft {
@@ -116,7 +116,7 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 {
 	m_nRequestedSize = nBytes;
 
-	uint64_t nNewNumEntries = 1LL;
+	uint64_t nNewNumEntries = 1ull;
 	// Make nNewSize a power of 2:
 	while (nNewNumEntries*sizeof(T) < nBytes) {
 		nNewNumEntries <<= 1;

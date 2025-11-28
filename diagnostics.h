@@ -26,6 +26,7 @@ SOFTWARE.
 
 #ifndef _DIAGNOSTICS_H
 #define _DIAGNOSTICS_H 1
+
 #include "movegen.h"
 
 #include <string>
@@ -38,14 +39,13 @@ namespace juddperft {
 #define PERFTVALIDATE_FAILEDTOSTART -1
 
 #ifdef INCLUDE_DIAGNOSTICS
-
 // perftValidateWithExternal() - validates perft calculation against external engine:
 int perftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
 void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth);
 void runTestSuite();
 void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
-
 #endif // INCLUDE_DIAGNOSTICS
-}
+
+} // namespace juddperft
 #endif //  _DIAGNOSTICS_H
 

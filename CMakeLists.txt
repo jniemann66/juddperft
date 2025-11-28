@@ -38,9 +38,9 @@ add_executable(juddperft
 )
 
 set_property(TARGET juddperft PROPERTY
-	CXX_STANDARD 11
+	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS ON
+	CXX_EXTENSIONS OFF
 )
 
 target_link_libraries(juddperft PRIVATE Threads::Threads)

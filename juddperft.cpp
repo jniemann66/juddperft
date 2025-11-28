@@ -72,7 +72,7 @@ int main(int argc, char *argv[], char *envp[])
 	// X.getLegalMoves(movelist);
 	// dumpMoveList(movelist, StandardAlgebraic, nullptr);
 
-	 runTestSuite();
+	// runTestSuite();
 
 	winBoard(&theEngine);
 

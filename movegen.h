@@ -249,7 +249,7 @@ public:
 
 	ChessPosition& setPieceAtSquare(const piece_t& piece,  unsigned int s)
 	{
-		const Bitboard S = 1LL << s;
+		const Bitboard S = 1ull << s;
 
 		// clear the square
 		A &= ~S;
@@ -272,7 +272,7 @@ public:
 
 	piece_t getPieceAtSquare(unsigned int q) const
 	{
-		const Bitboard S = 1LL << q;
+		const Bitboard S = 1ull << q;
 
 		Bitboard V = (D & S) >> q;
 		V <<= 1;
@@ -921,7 +921,7 @@ const int MoveKnight8Index[64] = {
 inline bool testMoveTables()
 {
 	auto t = [](std::string name, int q, Bitboard bitboard, int sqindex) -> void {
-		const bool ok = ((bitboard == 0 && sqindex == xx) || (bitboard == (1ULL << sqindex)));
+		const bool ok = ((bitboard == 0 && sqindex == xx) || (bitboard == (1ull << sqindex)));
 		if (!ok) {
 			std::stringstream e;
 			e << __func__ << "(): name=" << name << " failed at index " << q << ": " << "index=" << sqindex << " bitboard="<<  std::hex << bitboard;
