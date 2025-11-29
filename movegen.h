@@ -227,12 +227,12 @@ public:
 			uint32_t WhiteIsCheckmated : 1;
 			uint32_t BlackIsCheckmated : 1;
 		};
-		uint32_t Flags;
+		uint32_t flags;
 	};
 	uint16_t MoveNumber;
 	uint16_t HalfMoves;
 	bool operator==(const ChessPosition& Q) {
-		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::Flags == Q.Flags));
+		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::flags == Q.flags));
 	}
 
 #ifdef _USE_HASH

@@ -55,71 +55,71 @@ uint64_t movegen_total_cycles = 0;
 
 ChessPosition::ChessPosition()
 {
-	ChessPosition::A = 0;
-	ChessPosition::B = 0;
-	ChessPosition::C = 0;
-	ChessPosition::D = 0;
-	ChessPosition::Flags = 0;
+	A = 0;
+	B = 0;
+	C = 0;
+	D = 0;
+	flags = 0;
 
-#ifdef _USE_HASH
 	ChessPosition::hk = 0;
-#endif
-
 }
 
 ChessPosition& ChessPosition::setupStartPosition()
 {
-	ChessPosition::Flags = 0;
-	ChessPosition::A = 0x4Aff00000000ff4A;
-	ChessPosition::B = 0x3C0000000000003C;
-	ChessPosition::C = 0xDB000000000000DB;
-	ChessPosition::D = 0xffff000000000000;
-	ChessPosition::BlackCanCastle = 1;
-	ChessPosition::WhiteCanCastle = 1;
-	ChessPosition::BlackCanCastleLong = 1;
-	ChessPosition::WhiteCanCastleLong = 1;
-	ChessPosition::BlackForfeitedCastle = 0;
-	ChessPosition::WhiteForfeitedCastle = 0;
-	ChessPosition::BlackForfeitedCastleLong = 0;
-	ChessPosition::WhiteForfeitedCastleLong = 0;
-	ChessPosition::BlackDidCastle = 0;
-	ChessPosition::WhiteDidCastle = 0;
-	ChessPosition::BlackDidCastleLong = 0;
-	ChessPosition::WhiteDidCastleLong = 0;
-	ChessPosition::MoveNumber = 1;
-	ChessPosition::HalfMoves = 0;
-	ChessPosition::calculateMaterial();
+	flags = 0;
+	A = 0x4Aff00000000ff4A;
+	B = 0x3C0000000000003C;
+	C = 0xDB000000000000DB;
+	D = 0xffff000000000000;
+	BlackCanCastle = 1;
+	WhiteCanCastle = 1;
+	BlackCanCastleLong = 1;
+	WhiteCanCastleLong = 1;
+	BlackForfeitedCastle = 0;
+	WhiteForfeitedCastle = 0;
+	BlackForfeitedCastleLong = 0;
+	WhiteForfeitedCastleLong = 0;
+	BlackDidCastle = 0;
+	WhiteDidCastle = 0;
+	BlackDidCastleLong = 0;
+	WhiteDidCastleLong = 0;
+	MoveNumber = 1;
+	HalfMoves = 0;
+	calculateMaterial();
 
-#ifdef _USE_HASH
 	ChessPosition::calculateHash();
-#endif
 
 	return *this;
 }
 
-#ifdef _USE_HASH
 ChessPosition & ChessPosition::calculateHash()
 {
-	ChessPosition::hk = 0;
+	hk = 0;
 
-	// Scan the squares:
-	for (unsigned int q = 0; q < 64; q++)
-	{
+	for (unsigned int q = 0; q < 64; q++) {
 		piece_t piece = getPieceAtSquare(q);
 		if (piece & 0x7) {
 			ChessPosition::hk ^= zobristKeys.zkPieceOnSquare[piece][q];
 		}
 	}
 
-	if (ChessPosition::BlackToMove)	ChessPosition::hk ^= zobristKeys.zkBlackToMove;
-	if (ChessPosition::WhiteCanCastle) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;
-	if (ChessPosition::WhiteCanCastleLong) ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;
-	if (ChessPosition::BlackCanCastle) ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;
-	if (ChessPosition::BlackCanCastleLong) ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;
+	if (BlackToMove)
+		ChessPosition::hk ^= zobristKeys.zkBlackToMove;
+
+	if (WhiteCanCastle)
+		ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;
+
+	if (WhiteCanCastleLong)
+		ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;
+
+	if (BlackCanCastle)
+		ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;
+
+	if (BlackCanCastleLong)
+		ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;
 
 	return *this;
 }
-#endif
 
 int ChessPosition::calculateMaterial() const
 {
@@ -398,14 +398,14 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			B |= To;
 			C &= ~To;
 			D |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8];	// Place Black EP at (To+8)
+			hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8]; // Place Black EP at (To+8)
 		} else {
 			To >>= 8;
 			A |= To;
 			B |= To;
 			C &= ~To;
 			D &= ~To;
-			hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8];	// Place White EP at (To-8)
+			hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8]; // Place White EP at (To-8)
 		}
 		return *this;
 	}
@@ -437,14 +437,14 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 		B |= To;
 		C |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare]; // place Queen at To square
 		return *this;
 	}
 
 	if (M.PromoteKnight) {
 		C |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare]; // place Knight at To square
 		return *this;
 	}
 
@@ -685,15 +685,15 @@ void ChessPosition::getLegalMoves(ChessMove *movelist) const
 
 void ChessPosition::switchSides()
 {
-	ChessPosition::BlackToMove ^= 1;
-	ChessPosition::hk ^= zobristKeys.zkBlackToMove;
+	BlackToMove ^= 1;
+	hk ^= zobristKeys.zkBlackToMove;
 	return;
 }
 
 void ChessPosition::clear(void)
 {
 	A = B = C = D = 0;
-	Flags = 0;
+	flags = 0;
 	hk = 0;
 }
 
