@@ -285,7 +285,12 @@ public:
 		return static_cast<piece_t>(V);
 	}
 
-	ChessPosition& performMove(ChessMove M);
+	// performMove() : applies a move to a position, including differential update to hash key
+	ChessPosition& performMove(const ChessMove& M);
+
+	// performMove() : applies a move to a position, without updating the kash key
+	ChessPosition& performMoveNoHash(const ChessMove& M);
+
 	std::vector<ChessMove> getLegalMoves() const;
 	void getLegalMoves(ChessMove *movelist) const;
 

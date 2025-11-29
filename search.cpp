@@ -47,13 +47,12 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	ChessMove* pM;
 
 	generateMoves(P, MoveList);
-	int movecount = MoveList->MoveCount;
+	const int movecount = MoveList->MoveCount;
 
 	if (depth == maxdepth)
 	{
 		pM = MoveList;
-		for (int i = 0; i < movecount; i++, pM++)
-		{
+		for (int i = 0; i < movecount; i++, pM++) {
 			pI->nMoves++;
 			if (pM->Capture) {
 				pI->nCapture++;
@@ -88,39 +87,11 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 		}
 	}
 
-	else
-	{
+	else {
 		pM = MoveList;
 		for (int i = 0; i<movecount; i++, pM++)
 		{
-			Q.performMove(*pM).switchSides();
-			//// ---------------------------------------------------
-			//// Do this to trap bugs with incremental Hash updates:
-			//
-			//ChessPosition Q2;
-			//Q2 = Q;
-			//Q2.calculateHash();
-			////assert (Q2.HK == Q.HK);
-			//if (Q2.HK != Q.HK)
-			//{
-			//	printf("keys Don't match!\n ");
-			//	printf("before:\n");
-			//	dumpChessPosition(P);
-			//	printf("after:\n");
-			//	dumpMove(*pM);
-			//	dumpChessPosition(Q);
-			//	printf("\n\n");
-			//	getchar();
-			//	Q.calculateHash(); // Repair the bad hash Key
-			//}
-			//else
-			//{
-			//	//	printf( "keys Match: " );
-			//	//	dumpMove(*pM);
-			//	//	getchar();
-			//}
-			//// ---------------------------------------------------
-
+			Q.performMoveNoHash(*pM).switchSides();
 			perft(Q, maxdepth, depth + 1, pI);
 			Q = P; // unmake move
 		}
@@ -128,7 +99,6 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 	return pI->nMoves;
 }
-
 
 void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 {
@@ -139,8 +109,8 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 #ifdef _USE_HASH
 	// Consult the HashTable:
 	HashKey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
-	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk);		// get address of atomic record
-	PerftTableEntry retrievedRecord = pAtomicRecord->load();						// Load a copy of the record
+	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk); // get address of atomic record
+	PerftTableEntry retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
 	if (retrievedRecord.Hash == hk) {
 		nNodes += retrievedRecord.count;
 		return;
@@ -174,6 +144,33 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 #endif
 
 }
+
+//// ---------------------------------------------------
+//// Do this to trap bugs with incremental Hash updates (after performMove() ...) :
+//
+//ChessPosition Q2;
+//Q2 = Q;
+//Q2.calculateHash();
+////assert (Q2.HK == Q.HK);
+//if (Q2.HK != Q.HK)
+//{
+//	printf("keys Don't match!\n ");
+//	printf("before:\n");
+//	dumpChessPosition(P);
+//	printf("after:\n");
+//	dumpMove(*pM);
+//	dumpChessPosition(Q);
+//	printf("\n\n");
+//	getchar();
+//	Q.calculateHash(); // Repair the bad hash Key
+//}
+//else
+//{
+//	//	printf( "keys Match: " );
+//	//	dumpMove(*pM);
+//	//	getchar();
+//}
+//// ---------------------------------------------------
 
 void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
@@ -231,7 +228,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				ChessMove M = MoveQueue.front();				// Grab Move
 				MoveQueue.pop();								// remove Move from queue:
 				lock.unlock();									// yield usage of queue to other threads while busy processing perft
-				Q.performMove(M).switchSides();					// make move
+				Q.performMoveNoHash(M).switchSides();					// make move
 				perft(Q, maxdepth, depth + 1, &T);				// Invoke perft()
 				std::cout << ".";								// show progress
 				lock.lock();									// lock the queue again	for next iteration

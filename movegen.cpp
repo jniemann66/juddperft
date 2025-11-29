@@ -165,7 +165,7 @@ int ChessPosition::calculateMaterial() const
 	return material;
 }
 
-ChessPosition& ChessPosition::performMove(ChessMove M)
+ChessPosition& ChessPosition::performMove(const ChessMove& M)
 {
 	Bitboard To = 1ull << M.ToSquare;
 	const Bitboard O = ~((1ull << M.FromSquare) | To);
@@ -438,7 +438,6 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		C |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
-		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
 		return *this;
 	}
 
@@ -446,7 +445,6 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		C |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
-		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
 		return *this;
 	}
 
@@ -455,7 +453,6 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		B |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
-		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
 		return *this;
 	}
 
@@ -464,12 +461,212 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 		C |= To;
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
 		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
-		M.Piece = M.BlackToMove ? BROOK : WROOK;
 		return *this;
 	}
 
 	return *this;
 }
+
+ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
+{
+	Bitboard To = 1ull << M.ToSquare;
+	const Bitboard O = ~((1ull << M.FromSquare) | To);
+	const unsigned long nFromSquare = M.FromSquare;
+
+	// if move is known to be delivering checkmate, immediately flag checkmate in the position
+	if (M.Checkmate && M.BlackToMove == BlackToMove) {
+		if (M.BlackToMove) {
+			WhiteIsCheckmated = 1;
+		} else {
+			BlackIsCheckmated = 1;
+		}
+	}
+
+	// clear any enpassant squares
+	const Bitboard EnPassant = A & B & ~C;
+	A &= ~EnPassant;
+	B &= ~EnPassant;
+	C &= ~EnPassant;
+	D &= ~EnPassant;
+
+	switch (M.Piece) {
+	case BKING:
+		if (M.Castle) {
+
+			A ^= 0x0a00000000000000;
+			B ^= 0x0a00000000000000;
+			C ^= 0x0f00000000000000;
+			D ^= 0x0f00000000000000;
+
+			BlackDidCastle = 1;
+			BlackCanCastle = 0;
+			BlackCanCastleLong = 0;
+			return *this;
+		}
+
+		if (M.CastleLong) {
+			A ^= 0x2800000000000000;
+			B ^= 0x2800000000000000;
+			C ^= 0xb800000000000000;
+			D ^= 0xb800000000000000;
+
+			BlackDidCastleLong = 1;
+			BlackCanCastle = 0;
+			BlackCanCastleLong = 0;
+			return *this;
+		}
+
+		BlackForfeitedCastle = 1;
+		BlackForfeitedCastleLong = 1;
+		BlackCanCastle = 0;
+		BlackCanCastleLong = 0;
+		break;
+
+	case WKING:
+		if (M.Castle) {
+			A ^= 0x000000000000000a;
+			B ^= 0x000000000000000a;
+			C ^= 0x000000000000000f;
+			D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
+
+			WhiteDidCastle = 1;
+			WhiteCanCastle = 0;
+			WhiteCanCastleLong = 0;
+			return *this;
+		}
+
+		if (M.CastleLong) {
+			A ^= 0x0000000000000028;
+			B ^= 0x0000000000000028;
+			C ^= 0x00000000000000b8;
+			D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
+
+			WhiteDidCastleLong = 1;
+			WhiteCanCastle = 0;
+			WhiteCanCastleLong = 0;
+			return *this;
+		}
+
+		WhiteForfeitedCastle = 1;
+		WhiteCanCastle = 0;
+		WhiteForfeitedCastleLong = 1;
+		WhiteCanCastleLong = 0;
+		break;
+
+	case BROOK:
+		if (nFromSquare == SquareIndex::h8) {
+			// Black moved K-side Rook and forfeits right to castle K-side
+			if (BlackCanCastle){
+				BlackForfeitedCastle = 1;
+				BlackCanCastle = 0;
+			}
+		} else if (nFromSquare == SquareIndex::a8) {
+			// Black moved the QS Rook and forfeits right to castle Q-side
+			if (BlackCanCastleLong) {
+				BlackForfeitedCastleLong = 1;
+				BlackCanCastleLong = 0;
+			}
+		}
+		break;
+
+	case WROOK:
+		if (nFromSquare == SquareIndex::h1) {
+			// White moved K-side Rook and forfeits right to castle K-side
+			if (WhiteCanCastle) {
+				WhiteForfeitedCastle = 1;
+				WhiteCanCastle = 0;
+			}
+		} else if (nFromSquare == SquareIndex::a1) {
+			// White moved the QSide Rook and forfeits right to castle Q-side
+			if (WhiteCanCastleLong) {
+				WhiteForfeitedCastleLong = 1;
+				WhiteCanCastleLong = 0;
+			}
+		}
+		break;
+
+	default:
+		break;
+	} // ends switch (M.Piece)
+
+	// Render "ordinary" moves:
+	A &= O;
+	B &= O;
+	C &= O;
+	D &= O;
+
+	// Populate new square (Branchless method):
+	A |= static_cast<int64_t>(M.Piece & 1) << M.ToSquare;
+	B |= static_cast<int64_t>((M.Piece & 2) >> 1) << M.ToSquare;
+	C |= static_cast<int64_t>((M.Piece & 4) >> 2) << M.ToSquare;
+	D |= static_cast<int64_t>((M.Piece & 8) >> 3) << M.ToSquare;
+
+	// For double-pawn moves, set EP square:
+	if (M.DoublePawnMove) {
+		// Set EnPassant Square
+		if (M.BlackToMove) {
+			To <<= 8;
+			A |= To;
+			B |= To;
+			C &= ~To;
+			D |= To;
+		} else {
+			To >>= 8;
+			A |= To;
+			B |= To;
+			C &= ~To;
+			D &= ~To;
+		}
+		return *this;
+	}
+
+	// En-Passant Captures
+	if (M.EnPassantCapture) {
+		// remove the actual pawn (it is different to the capture square)
+		if (M.BlackToMove) {
+			To <<= 8;
+			A &= ~To; // clear the pawn's square
+			B &= ~To;
+			C &= ~To;
+			D &= ~To;
+		} else {
+			To >>= 8;
+			A &= ~To;
+			B &= ~To;
+			C &= ~To;
+			D &= ~To;
+		}
+		return *this;
+	}
+
+	// Promotions - Change the piece:
+	if (M.PromoteQueen) {
+		A &= ~To;
+		B |= To;
+		C |= To;
+		return *this;
+	}
+
+	if (M.PromoteKnight) {
+		C |= To;
+		return *this;
+	}
+
+	if (M.PromoteBishop) {
+		A &= ~To;
+		B |= To;
+		return *this;
+	}
+
+	if (M.PromoteRook) {
+		A &= ~To;
+		C |= To;
+		return *this;
+	}
+
+	return *this;
+}
+
 
 std::vector<ChessMove> ChessPosition::getLegalMoves() const
 {
