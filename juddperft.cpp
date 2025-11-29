@@ -74,8 +74,6 @@ int main(int argc, char *argv[], char *envp[])
 
 	// runTestSuite();
 
-
-
 	winBoard(&theEngine);
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES

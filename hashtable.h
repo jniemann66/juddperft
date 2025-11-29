@@ -63,7 +63,7 @@ public:
 	ZobristKey zkDoWhiteCastle;
 	ZobristKey zkDoWhiteCastleLong;
 
-	unsigned int generate(std::optional<unsigned int> seed = {});
+	uint64_t generate(std::optional<uint64_t> seed = {});
 
 	static void findBestSeed(const std::optional<unsigned int>& prev_best_seed = {}, const std::optional<int>& maxAttempts = {});
 };

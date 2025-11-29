@@ -42,15 +42,14 @@ namespace juddperft {
 		ZobristKeySet::generate();
 	}
 
-	unsigned int ZobristKeySet::generate(std::optional<unsigned int> seed)
+	uint64_t ZobristKeySet::generate(std::optional<uint64_t> seed)
 	{
-		std::random_device rd;
 		if (!seed.has_value()) {
-			seed = rd();
-		}
+			// std::random_device rd;
+			// seed = rd();
 
-		//const unsigned int seed = 0x4a1b5d94; // favorite
-		//const unsigned int seed=0xb52b767b; // rd();
+			seed = 0x4a1b5d94; // for consistency during dev. "best" seed yet to be found
+		}
 
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
 		// with a uniform distribution of ints;
@@ -61,19 +60,21 @@ namespace juddperft {
 		std::uniform_int_distribution<unsigned long long int> dist(2, 0xffffffffffffffff);
 		for (int n = 0; n < 16; ++n) {
 			for (int m = 0; m < 64; ++m) {
-				ZobristKeySet::zkPieceOnSquare[n][m] = dist(rd);
+				ZobristKeySet::zkPieceOnSquare[n][m] = dist(rng);
 			}
 		}
 
-		ZobristKeySet::zkBlackToMove = dist(rd);
-		ZobristKeySet::zkWhiteCanCastle = dist(rd);
-		ZobristKeySet::zkWhiteCanCastleLong = dist(rd);
-		ZobristKeySet::zkBlackCanCastle = dist(rd);
-		ZobristKeySet::zkBlackCanCastleLong = dist(rd);
+		ZobristKeySet::zkBlackToMove = dist(rng);
+		ZobristKeySet::zkWhiteCanCastle = dist(rng);
+		ZobristKeySet::zkWhiteCanCastleLong = dist(rng);
+		ZobristKeySet::zkBlackCanCastle = dist(rng);
+		ZobristKeySet::zkBlackCanCastleLong = dist(rng);
 
 		for (int m = 0; m < 24; ++m) {
-			ZobristKeySet::zkPerftDepth[m] = dist(rd);
+			ZobristKeySet::zkPerftDepth[m] = dist(rng);
 		}
+		// ends random key generation
+
 
 		// generate pre-fabricated castling keys:
 		ZobristKeySet::zkDoBlackCastle =
@@ -165,11 +166,18 @@ namespace juddperft {
 				results.insert({seed, tt / avgOf});
 			}
 
-			auto it = std::min_element(std::begin(results), std::end(results), [](const auto& l, const auto& r) {
+			auto itBest = std::min_element(std::begin(results), std::end(results), [](const auto& l, const auto& r) {
 				return l.second < r.second;
 			});
 
-			std::cout << "best so far: seed=0x" << std::hex << it->first << " ms=" << std::dec << std::setw(1) << it->second << std::endl;
+			std::cout << "best so far: seed=0x" << std::hex << itBest->first << " ms=" << std::dec << std::setw(1) << itBest->second << std::endl;
+
+			auto itWorst = std::max_element(std::begin(results), std::end(results), [](const auto& l, const auto& r) {
+				return l.second < r.second;
+			});
+
+			std::cout << "worst so far: seed=0x" << std::hex << itWorst->first << " ms=" << std::dec << std::setw(1) << itWorst->second << std::endl;
+
 			attempt++;
 		} // ends while (...)
 	}
