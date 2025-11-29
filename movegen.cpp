@@ -389,44 +389,6 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 	hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nFromSquare]; // Remove piece at From square
 	hk ^= zobristKeys.zkPieceOnSquare[M.Piece][nToSquare]; // Place piece at To Square
 
-	// Promotions - Change the piece:
-
-	if (M.PromoteBishop) {
-		A &= ~To;
-		B |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
-		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
-		return *this;
-	}
-
-	if (M.PromoteKnight) {
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
-		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
-		return *this;
-	}
-
-	if (M.PromoteRook) {
-		A &= ~To;
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
-		M.Piece = M.BlackToMove ? BROOK : WROOK;
-		return *this;
-	}
-
-	if (M.PromoteQueen) {
-		A &= ~To;
-		B |= To;
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
-		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
-		return *this;
-	}
-
 	// For double-pawn moves, set EP square:
 	if (M.DoublePawnMove) {
 		// Set EnPassant Square
@@ -466,6 +428,44 @@ ChessPosition& ChessPosition::performMove(ChessMove M)
 			D &= ~To;
 			hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
 		}
+		return *this;
+	}
+
+	// Promotions - Change the piece:
+	if (M.PromoteQueen) {
+		A &= ~To;
+		B |= To;
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BQUEEN : WQUEEN)][nToSquare];	// place Queen at To square
+		M.Piece = M.BlackToMove ? BQUEEN : WQUEEN;
+		return *this;
+	}
+
+	if (M.PromoteKnight) {
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BKNIGHT : WKNIGHT)][nToSquare];// place Knight at To square
+		M.Piece = M.BlackToMove ? BKNIGHT : WKNIGHT;
+		return *this;
+	}
+
+	if (M.PromoteBishop) {
+		A &= ~To;
+		B |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
+		M.Piece = M.BlackToMove ? BBISHOP : WBISHOP;
+		return *this;
+	}
+
+	if (M.PromoteRook) {
+		A &= ~To;
+		C |= To;
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+		hk ^= zobristKeys.zkPieceOnSquare[(M.BlackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
+		M.Piece = M.BlackToMove ? BROOK : WROOK;
+		return *this;
 	}
 
 	return *this;

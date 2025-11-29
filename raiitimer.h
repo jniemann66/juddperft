@@ -36,6 +36,12 @@ public:
 		std::cout << std::endl;
 	}
 
+	double elapsed() const
+	{
+		const std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
+		return std::chrono::duration_cast<std::chrono::milliseconds>(t - beginTimer).count();
+	}
+
 	void setNodes(uint64_t n)
 	{
 		nodes = n;

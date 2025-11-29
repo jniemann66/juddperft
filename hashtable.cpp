@@ -26,11 +26,14 @@ SOFTWARE.
 
 #include "hashtable.h"
 #include "search.h"
+#include "raiitimer.h"
 
+#include <algorithm>
+#include <cinttypes>
 #include <cmath>
-
-#include <iostream>
 #include <random>
+#include <sstream>
+#include <map>
 
 namespace juddperft {
 
@@ -39,14 +42,19 @@ namespace juddperft {
 		ZobristKeySet::generate();
 	}
 
-	bool ZobristKeySet::generate()
+	unsigned int ZobristKeySet::generate()
 	{
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
 		// with a uniform distribution of ints
 		std::random_device rd;
-		std::mt19937_64 rng(rd());
+		const unsigned int seed = rd();
+		//const unsigned int seed = 0x4a1b5d94; // favorite
+		//const unsigned int seed=0xb52b767b; // rd();
+		std::stringstream seed_s;
+		seed_s << "seed=0x" << std::hex << seed;
+		std::cout << seed_s.str() << std::endl;
+		std::mt19937_64 rng(seed);
 		std::uniform_int_distribution<unsigned long long int> dist(0, 0xffffffffffffffff);
-		//
 		for (int n = 0; n < 16; ++n) {
 			for (int m = 0; m < 64; ++m) {
 				ZobristKeySet::zkPieceOnSquare[n][m] = dist(rd);
@@ -65,34 +73,98 @@ namespace juddperft {
 
 		// generate pre-fabricated castling keys:
 		ZobristKeySet::zkDoBlackCastle =
-			ZobristKeySet::zkPieceOnSquare[BKING][59] ^ // Remove King from e8
-			ZobristKeySet::zkPieceOnSquare[BKING][57] ^ // Place King on g8
-			ZobristKeySet::zkPieceOnSquare[BROOK][56] ^ // Remove Rook from h8
-			ZobristKeySet::zkPieceOnSquare[BROOK][58] ^ // Place Rook on f8
+			ZobristKeySet::zkPieceOnSquare[BKING][e8] ^ // Remove King from e8
+			ZobristKeySet::zkPieceOnSquare[BKING][g8] ^ // Place King on g8
+			ZobristKeySet::zkPieceOnSquare[BROOK][h8] ^ // Remove Rook from h8
+			ZobristKeySet::zkPieceOnSquare[BROOK][f8] ^ // Place Rook on f8
 			ZobristKeySet::zkBlackCanCastle;			// (unconditionally) flip black castling
 
 		ZobristKeySet::zkDoBlackCastleLong =
-			ZobristKeySet::zkPieceOnSquare[BKING][59] ^ // Remove King from e8
-			ZobristKeySet::zkPieceOnSquare[BKING][61] ^ // Place King on c8
-			ZobristKeySet::zkPieceOnSquare[BROOK][63] ^ // Remove Rook from a8
-			ZobristKeySet::zkPieceOnSquare[BROOK][60] ^ // Place Rook on d8
+			ZobristKeySet::zkPieceOnSquare[BKING][e8] ^ // Remove King from e8
+			ZobristKeySet::zkPieceOnSquare[BKING][c8] ^ // Place King on c8
+			ZobristKeySet::zkPieceOnSquare[BROOK][a8] ^ // Remove Rook from a8
+			ZobristKeySet::zkPieceOnSquare[BROOK][d8] ^ // Place Rook on d8
 			ZobristKeySet::zkBlackCanCastleLong;		// (unconditionally) flip black castling long
 
 		ZobristKeySet::zkDoWhiteCastle =
-			ZobristKeySet::zkPieceOnSquare[WKING][3] ^ // Remove King from e1
-			ZobristKeySet::zkPieceOnSquare[WKING][1] ^ // Place King on g1
-			ZobristKeySet::zkPieceOnSquare[WROOK][0] ^ // Remove Rook from h1
-			ZobristKeySet::zkPieceOnSquare[WROOK][2] ^ // Place Rook on f1
+			ZobristKeySet::zkPieceOnSquare[WKING][e1] ^ // Remove King from e1
+			ZobristKeySet::zkPieceOnSquare[WKING][g1] ^ // Place King on g1
+			ZobristKeySet::zkPieceOnSquare[WROOK][h1] ^ // Remove Rook from h1
+			ZobristKeySet::zkPieceOnSquare[WROOK][f1] ^ // Place Rook on f1
 			ZobristKeySet::zkWhiteCanCastle;			// (unconditionally) flip white castling
 
 		ZobristKeySet::zkDoWhiteCastleLong =
-			ZobristKeySet::zkPieceOnSquare[WKING][3] ^ // Remove King from e1
-			ZobristKeySet::zkPieceOnSquare[WKING][5] ^ // Place King on c1
-			ZobristKeySet::zkPieceOnSquare[WROOK][7] ^ // Remove Rook from a1
-			ZobristKeySet::zkPieceOnSquare[WROOK][4] ^ // Place Rook on d1
+			ZobristKeySet::zkPieceOnSquare[WKING][e1] ^ // Remove King from e1
+			ZobristKeySet::zkPieceOnSquare[WKING][c1] ^ // Place King on c1
+			ZobristKeySet::zkPieceOnSquare[WROOK][a1] ^ // Remove Rook from a1
+			ZobristKeySet::zkPieceOnSquare[WROOK][d1] ^ // Place Rook on d1
 			ZobristKeySet::zkWhiteCanCastleLong;		// (unconditionally) flip white castling long
 
-		return false;
+		return seed;
+	}
+
+	void ZobristKeySet::findBestSeed(const std::optional<int>& maxAttempts)
+	{
+		static std::map<unsigned int, double> results;
+
+		perftTable.setQuiet(true);
+		{
+			std::cout << "warming up the CPU with a perft(8)" << std::endl;
+			perftTable.setSize(perftTable.getSize());
+
+			ChessPosition P;
+			P.setupStartPosition();
+
+			RaiiTimer timer;
+			nodecount_t nNumPositions = 0;
+			const int depth = 8;
+			perftFastMT(P, depth, nNumPositions);
+			printf("\nPerft %d: %" PRIu64 " \n",
+				   depth, nNumPositions
+				   );
+			printf("\n");
+		}
+
+		int attempt = 0;
+
+
+		while (attempt++ < maxAttempts.value_or(10000000)) {
+			const unsigned int seed = zobristKeys.generate();
+
+			static constexpr int avgOf = 10;
+			const int depth = 7;
+			const nodecount_t expected = 3195901860ull;
+			nodecount_t nNumPositions = 0;
+			double tt = 0.0;
+
+			for (int s = 0; s < avgOf; s++) {
+				perftTable.setSize(perftTable.getSize());
+
+				ChessPosition P;
+				P.setupStartPosition();
+
+				RaiiTimer timer;
+				nNumPositions = 0;
+				perftFastMT(P, depth, nNumPositions);
+				printf("\nPerft %d: %" PRIu64 " \n",
+					   depth, nNumPositions
+					   );
+				printf("\n");
+
+				timer.setNodes(nNumPositions);
+				tt += timer.elapsed();
+			}
+
+			if (nNumPositions == expected) {
+				results.insert({seed, tt / avgOf});
+			}
+
+			auto it = std::min_element(std::begin(results), std::end(results), [](const auto& l, const auto& r) {
+				return l.second < r.second;
+			});
+
+			std::cout << "best so far: seed=0x" << std::hex << it->first << " ms=" << std::dec << std::setw(1) << it->second << std::endl;
+		}
 	}
 
 #ifdef _USE_HASH

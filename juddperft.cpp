@@ -51,7 +51,7 @@ int main(int argc, char *argv[], char *envp[])
 	// std::cout << "sizeof(ChessMove) == " << sizeof(ChessMove) << " sizeof(ChessPosition) == " << sizeof(ChessPosition) << std::endl;
 
 #ifdef _USE_HASH
-	uint64_t nBytesToAllocate = 8589934593; // <-- Set how much RAM to use here (more RAM -> faster !!!)
+	uint64_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
 	while (!setMemory(nBytesToAllocate)) {
 		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
@@ -73,6 +73,8 @@ int main(int argc, char *argv[], char *envp[])
 	// dumpMoveList(movelist, StandardAlgebraic, nullptr);
 
 	// runTestSuite();
+
+	ZobristKeySet::findBestSeed(100);
 
 	winBoard(&theEngine);
 

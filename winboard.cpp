@@ -350,21 +350,19 @@ void parse_input_perft(const char* s, Engine* pE)
 
 void parse_input_perftfast(const char* s, Engine* pE) {
 
-	if (s == nullptr)
+	if (s == nullptr) {
 		return;
+	}
 
-	for (int q = 1; q <= atoi(s); q++)
-	{
-		{
-			RaiiTimer timer;
-			nodecount_t nNumPositions = 0;
-			perftFastMT(pE->currentPosition, q, nNumPositions);
-			printf("\nPerft %d: %" PRIu64 " \n",
-				q, nNumPositions
-				);
-			printf("\n");
-			timer.setNodes(nNumPositions);
-		}
+	for (int q = 1; q <= atoi(s); q++) {
+		RaiiTimer timer;
+		nodecount_t nNumPositions = 0;
+		perftFastMT(pE->currentPosition, q, nNumPositions);
+		printf("\nPerft %d: %" PRIu64 " \n",
+			   q, nNumPositions
+			   );
+		printf("\n");
+		timer.setNodes(nNumPositions);
 	}
 }
 

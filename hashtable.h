@@ -35,6 +35,7 @@ SOFTWARE.
 #include <atomic>
 #include <iostream>
 #include <string>
+#include <optional>
 
 namespace juddperft {
 
@@ -61,9 +62,10 @@ public:
 	ZobristKey zkDoBlackCastleLong;
 	ZobristKey zkDoWhiteCastle;
 	ZobristKey zkDoWhiteCastleLong;
-	//
 
-	bool generate();
+	unsigned int generate();
+
+	static void findBestSeed(const std::optional<int>& maxAttempts = {});
 };
 
 // generic Hashtable template:
@@ -72,14 +74,22 @@ template<class T> class HashTable
 public:
 	HashTable(const std::string& name = std::string("Hash Table"));
 	~HashTable();
-	bool setSize(uint64_t nBytes);
-	bool deAllocate();
+
+	// getters
 	T* getAddress(const HashKey& SearchHK) const;
+	std::string getName() const;
 	uint64_t getSize() const;			// return currently-allocated size in bytes
 	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
 	uint64_t getNumEntries() const;
 	double getLoadFactor() const;
+
+	// setters
+	bool setSize(uint64_t nBytes);
+	void setName(const std::string &newName);
+	bool deAllocate();
 	void clear();
+
+	void setQuiet(bool newQuiet);
 
 private:
 	T* m_pTable;
@@ -89,10 +99,12 @@ private:
 	uint64_t m_nWrites;
 	uint64_t m_nCollisions;
 	std::string m_Name;
+	bool quiet{false};
 };
 
 template<class T>
-inline HashTable<T>::HashTable(const std::string& name) : m_Name(name)
+inline HashTable<T>::HashTable(const std::string& name)
+	: m_Name(name)
 {
 	m_pTable = nullptr;
 	m_nCollisions = 0;
@@ -118,21 +130,16 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 
 	uint64_t nNewNumEntries = 1ull;
 	// Make nNewSize a power of 2:
-	while (nNewNumEntries*sizeof(T) < nBytes) {
+	while (nNewNumEntries*sizeof(T) <= nBytes) {
 		nNewNumEntries <<= 1;
 	}
 
 	nNewNumEntries >>= 1;
-
-	if (nNewNumEntries == m_nEntries) {
-		// No change in size
-		return false;
-	}
-
 	m_nEntries = nNewNumEntries;
+
 	// create a mask with all 1's (2^n - 1) for address calculation:
-	HashTable::m_nIndexMask = m_nEntries - 1;
-	HashTable::deAllocate();
+	m_nIndexMask = m_nEntries - 1;
+	deAllocate();
 
 	m_pTable = new (std::nothrow) T[m_nEntries];
 
@@ -142,9 +149,11 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 	}
 	else {
 		const uint64_t bytes = m_nEntries * sizeof(T);
-		std::cout << "Allocated " << bytes << " bytes ("
-				  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
-				  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
+		if (!quiet) {
+			std::cout << "Allocated " << bytes << " bytes ("
+					  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
+					  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
+		}
 		m_nCollisions = 0;
 		m_nWrites = 0;
 		HashTable<T>::clear();
@@ -157,7 +166,9 @@ inline bool HashTable<T>::deAllocate()
 {
 	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
 	{
-		std::cout << "deallocating " << m_Name << std::endl;
+		if (!quiet) {
+			std::cout << "deallocating " << m_Name << std::endl;
+		}
 		delete[] m_pTable;
 		m_pTable = nullptr;
 		return true;
@@ -194,8 +205,7 @@ inline uint64_t HashTable<T>::getNumEntries() const
 template<class T>
 inline double HashTable<T>::getLoadFactor() const
 {
-	return
-		static_cast<double>((1000 * m_nWrites) / m_nEntries) / 1000;
+	return static_cast<double>((1000 * m_nWrites) / m_nEntries) / 1000;
 }
 
 template<class T>
@@ -204,6 +214,24 @@ inline void HashTable<T>::clear()
 	if (m_pTable != nullptr) {
 		std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
 	}
+}
+
+template<class T>
+inline std::string HashTable<T>::getName() const
+{
+	return m_Name;
+}
+
+template<class T>
+inline void HashTable<T>::setName(const std::string &newName)
+{
+	m_Name = newName;
+}
+
+template<class T>
+void HashTable<T>::setQuiet(bool newQuiet)
+{
+	quiet = newQuiet;
 }
 
 struct PerftTableEntry
