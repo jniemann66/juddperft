@@ -47,41 +47,41 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	ChessMove* pM;
 
 	generateMoves(P, MoveList);
-	const int movecount = MoveList->MoveCount;
+	const int movecount = MoveList->moveCount;
 
 	if (depth == maxdepth)
 	{
 		pM = MoveList;
 		for (int i = 0; i < movecount; i++, pM++) {
 			pI->nMoves++;
-			if (pM->Capture) {
+			if (pM->capture) {
 				pI->nCapture++;
 			}
 
-			if (pM->Castle) {
+			if (pM->castle) {
 				pI->nCastle++;
 			}
 
-			if (pM->CastleLong) {
+			if (pM->castleLong) {
 				pI->nCastleLong++;
 			}
 
-			if (pM->EnPassantCapture) {
+			if (pM->enPassantCapture) {
 				pI->nEPCapture++;
 			}
 
-			if (pM->PromoteBishop ||
-				pM->PromoteKnight ||
-				pM->PromoteQueen ||
-				pM->PromoteRook) {
+			if (pM->promoteBishop ||
+				pM->promoteKnight ||
+				pM->promoteQueen ||
+				pM->promoteRook) {
 				pI->nPromotion++;
 			}
 
-			if (pM->Check) {
+			if (pM->check) {
 				pI->nCheck++;
 			}
 
-			if (pM->Checkmate) {
+			if (pM->checkmate) {
 				pI->nCheckmate++;
 			}
 		}
@@ -123,12 +123,12 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 	if (depth == 1) { /* Leaf Node*/
 		generateMoves(P, moveList);
-		int movecount = moveList->MoveCount;
+		int movecount = moveList->moveCount;
 		newRecord.count = movecount;
 		nNodes += movecount;
 	} else { /* Branch Node */
 		generateMoves(P, moveList);
-		int movecount = moveList->MoveCount;
+		int movecount = moveList->moveCount;
 		for (int i = 0; i < movecount; i++) {
 			Q = P; // unmake move
 			Q.performMove(moveList[i]).switchSides(); // make move
@@ -178,21 +178,21 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	generateMoves(P, MoveList);
 
 	if (depth == maxdepth) {
-		for (ChessMove* pM = MoveList; pM->EndOfMoveList == 0; pM++)
+		for (ChessMove* pM = MoveList; pM->endOfMoveList == 0; pM++)
 		{
 			pI->nMoves++;
-			if (pM->Capture)
+			if (pM->capture)
 				pI->nCapture++;
-			if (pM->Castle)
+			if (pM->castle)
 				pI->nCastle++;
-			if (pM->CastleLong)
+			if (pM->castleLong)
 				pI->nCastleLong++;
-			if (pM->EnPassantCapture)
+			if (pM->enPassantCapture)
 				pI->nEPCapture++;
-			if (pM->PromoteBishop ||
-				pM->PromoteKnight ||
-				pM->PromoteQueen ||
-				pM->PromoteRook)
+			if (pM->promoteBishop ||
+				pM->promoteKnight ||
+				pM->promoteQueen ||
+				pM->promoteRook)
 				pI->nPromotion++;
 		}
 		return;
@@ -213,7 +213,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	bool ready = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
 		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -238,7 +238,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	// Put Moves into Queue for Thread pool to process:
-	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
+	for (unsigned int i = 0; i < MoveList->moveCount; ++i) {
 		MoveQueue.push(MoveList[i]);
 	}
 
@@ -280,7 +280,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	generateMoves(P, MoveList);
 
 	if (depth == 1) {
-		nNodes = MoveList->MoveCount;
+		nNodes = MoveList->moveCount;
 		return;
 	}
 
@@ -299,7 +299,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	bool ready = false;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, MoveList->MoveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
 		threads.emplace_back([&, depth, P, t] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -324,7 +324,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	}
 
 	// Put Moves into Queue for Thread pool to process:
-	for (unsigned int i = 0; i < MoveList->MoveCount; ++i) {
+	for (unsigned int i = 0; i < MoveList->moveCount; ++i) {
 		MoveQueue.push(MoveList[i]);
 	}
 

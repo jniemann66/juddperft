@@ -382,7 +382,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	ChessPosition Q;
 	RaiiTimer timer;
 
-	while (pM->EndOfMoveList == 0)
+	while (pM->endOfMoveList == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM);
@@ -445,7 +445,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	nodecount_t grandtotal = 0;
 	RaiiTimer timer;
 
-	while (pM->EndOfMoveList == 0)
+	while (pM->endOfMoveList == 0)
 	{
 		Q = pE->currentPosition;
 		Q.performMove(*pM).switchSides();

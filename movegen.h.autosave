@@ -400,10 +400,26 @@ const int pieceMaterialValue[16] =
 	,0			// Black King
 };
 
+// some observations / ruminations:
+// SquareIndex can be thought of as the logarithm(base2) of a Bitboard
+// and a Bitboard can be thought of as the result of 2^SquareIndex
+
+// There is no direct way (using bit-shifts) to make an empty bitboard from a square index,
+// - just as you can't raise 2 to the power of anything to make it zero.
+
+// a special value is needed to represent "no square". her it is:
+
+static constexpr int xx = -1; // value for "no square"
+
+// sometimes, eg when getting result from std::bitset::_Find_first(),
+// you will get a 64 (= size of the bitset), instead of -1 
+// if you treat the square index as an unsigned int, then -1
+// will be 255 as an unsigned int, so you can use 
+// if (sq M 
+
 // all the square indexes
 enum SquareIndex : unsigned char {
-	h1 = 0,
-	g1, f1, e1, d1, c1, b1, a1,
+	h1 = 0, g1, f1, e1, d1, c1, b1, a1,
 	h2, g2, f2, e2, d2, c2, b2, a2,
 	h3, g3, f3, e3, d3, c3, b3, a3,
 	h4, g4, f4, e4, d4, c4, b4, a4,
@@ -740,8 +756,6 @@ const Bitboard MoveKnight8[64] = {
 };
 
 // Pre-Calculated Move tables: Square-Index (the logarithm of the bitboard versions)
-
-static constexpr int xx = -1; // value for "no square"
 
 const int MoveUpIndex[64] = {
 	8, 9, 10, 11, 12, 13, 14, 15,
