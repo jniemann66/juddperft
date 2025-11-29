@@ -63,9 +63,9 @@ public:
 	ZobristKey zkDoWhiteCastle;
 	ZobristKey zkDoWhiteCastleLong;
 
-	unsigned int generate();
+	unsigned int generate(std::optional<unsigned int> seed = {});
 
-	static void findBestSeed(const std::optional<int>& maxAttempts = {});
+	static void findBestSeed(const std::optional<unsigned int>& prev_best_seed = {}, const std::optional<int>& maxAttempts = {});
 };
 
 // generic Hashtable template:

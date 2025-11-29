@@ -42,19 +42,23 @@ namespace juddperft {
 		ZobristKeySet::generate();
 	}
 
-	unsigned int ZobristKeySet::generate()
+	unsigned int ZobristKeySet::generate(std::optional<unsigned int> seed)
 	{
-		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
-		// with a uniform distribution of ints
 		std::random_device rd;
-		const unsigned int seed = rd();
+		if (!seed.has_value()) {
+			seed = rd();
+		}
+
 		//const unsigned int seed = 0x4a1b5d94; // favorite
 		//const unsigned int seed=0xb52b767b; // rd();
-		std::stringstream seed_s;
-		seed_s << "seed=0x" << std::hex << seed;
-		std::cout << seed_s.str() << std::endl;
-		std::mt19937_64 rng(seed);
-		std::uniform_int_distribution<unsigned long long int> dist(0, 0xffffffffffffffff);
+
+		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
+		// with a uniform distribution of ints;
+		// avoid zero
+		// avoid modulo-2 bias by making an even number of possibilities :-)
+
+		std::mt19937_64 rng(seed.value());
+		std::uniform_int_distribution<unsigned long long int> dist(2, 0xffffffffffffffff);
 		for (int n = 0; n < 16; ++n) {
 			for (int m = 0; m < 64; ++m) {
 				ZobristKeySet::zkPieceOnSquare[n][m] = dist(rd);
@@ -100,10 +104,10 @@ namespace juddperft {
 			ZobristKeySet::zkPieceOnSquare[WROOK][d1] ^ // Place Rook on d1
 			ZobristKeySet::zkWhiteCanCastleLong;		// (unconditionally) flip white castling long
 
-		return seed;
+		return seed.value();
 	}
 
-	void ZobristKeySet::findBestSeed(const std::optional<int>& maxAttempts)
+	void ZobristKeySet::findBestSeed(const std::optional<unsigned int>& prev_best_seed, const std::optional<int>& maxAttempts)
 	{
 		static std::map<unsigned int, double> results;
 
@@ -127,9 +131,11 @@ namespace juddperft {
 
 		int attempt = 0;
 
-
-		while (attempt++ < maxAttempts.value_or(10000000)) {
-			const unsigned int seed = zobristKeys.generate();
+		while (attempt < maxAttempts.value_or(10000000)) {
+			const unsigned int seed = (attempt ? zobristKeys.generate() : zobristKeys.generate(prev_best_seed));
+			std::stringstream seed_s;
+			seed_s << "seed=0x" << std::hex << seed;
+			std::cout << seed_s.str() << std::endl;
 
 			static constexpr int avgOf = 10;
 			const int depth = 7;
@@ -139,20 +145,20 @@ namespace juddperft {
 
 			for (int s = 0; s < avgOf; s++) {
 				perftTable.setSize(perftTable.getSize());
-
 				ChessPosition P;
 				P.setupStartPosition();
+				{
+					RaiiTimer timer;
+					nNumPositions = 0;
+					perftFastMT(P, depth, nNumPositions);
+					printf("\nPerft %d: %" PRIu64 " \n",
+						   depth, nNumPositions
+						   );
+					printf("\n");
 
-				RaiiTimer timer;
-				nNumPositions = 0;
-				perftFastMT(P, depth, nNumPositions);
-				printf("\nPerft %d: %" PRIu64 " \n",
-					   depth, nNumPositions
-					   );
-				printf("\n");
-
-				timer.setNodes(nNumPositions);
-				tt += timer.elapsed();
+					timer.setNodes(nNumPositions);
+					tt += timer.elapsed();
+				}
 			}
 
 			if (nNumPositions == expected) {
@@ -164,7 +170,8 @@ namespace juddperft {
 			});
 
 			std::cout << "best so far: seed=0x" << std::hex << it->first << " ms=" << std::dec << std::setw(1) << it->second << std::endl;
-		}
+			attempt++;
+		} // ends while (...)
 	}
 
 #ifdef _USE_HASH

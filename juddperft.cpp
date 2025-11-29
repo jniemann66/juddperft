@@ -74,7 +74,7 @@ int main(int argc, char *argv[], char *envp[])
 
 	// runTestSuite();
 
-	ZobristKeySet::findBestSeed(100);
+
 
 	winBoard(&theEngine);
 
