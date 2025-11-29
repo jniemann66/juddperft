@@ -27,9 +27,16 @@ SOFTWARE.
 #include "movegen.h"
 #include "hashtable.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "fen.h"
+
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+
+
+
+#include <set>
+#include <fstream>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -39,7 +46,6 @@ SOFTWARE.
 
 #include <bitset>
 #include <cassert>
-#include <set>
 
 namespace juddperft {
 
@@ -174,6 +180,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
 	if (M.checkmate && M.blackToMove == BlackToMove) {
+
 		if (M.blackToMove) {
 			WhiteIsCheckmated = 1;
 		} else {
@@ -715,6 +722,27 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 	} else {
 		generateWhiteMoves(P, pM);
 	}
+
+	ChessMove * pX = pM;
+
+	// for (int i = 0 ; i < pM->moveCount; i++) {
+	// 	if (pX[i].checkmate) {
+
+	// 		std::ofstream outfile;
+	// 		outfile.open("e:\\checkmates.txt", std::ios::app);
+
+	// 		if (outfile.is_open()) {
+
+	// 			char buf[4096];
+	// 			memset(buf, 0, 4096);
+	// 			writeFen(buf, &P);
+
+	// 			outfile << "\"" << buf << "\""\n";
+	// 			outfile.close();
+	// 			//dumpChessPosition(*this);
+	// 		}
+	// 	}
+	// }
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
 	cycles = __rdtsc() - cycles;

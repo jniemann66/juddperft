@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.19)
 project(juddperft LANGUAGES CXX)
 
+option(ENABLE_PROFILING "This option will enable GNU profiling" OFF)
+if (ENABLE_PROFILING)
+  add_compile_options(-pg)
+  add_compile_definitions(GPROF=1)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
