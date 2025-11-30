@@ -27,12 +27,14 @@ SOFTWARE.
 #include "search.h"
 #include "engine.h"
 #include "movegen.h"
+#include "fen.h"
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <numeric>
+#include <fstream>
 #include <queue>
 #include <string>
 #include <thread>
@@ -83,6 +85,20 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 			if (pM->checkmate) {
 				pI->nCheckmate++;
+
+				// std::ofstream outfile;
+				// outfile.open("checkmates.txt", std::ios::app);
+
+				// if (outfile.is_open()) {
+
+				// 	char buf[4096];
+				// 	memset(buf, 0, 4096);
+				// 	writeFen(buf, &P);
+
+				// 	outfile << "\"" << buf << "\"\n";
+				// 	outfile.close();
+				// 	//dumpChessPosition(*this);
+				// }
 			}
 		}
 	}
