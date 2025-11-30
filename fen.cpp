@@ -213,9 +213,7 @@ namespace juddperft {
 			pP->MoveNumber = atoi(token);
 		}
 
-#ifdef _USE_HASH
 		pP->calculateHash(); // Important: always do this after setting up a position !
-#endif
 
 		return true;
 	}

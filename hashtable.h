@@ -249,9 +249,10 @@ struct PerftTableEntry
 	};
 };
 
-#ifdef _USE_HASH
 // Global instances:
 extern ZobristKeySet zobristKeys;
+
+#ifdef _USE_HASH
 extern HashTable <std::atomic<PerftTableEntry>> perftTable;
 #endif
 
