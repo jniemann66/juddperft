@@ -280,8 +280,9 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	});
 }
 
-// perftFastMT() - Multi-threaded perftFast() driver, Thread Pool version - ensures cpu cores are always doing work. Depends on Perft3()
+// perftFastMT() - Multi-threaded perftFast() driver, Thread Pool version - ensures cpu cores are always doing work.
 // 01/03/2016: (working ok)
+// 01/12/2025: Working Great :-)
 
 void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 {
@@ -291,6 +292,12 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 		nNodes = 1;
 		return;
 	}
+
+	// Deactivate Check-detection:
+	// Since perftfast doesn't collect stats,
+	// there is no point counting checks and checkmates - which is a _LOT_ of extra work for the move generator
+	// switching-off check/checkmate detection can result in about 25% speed-up.
+	// (this does not affect overall generation of legal moves, it just means that the moves don't have "this-is-a-check", or "this-is-a-checkmate" status set)
 
 	P.dontDetectChecks = 1;
 
@@ -318,7 +325,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 
 	// Set up a simple Thread Pool:
 	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
-		threads.emplace_back([&, depth, P, t] {
+		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
 			std::unique_lock<std::mutex> lock(q_mutex);
