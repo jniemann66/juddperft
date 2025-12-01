@@ -396,79 +396,81 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	hk ^= zobristKeys.zkPieceOnSquare[M.piece][nFromSquare]; // Remove piece at From square
 	hk ^= zobristKeys.zkPieceOnSquare[M.piece][nToSquare]; // Place piece at To Square
 
-	// For double-pawn moves, set EP square:
-	if (M.doublePawnMove) {
-		// Set EnPassant Square
-		if (M.blackToMove) {
-			To <<= 8;
-			A |= To;
-			B |= To;
-			C &= ~To;
-			D |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8]; // Place Black EP at (To+8)
-		} else {
-			To >>= 8;
-			A |= To;
-			B |= To;
-			C &= ~To;
-			D &= ~To;
-			hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8]; // Place White EP at (To-8)
+	if ((M.piece & 7) == WPAWN) {
+		// For double-pawn moves, set EP square:
+		if (M.doublePawnMove) {
+			// Set EnPassant Square
+			if (M.blackToMove) {
+				To <<= 8;
+				A |= To;
+				B |= To;
+				C &= ~To;
+				D |= To;
+				hk ^= zobristKeys.zkPieceOnSquare[BENPASSANT][nToSquare + 8]; // Place Black EP at (To+8)
+			} else {
+				To >>= 8;
+				A |= To;
+				B |= To;
+				C &= ~To;
+				D &= ~To;
+				hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][nToSquare - 8]; // Place White EP at (To-8)
+			}
+			return *this;
 		}
-		return *this;
-	}
 
-	// En-Passant Captures
-	if (M.enPassantCapture) {
-		// remove the actual pawn (it is different to the capture square)
-		if (M.blackToMove) {
-			To <<= 8;
-			A &= ~To; // clear the pawn's square
-			B &= ~To;
-			C &= ~To;
-			D &= ~To;
-			hk ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
-		} else {
-			To >>= 8;
+		// En-Passant Captures
+		if (M.enPassantCapture) {
+			// remove the actual pawn (it is different to the capture square)
+			if (M.blackToMove) {
+				To <<= 8;
+				A &= ~To; // clear the pawn's square
+				B &= ~To;
+				C &= ~To;
+				D &= ~To;
+				hk ^= zobristKeys.zkPieceOnSquare[WPAWN][nToSquare + 8]; // Remove WHITE Pawn at (To+8)
+			} else {
+				To >>= 8;
+				A &= ~To;
+				B &= ~To;
+				C &= ~To;
+				D &= ~To;
+				hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
+			}
+			return *this;
+		}
+
+		// Promotions - Change the piece:
+		if (M.promoteQueen) {
 			A &= ~To;
-			B &= ~To;
-			C &= ~To;
-			D &= ~To;
-			hk ^= zobristKeys.zkPieceOnSquare[BPAWN][nToSquare - 8]; // Remove BLACK Pawn at (To-8)
+			B |= To;
+			C |= To;
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BQUEEN : WQUEEN)][nToSquare]; // place Queen at To square
+			return *this;
 		}
-		return *this;
-	}
 
-	// Promotions - Change the piece:
-	if (M.promoteQueen) {
-		A &= ~To;
-		B |= To;
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BQUEEN : WQUEEN)][nToSquare]; // place Queen at To square
-		return *this;
-	}
+		if (M.promoteKnight) {
+			C |= To;
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BKNIGHT : WKNIGHT)][nToSquare]; // place Knight at To square
+			return *this;
+		}
 
-	if (M.promoteKnight) {
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BKNIGHT : WKNIGHT)][nToSquare]; // place Knight at To square
-		return *this;
-	}
+		if (M.promoteBishop) {
+			A &= ~To;
+			B |= To;
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
+			return *this;
+		}
 
-	if (M.promoteBishop) {
-		A &= ~To;
-		B |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
-		return *this;
-	}
-
-	if (M.promoteRook) {
-		A &= ~To;
-		C |= To;
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-		hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
-		return *this;
+		if (M.promoteRook) {
+			A &= ~To;
+			C |= To;
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
+			return *this;
+		}
 	}
 
 	return *this;
@@ -608,67 +610,69 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	C |= static_cast<int64_t>((M.piece & 4) >> 2) << M.destination;
 	D |= static_cast<int64_t>((M.piece & 8) >> 3) << M.destination;
 
-	// For double-pawn moves, set EP square:
-	if (M.doublePawnMove) {
-		// Set EnPassant Square
-		if (M.blackToMove) {
-			To <<= 8;
-			A |= To;
-			B |= To;
-			C &= ~To;
-			D |= To;
-		} else {
-			To >>= 8;
-			A |= To;
-			B |= To;
-			C &= ~To;
-			D &= ~To;
+	if ((M.piece & 7) == WPAWN) {
+		// For double-pawn moves, set EP square:
+		if (M.doublePawnMove) {
+			// Set EnPassant Square
+			if (M.blackToMove) {
+				To <<= 8;
+				A |= To;
+				B |= To;
+				C &= ~To;
+				D |= To;
+			} else {
+				To >>= 8;
+				A |= To;
+				B |= To;
+				C &= ~To;
+				D &= ~To;
+			}
+			return *this;
 		}
-		return *this;
-	}
 
-	// En-Passant Captures
-	if (M.enPassantCapture) {
-		// remove the actual pawn (it is different to the capture square)
-		if (M.blackToMove) {
-			To <<= 8;
-			A &= ~To; // clear the pawn's square
-			B &= ~To;
-			C &= ~To;
-			D &= ~To;
-		} else {
-			To >>= 8;
+		// En-Passant Captures
+		if (M.enPassantCapture) {
+			// remove the actual pawn (it is different to the capture square)
+			if (M.blackToMove) {
+				To <<= 8;
+				A &= ~To; // clear the pawn's square
+				B &= ~To;
+				C &= ~To;
+				D &= ~To;
+			} else {
+				To >>= 8;
+				A &= ~To;
+				B &= ~To;
+				C &= ~To;
+				D &= ~To;
+			}
+			return *this;
+		}
+
+		// Promotions - Change the piece:
+		if (M.promoteQueen) {
 			A &= ~To;
-			B &= ~To;
-			C &= ~To;
-			D &= ~To;
+			B |= To;
+			C |= To;
+			return *this;
 		}
-		return *this;
-	}
 
-	// Promotions - Change the piece:
-	if (M.promoteQueen) {
-		A &= ~To;
-		B |= To;
-		C |= To;
-		return *this;
-	}
+		if (M.promoteKnight) {
+			C |= To;
+			return *this;
+		}
 
-	if (M.promoteKnight) {
-		C |= To;
-		return *this;
-	}
+		if (M.promoteBishop) {
+			A &= ~To;
+			B |= To;
+			return *this;
+		}
 
-	if (M.promoteBishop) {
-		A &= ~To;
-		B |= To;
-		return *this;
-	}
-
-	if (M.promoteRook) {
-		A &= ~To;
-		C |= To;
-		return *this;
+		if (M.promoteRook) {
+			A &= ~To;
+			C |= To;
+			return *this;
+		}
 	}
 
 	return *this;
@@ -864,17 +868,6 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		}
 
 	} // ends loop over q
-
-	// ChessMove *pLastMove = pM - 1;
-	// pM = pFirstMove;
-	// while (pM <= pLastMove) {
-	// 	if (approveWhiteMove(P, pM)) {
-	// 		++pM;
-	// 	} else {
-	// 		std::swap(*pM, *pLastMove--);
-	// 	}
-	// }
-	// pM->flags = 0;
 
 	// castling
 	if (P.A & P.B & P.C & ~P.D & E1) { // King still in original position
