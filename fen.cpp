@@ -150,7 +150,7 @@ namespace juddperft {
 			if (strstr(token, "b") != NULL)
 			{
 				// Black to Move
-				pP->BlackToMove = 1;
+				pP->blackToMove = 1;
 			}
 			token = strtok(NULL, " ");
 		}
@@ -160,22 +160,22 @@ namespace juddperft {
 			if (strstr(token, "K") != NULL)
 			{
 				// White Can castle short
-				pP->WhiteCanCastle = 1;
+				pP->whiteCanCastle = 1;
 			}
 			if (strstr(token, "Q") != NULL)
 			{
 				// White can Castle long
-				pP->WhiteCanCastleLong = 1;
+				pP->whiteCanCastleLong = 1;
 			}
 			if (strstr(token, "k") != NULL)
 			{
 				// Black can castle short
-				pP->BlackCanCastle = 1;
+				pP->blackCanCastle = 1;
 			}
 			if (strstr(token, "q") != NULL)
 			{
 				// Black can castle long
-				pP->BlackCanCastleLong = 1;
+				pP->blackCanCastleLong = 1;
 			}
 			token = strtok(NULL, " ");
 		}
@@ -204,13 +204,13 @@ namespace juddperft {
 		// Read Field 5: Halfmove clock (number of half moves since last capture or pawn advance)
 		if (token != NULL)
 		{
-			pP->HalfMoves = atoi(token);
+			pP->halfMoves = atoi(token);
 			token = strtok(NULL, " ");
 		}
 		// Read Field 6: Fullmove Number
 		if (token != NULL)
 		{
-			pP->MoveNumber = atoi(token);
+			pP->moveNumber = atoi(token);
 		}
 
 		pP->calculateHash(); // Important: always do this after setting up a position !
@@ -309,29 +309,29 @@ namespace juddperft {
 		strcat(pzFENBuffer, " ");
 
 		// Field 2: Side to Move
-		if (pP->BlackToMove)
+		if (pP->blackToMove)
 			strcat(pzFENBuffer, "b ");
 		else
 			strcat(pzFENBuffer, "w ");
 
 		// Field 3: Castling Rights
-		if ((pP->WhiteCanCastle == 0) &&
-			(pP->WhiteCanCastleLong == 0) &&
-			(pP->BlackCanCastle == 0) &&
-			(pP->BlackCanCastleLong == 0))
+		if ((pP->whiteCanCastle == 0) &&
+			(pP->whiteCanCastleLong == 0) &&
+			(pP->blackCanCastle == 0) &&
+			(pP->blackCanCastleLong == 0))
 			strcat(pzFENBuffer, "-");
 		else
 		{
-			if (pP->WhiteCanCastle)
+			if (pP->whiteCanCastle)
 				strcat(pzFENBuffer, "K");
 
-			if (pP->WhiteCanCastleLong)
+			if (pP->whiteCanCastleLong)
 				strcat(pzFENBuffer, "Q");
 
-			if (pP->BlackCanCastle)
+			if (pP->blackCanCastle)
 				strcat(pzFENBuffer, "k");
 
-			if (pP->BlackCanCastleLong)
+			if (pP->blackCanCastleLong)
 				strcat(pzFENBuffer, "q");
 		}
 		strcat(pzFENBuffer, " ");
@@ -348,11 +348,11 @@ namespace juddperft {
 			strcat(pzFENBuffer, "- ");
 
 		// Field 5: Half-Move Clock
-		sprintf(s, "%d ", pP->HalfMoves);
+		sprintf(s, "%d ", pP->halfMoves);
 		strncat(pzFENBuffer, s, 1023);
 
 		// Field 6: Fullmove number
-		sprintf(s, "%d", pP->MoveNumber);
+		sprintf(s, "%d", pP->moveNumber);
 		strncat(pzFENBuffer, s, 1023);
 
 		return true;

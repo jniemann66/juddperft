@@ -77,20 +77,20 @@ ChessPosition& ChessPosition::setupStartPosition()
 	B = 0x3C0000000000003C;
 	C = 0xDB000000000000DB;
 	D = 0xffff000000000000;
-	BlackCanCastle = 1;
-	WhiteCanCastle = 1;
-	BlackCanCastleLong = 1;
-	WhiteCanCastleLong = 1;
-	BlackForfeitedCastle = 0;
-	WhiteForfeitedCastle = 0;
-	BlackForfeitedCastleLong = 0;
-	WhiteForfeitedCastleLong = 0;
-	BlackDidCastle = 0;
-	WhiteDidCastle = 0;
-	BlackDidCastleLong = 0;
-	WhiteDidCastleLong = 0;
-	MoveNumber = 1;
-	HalfMoves = 0;
+	blackCanCastle = 1;
+	whiteCanCastle = 1;
+	blackCanCastleLong = 1;
+	whiteCanCastleLong = 1;
+	blackForfeitedCastle = 0;
+	whiteForfeitedCastle = 0;
+	blackForfeitedCastleLong = 0;
+	whiteForfeitedCastleLong = 0;
+	blackDidCastle = 0;
+	whiteDidCastle = 0;
+	blackDidCastleLong = 0;
+	whiteDidCastleLong = 0;
+	moveNumber = 1;
+	halfMoves = 0;
 	calculateMaterial();
 
 	ChessPosition::calculateHash();
@@ -109,19 +109,19 @@ ChessPosition & ChessPosition::calculateHash()
 		}
 	}
 
-	if (BlackToMove)
+	if (blackToMove)
 		ChessPosition::hk ^= zobristKeys.zkBlackToMove;
 
-	if (WhiteCanCastle)
+	if (whiteCanCastle)
 		ChessPosition::hk ^= zobristKeys.zkWhiteCanCastle;
 
-	if (WhiteCanCastleLong)
+	if (whiteCanCastleLong)
 		ChessPosition::hk ^= zobristKeys.zkWhiteCanCastleLong;
 
-	if (BlackCanCastle)
+	if (blackCanCastle)
 		ChessPosition::hk ^= zobristKeys.zkBlackCanCastle;
 
-	if (BlackCanCastleLong)
+	if (blackCanCastleLong)
 		ChessPosition::hk ^= zobristKeys.zkBlackCanCastleLong;
 
 	return *this;
@@ -179,12 +179,12 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	const unsigned long nToSquare = M.destination;
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
-	if (M.checkmate && M.blackToMove == BlackToMove) {
+	if (M.checkmate && M.blackToMove == blackToMove) {
 
 		if (M.blackToMove) {
-			WhiteIsCheckmated = 1;
+			whiteIsCheckmated = 1;
 		} else {
-			BlackIsCheckmated = 1;
+			blackIsCheckmated = 1;
 		}
 	}
 
@@ -233,13 +233,13 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			D ^= 0x0f00000000000000;
 
 			hk ^= zobristKeys.zkDoBlackCastle;
-			if (BlackCanCastleLong) {
+			if (blackCanCastleLong) {
 				hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
 			}
 
-			BlackDidCastle = 1;
-			BlackCanCastle = 0;
-			BlackCanCastleLong = 0;
+			blackDidCastle = 1;
+			blackCanCastle = 0;
+			blackCanCastleLong = 0;
 			return *this;
 		}
 
@@ -250,30 +250,30 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			D ^= 0xb800000000000000;
 
 			hk ^= zobristKeys.zkDoBlackCastleLong;
-			if (BlackCanCastle) {
+			if (blackCanCastle) {
 				hk ^= zobristKeys.zkBlackCanCastle;	// conditionally flip black castling
 			}
 
-			BlackDidCastleLong = 1;
-			BlackCanCastle = 0;
-			BlackCanCastleLong = 0;
+			blackDidCastleLong = 1;
+			blackCanCastle = 0;
+			blackCanCastleLong = 0;
 			return *this;
 		}
 
 		// ordinary king move; Black could have castled,
 		// but chose to move the King in a non-castling move
-		if (BlackCanCastle) {
+		if (blackCanCastle) {
 			hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
 		}
 
-		if (BlackCanCastleLong) {
+		if (blackCanCastleLong) {
 			hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
 		}
 
-		BlackForfeitedCastle = 1;
-		BlackForfeitedCastleLong = 1;
-		BlackCanCastle = 0;
-		BlackCanCastleLong = 0;
+		blackForfeitedCastle = 1;
+		blackForfeitedCastleLong = 1;
+		blackCanCastle = 0;
+		blackCanCastleLong = 0;
 		break;
 
 	case WKING:
@@ -284,13 +284,13 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
 
 			hk ^= zobristKeys.zkDoWhiteCastle;
-			if (WhiteCanCastleLong) {
+			if (whiteCanCastleLong) {
 				hk ^= zobristKeys.zkWhiteCanCastleLong;	// conditionally flip white castling long
 			}
 
-			WhiteDidCastle = 1;
-			WhiteCanCastle = 0;
-			WhiteCanCastleLong = 0;
+			whiteDidCastle = 1;
+			whiteCanCastle = 0;
+			whiteCanCastleLong = 0;
 			return *this;
 		}
 
@@ -301,46 +301,46 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
 			hk ^= zobristKeys.zkDoWhiteCastleLong;
-			if (WhiteCanCastle) {
+			if (whiteCanCastle) {
 				hk ^= zobristKeys.zkWhiteCanCastle;	// conditionally flip white castling
 			}
 
-			WhiteDidCastleLong = 1;
-			WhiteCanCastle = 0;
-			WhiteCanCastleLong = 0;
+			whiteDidCastleLong = 1;
+			whiteCanCastle = 0;
+			whiteCanCastleLong = 0;
 			return *this;
 		}
 
 		// ordinary king move; White could have castled,
 		// but chose to move the King in a non-castling move
-		if (WhiteCanCastle) {
+		if (whiteCanCastle) {
 			hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling
 		}
 
-		if (WhiteCanCastleLong) {
+		if (whiteCanCastleLong) {
 			hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
 		}
 
-		WhiteForfeitedCastle = 1;
-		WhiteCanCastle = 0;
-		WhiteForfeitedCastleLong = 1;
-		WhiteCanCastleLong = 0;
+		whiteForfeitedCastle = 1;
+		whiteCanCastle = 0;
+		whiteForfeitedCastleLong = 1;
+		whiteCanCastleLong = 0;
 		break;
 
 	case BROOK:
 		if (nFromSquare == SquareIndex::h8) {
 			// Black moved K-side Rook and forfeits right to castle K-side
-			if (BlackCanCastle){
-				BlackForfeitedCastle = 1;
+			if (blackCanCastle){
+				blackForfeitedCastle = 1;
 				hk ^= zobristKeys.zkBlackCanCastle;	// flip black castling
-				BlackCanCastle = 0;
+				blackCanCastle = 0;
 			}
 		} else if (nFromSquare == SquareIndex::a8) {
 			// Black moved the QS Rook and forfeits right to castle Q-side
-			if (BlackCanCastleLong) {
-				BlackForfeitedCastleLong = 1;
+			if (blackCanCastleLong) {
+				blackForfeitedCastleLong = 1;
 				hk ^= zobristKeys.zkBlackCanCastleLong;	// flip black castling long
-				BlackCanCastleLong = 0;
+				blackCanCastleLong = 0;
 			}
 		}
 		break;
@@ -348,17 +348,17 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	case WROOK:
 		if (nFromSquare == SquareIndex::h1) {
 			// White moved K-side Rook and forfeits right to castle K-side
-			if (WhiteCanCastle) {
-				WhiteForfeitedCastle = 1;
+			if (whiteCanCastle) {
+				whiteForfeitedCastle = 1;
 				hk ^= zobristKeys.zkWhiteCanCastle;	// flip white castling BROKEN !!!
-				WhiteCanCastle = 0;
+				whiteCanCastle = 0;
 			}
 		} else if (nFromSquare == SquareIndex::a1) {
 			// White moved the QSide Rook and forfeits right to castle Q-side
-			if (WhiteCanCastleLong) {
-				WhiteForfeitedCastleLong = 1;
+			if (whiteCanCastleLong) {
+				whiteForfeitedCastleLong = 1;
 				hk ^= zobristKeys.zkWhiteCanCastleLong;	// flip white castling long
-				WhiteCanCastleLong = 0;
+				whiteCanCastleLong = 0;
 			}
 		}
 		break;
@@ -483,11 +483,11 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	const unsigned long nFromSquare = M.origin;
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
-	if (M.checkmate && M.blackToMove == BlackToMove) {
+	if (M.checkmate && M.blackToMove == blackToMove) {
 		if (M.blackToMove) {
-			WhiteIsCheckmated = 1;
+			whiteIsCheckmated = 1;
 		} else {
-			BlackIsCheckmated = 1;
+			blackIsCheckmated = 1;
 		}
 	}
 
@@ -507,9 +507,9 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			C ^= 0x0f00000000000000;
 			D ^= 0x0f00000000000000;
 
-			BlackDidCastle = 1;
-			BlackCanCastle = 0;
-			BlackCanCastleLong = 0;
+			blackDidCastle = 1;
+			blackCanCastle = 0;
+			blackCanCastleLong = 0;
 			return *this;
 		}
 
@@ -519,16 +519,16 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			C ^= 0xb800000000000000;
 			D ^= 0xb800000000000000;
 
-			BlackDidCastleLong = 1;
-			BlackCanCastle = 0;
-			BlackCanCastleLong = 0;
+			blackDidCastleLong = 1;
+			blackCanCastle = 0;
+			blackCanCastleLong = 0;
 			return *this;
 		}
 
-		BlackForfeitedCastle = 1;
-		BlackForfeitedCastleLong = 1;
-		BlackCanCastle = 0;
-		BlackCanCastleLong = 0;
+		blackForfeitedCastle = 1;
+		blackForfeitedCastleLong = 1;
+		blackCanCastle = 0;
+		blackCanCastleLong = 0;
 		break;
 
 	case WKING:
@@ -538,9 +538,9 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			C ^= 0x000000000000000f;
 			D &= 0xfffffffffffffff0;	// clear colour of e1, f1, g1, h1 (make white)
 
-			WhiteDidCastle = 1;
-			WhiteCanCastle = 0;
-			WhiteCanCastleLong = 0;
+			whiteDidCastle = 1;
+			whiteCanCastle = 0;
+			whiteCanCastleLong = 0;
 			return *this;
 		}
 
@@ -550,30 +550,30 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			C ^= 0x00000000000000b8;
 			D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
-			WhiteDidCastleLong = 1;
-			WhiteCanCastle = 0;
-			WhiteCanCastleLong = 0;
+			whiteDidCastleLong = 1;
+			whiteCanCastle = 0;
+			whiteCanCastleLong = 0;
 			return *this;
 		}
 
-		WhiteForfeitedCastle = 1;
-		WhiteCanCastle = 0;
-		WhiteForfeitedCastleLong = 1;
-		WhiteCanCastleLong = 0;
+		whiteForfeitedCastle = 1;
+		whiteCanCastle = 0;
+		whiteForfeitedCastleLong = 1;
+		whiteCanCastleLong = 0;
 		break;
 
 	case BROOK:
 		if (nFromSquare == SquareIndex::h8) {
 			// Black moved K-side Rook and forfeits right to castle K-side
-			if (BlackCanCastle){
-				BlackForfeitedCastle = 1;
-				BlackCanCastle = 0;
+			if (blackCanCastle){
+				blackForfeitedCastle = 1;
+				blackCanCastle = 0;
 			}
 		} else if (nFromSquare == SquareIndex::a8) {
 			// Black moved the QS Rook and forfeits right to castle Q-side
-			if (BlackCanCastleLong) {
-				BlackForfeitedCastleLong = 1;
-				BlackCanCastleLong = 0;
+			if (blackCanCastleLong) {
+				blackForfeitedCastleLong = 1;
+				blackCanCastleLong = 0;
 			}
 		}
 		break;
@@ -581,15 +581,15 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	case WROOK:
 		if (nFromSquare == SquareIndex::h1) {
 			// White moved K-side Rook and forfeits right to castle K-side
-			if (WhiteCanCastle) {
-				WhiteForfeitedCastle = 1;
-				WhiteCanCastle = 0;
+			if (whiteCanCastle) {
+				whiteForfeitedCastle = 1;
+				whiteCanCastle = 0;
 			}
 		} else if (nFromSquare == SquareIndex::a1) {
 			// White moved the QSide Rook and forfeits right to castle Q-side
-			if (WhiteCanCastleLong) {
-				WhiteForfeitedCastleLong = 1;
-				WhiteCanCastleLong = 0;
+			if (whiteCanCastleLong) {
+				whiteForfeitedCastleLong = 1;
+				whiteCanCastleLong = 0;
 			}
 		}
 		break;
@@ -696,7 +696,7 @@ void ChessPosition::getLegalMoves(ChessMove *movelist) const
 
 void ChessPosition::switchSides()
 {
-	BlackToMove ^= 1;
+	blackToMove ^= 1;
 	hk ^= zobristKeys.zkBlackToMove;
 	return;
 }
@@ -721,7 +721,7 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 	uint64_t cycles = __rdtsc();
 #endif
 
-	if (P.BlackToMove) {
+	if (P.blackToMove) {
 		generateBlackMoves(P, pM);
 	} else {
 		generateWhiteMoves(P, pM);
@@ -756,7 +756,7 @@ inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
 
 void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
-	if (P.WhiteIsCheckmated || P.WhiteIsStalemated) {
+	if (P.whiteIsCheckmated || P.whiteIsStalemated) {
 		pM->moveCount = 0;
 		pM->origin = 0;
 		pM->destination = 0;
@@ -771,27 +771,26 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	const Bitboard WhiteFree // all squares where W is free to move
 			= (P.A & P.B & ~P.C)        // any EP square
 			  |	~(Occupied)				// any vacant square
-			  |	(~P.A & P.D)			// Black Bishop, Rook or Queen
-			  |	(~P.B & P.D);			// Black Pawn or Knight
+			|	(~P.A & P.D)			// Black Bishop, Rook or Queen
+			|	(~P.B & P.D);			// Black Pawn or Knight
 
 	const Bitboard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
 
-	unsigned long firstSq = 0;
-	unsigned long lastSq = 63;
+	// note: tried system using bit-scans to get start and end squares.
+	// it works fine, but the simpler system of just counting pieces seems marginally faster
+	// unsigned long firstSq = h1;
+	// unsigned long lastSq = a8;
+	// const Bitboard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
+	// getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
 
-	const Bitboard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
-	assert(WhiteOccupied != 0);
-	getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
+	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
+	int pieces = 0;
 
-	for (unsigned int q = firstSq; q <= lastSq; q++) {
+	for (int q = h1; q <= a8; q++) { // start from white's side of board
 		const Bitboard fromSQ = 1ull << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
 		switch (piece) {
-		case WEMPTY:
-		case BEMPTY:
-			continue;
-
 		case WPAWN:
 		{
 			const Bitboard marchZone =  WhiteFree & ~BlackOccupied;
@@ -808,11 +807,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		}
 			break;
 
-		case WENPASSANT:
-			continue;
-
 		case WKNIGHT:
-		{
 			addWhiteMove(P, pM, q, MoveKnight1Index[q], WhiteFree, WKNIGHT);
 			addWhiteMove(P, pM, q, MoveKnight2Index[q], WhiteFree, WKNIGHT);
 			addWhiteMove(P, pM, q, MoveKnight3Index[q], WhiteFree, WKNIGHT);
@@ -821,11 +816,9 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			addWhiteMove(P, pM, q, MoveKnight6Index[q], WhiteFree, WKNIGHT);
 			addWhiteMove(P, pM, q, MoveKnight7Index[q], WhiteFree, WKNIGHT);
 			addWhiteMove(P, pM, q, MoveKnight8Index[q], WhiteFree, WKNIGHT);
-		}
 			break;
 
 		case WKING:
-		{
 			addWhiteMove(P, pM, q, MoveLeftIndex[q], WhiteFree, WKING);
 			addWhiteMove(P, pM, q, MoveUpLeftIndex[q], WhiteFree, WKING);
 			addWhiteMove(P, pM, q, MoveUpIndex[q], WhiteFree, WKING);
@@ -834,7 +827,6 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			addWhiteMove(P, pM, q, MoveDownRightIndex[q], WhiteFree, WKING);
 			addWhiteMove(P, pM, q, MoveDownIndex[q], WhiteFree, WKING);
 			addWhiteMove(P, pM, q, MoveDownLeftIndex[q], WhiteFree, WKING);
-		}
 			break;
 
 		case WBISHOP:
@@ -863,7 +855,11 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 		} // ends switch
 
-		if (P.DontGenerateAllMoves && pM > pFirstMove) {
+		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
+			goto cleanup; // get the hell outa here ...
+		}
+
+		if (++pieces > maxPieces) {
 			break;
 		}
 
@@ -873,7 +869,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	if (P.A & P.B & P.C & ~P.D & E1) { // King still in original position
 
 		// Conditionally generate O-O move:
-		if (P.WhiteCanCastle && // White still has castle rights
+		if (P.whiteCanCastle && // White still has castle rights
 				(~P.A & ~P.B & P.C & ~P.D & H1) && // Kingside rook is in correct position
 				(WHITECASTLEZONE & Occupied) == 0 && // Castle Zone (f1, g1) is clear
 				!isWhiteInCheck(P, WHITECASTLECHECKZONE)) // King is not in Check (in e1, f1, g1)
@@ -897,7 +893,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		}
 
 		// Conditionally generate O-O-O move:
-		if (P.WhiteCanCastleLong && // White still has castle-long rights
+		if (P.whiteCanCastleLong && // White still has castle-long rights
 				(~P.A & ~P.B & P.C & ~P.D & A1) && // Queenside rook is in correct Position
 				(WHITECASTLELONGZONE & Occupied) == 0 && // Castle-long zone (b1, c1, d1) is clear
 				!isWhiteInCheck(P, WHITECASTLELONGCHECKZONE)) // King is not in check (in e1, d1, c1)
@@ -922,6 +918,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		}
 	} // ends castling
 
+	cleanup:
 	// put the move count into the first move
 	pFirstMove->moveCount = pM - pFirstMove;
 
@@ -1183,15 +1180,20 @@ inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 
 inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
+	if (Q.dontDetectChecks)
+		return;
+
 	// test if white's move will put black in check or checkmate
 	if (isBlackInCheck(Q))	{
 		pM->check = 1;
-		Q.BlackToMove = 1;
-		ChessMove blacksMoves[MOVELIST_SIZE];
-		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
-		generateBlackMoves(Q, blacksMoves);
-		if (blacksMoves->moveCount == 0) { // black will be in check with no legal moves
-			pM->checkmate = 1; // this move is a checkmating move
+		if (Q.dontDetectCheckmates == 0) {
+			Q.blackToMove = 1;
+			ChessMove blacksMoves[MOVELIST_SIZE];
+			Q.dontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
+			generateBlackMoves(Q, blacksMoves);
+			if (blacksMoves->moveCount == 0) { // black will be in check with no legal moves
+				pM->checkmate = 1; // this move is a checkmating move
+			}
 		}
 	} else {
 		pM->check = 0;
@@ -1210,7 +1212,7 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 
 void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
-	if (P.BlackIsCheckmated || P.BlackIsStalemated) {
+	if (P.blackIsCheckmated || P.blackIsStalemated) {
 		pM->moveCount = 0;
 		pM->origin = 0;
 		pM->destination = 0;
@@ -1221,32 +1223,30 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 	ChessMove* pFirstMove = pM;
 	const Bitboard Occupied = P.A | P.B | P.C; // all squares occupied by something
-
 	const Bitboard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
 	const Bitboard BlackFree // all squares where B is free to move
 			= (P.A & P.B & ~P.C)		// any EP square
 			  | ~(Occupied)				// any vacant square
-			  | (~P.A & ~P.D)			// White Bishop, Rook or Queen
-			  | (~P.B & ~P.D);			// White Pawn or Knight
+			| (~P.A & ~P.D)			// White Bishop, Rook or Queen
+			| (~P.B & ~P.D);			// White Pawn or Knight
 
 	const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
 
-	unsigned long firstSq = 0;
-	unsigned long lastSq = 63;
+	// note: tried system using bit-scans to get start and end squares.
+	// it works fine, but the simpler system of just counting pieces seems marginally faster
+	// unsigned long firstSq = h1;
+	// unsigned long lastSq = a8;
+	// const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
+	// getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
 
-	const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
-	assert(BlackOccupied != 0);
-	getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
+	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
+	int pieces = 0;
 
-	for (unsigned int q = firstSq; q <= lastSq; q++) {
+	for (int q = a8; q >= h1; q--) { // start from black's side of board
 		const Bitboard fromSQ = 1ull << q;
 		const piece_t piece = P.getPieceAtSquare(q);
 
 		switch (piece) {
-		case WEMPTY:
-		case BEMPTY:
-			continue;
-
 		case BPAWN:
 		{
 			const Bitboard marchZone = BlackFree & ~WhiteOccupied; // area into which pawns may advance
@@ -1263,11 +1263,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		}
 			break;
 
-		case BENPASSANT:
-			continue;
-
 		case BKNIGHT:
-		{
 			addBlackMove(P, pM, q, MoveKnight1Index[q], BlackFree, BKNIGHT);
 			addBlackMove(P, pM, q, MoveKnight2Index[q], BlackFree, BKNIGHT);
 			addBlackMove(P, pM, q, MoveKnight3Index[q], BlackFree, BKNIGHT);
@@ -1276,11 +1272,9 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			addBlackMove(P, pM, q, MoveKnight6Index[q], BlackFree, BKNIGHT);
 			addBlackMove(P, pM, q, MoveKnight7Index[q], BlackFree, BKNIGHT);
 			addBlackMove(P, pM, q, MoveKnight8Index[q], BlackFree, BKNIGHT);
-		}
 			break;
 
 		case BKING:
-		{
 			addBlackMove(P, pM, q, MoveLeftIndex[q], BlackFree, BKING);
 			addBlackMove(P, pM, q, MoveUpLeftIndex[q], BlackFree, BKING);
 			addBlackMove(P, pM, q, MoveUpIndex[q], BlackFree, BKING);
@@ -1289,7 +1283,6 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			addBlackMove(P, pM, q, MoveDownRightIndex[q], BlackFree, BKING);
 			addBlackMove(P, pM, q, MoveDownIndex[q], BlackFree, BKING);
 			addBlackMove(P, pM, q, MoveDownLeftIndex[q], BlackFree, BKING);
-		}
 			break;
 
 		case BBISHOP:
@@ -1318,7 +1311,11 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 		} // ends switch
 
-		if (P.DontGenerateAllMoves && pM > pFirstMove) {
+		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
+			goto cleanup;  // get the hell outa here ...
+		}
+
+		if (++pieces > maxPieces) {
 			break;
 		}
 
@@ -1328,7 +1325,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	if (P.A & P.B & P.C & P.D & E8) { // King still in original position
 
 		// Conditionally generate O-O move:
-		if (P.BlackCanCastle && // Black still has castle rights
+		if (P.blackCanCastle && // Black still has castle rights
 				(~P.A & ~P.B & P.C & P.D & H8) && // Kingside rook is in correct position
 				(BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
 				!isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
@@ -1352,7 +1349,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		}
 
 		// Conditionally generate O-O-O move:
-		if (P.BlackCanCastleLong && // Black still has castle-long rights
+		if (P.blackCanCastleLong && // Black still has castle-long rights
 				(~P.A & ~P.B & P.C & P.D & A8) && // Queenside rook is in correct Position
 				(BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
 				!isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
@@ -1377,6 +1374,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 	} // ends castling
 
+	cleanup:
 	// put the move count into the first move
 	pFirstMove->moveCount = pM - pFirstMove;
 
@@ -1517,15 +1515,20 @@ inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 
 inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
+	if (Q.dontDetectChecks)
+		return;
+
 	// test if black's move will put white in check or checkmate
 	if (isWhiteInCheck(Q))	{
 		pM->check = 1;
-		Q.BlackToMove = 0;
-		ChessMove whitesMoves[MOVELIST_SIZE];
-		Q.DontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
-		generateWhiteMoves(Q, whitesMoves);
-		if (whitesMoves->moveCount == 0) { // white will be in check with no legal moves
-			pM->checkmate = 1; // this move is a checkmating move
+		if (Q.dontDetectCheckmates == 0) {
+			Q.blackToMove = 0;
+			ChessMove whitesMoves[MOVELIST_SIZE];
+			Q.dontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
+			generateWhiteMoves(Q, whitesMoves);
+			if (whitesMoves->moveCount == 0) { // white will be in check with no legal moves
+				pM->checkmate = 1; // this move is a checkmating move
+			}
 		}
 	} else {
 		pM->check = 0;
@@ -1682,16 +1685,16 @@ void dumpChessPosition(ChessPosition p)
 		if ((q % 8) == 0)
 		{
 			printf("|   ");
-			if ((q == 56) && (p.BlackCanCastle))
+			if ((q == 56) && (p.blackCanCastle))
 				printf("Black can Castle");
-			if ((q == 48) && (p.BlackCanCastleLong))
+			if ((q == 48) && (p.blackCanCastleLong))
 				printf("Black can Castle Long");
-			if ((q == 40) && (p.WhiteCanCastle))
+			if ((q == 40) && (p.whiteCanCastle))
 				printf("White can Castle");
-			if ((q == 32) && (p.WhiteCanCastleLong))
+			if ((q == 32) && (p.whiteCanCastleLong))
 				printf("White can Castle Long");
 			if (q == 8) printf("material= %d", p.calculateMaterial());
-			if (q == 0) printf("%s to move", p.BlackToMove ? "Black" : "White");
+			if (q == 0) printf("%s to move", p.blackToMove ? "Black" : "White");
 			printf("\n---------------------------------\n");
 		}
 	}

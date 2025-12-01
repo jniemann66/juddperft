@@ -292,6 +292,8 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 		return;
 	}
 
+	P.dontDetectChecks = 1;
+
 	ChessMove MoveList[MOVELIST_SIZE];
 	generateMoves(P, MoveList);
 

@@ -209,32 +209,36 @@ public:
 
 	union{
 		struct{
-			uint32_t BlackToMove : 1;
-			uint32_t WhiteCanCastle : 1;
-			uint32_t WhiteCanCastleLong : 1;
-			uint32_t BlackCanCastle : 1;
-			uint32_t BlackCanCastleLong : 1;
-			uint32_t WhiteForfeitedCastle : 1;
-			uint32_t WhiteForfeitedCastleLong : 1;
-			uint32_t BlackForfeitedCastle : 1;
-			uint32_t BlackForfeitedCastleLong : 1;
-			uint32_t WhiteDidCastle : 1;
-			uint32_t WhiteDidCastleLong : 1;
-			uint32_t BlackDidCastle : 1;
-			uint32_t BlackDidCastleLong : 1;
-			uint32_t Unused : 12;
-			uint32_t DontGenerateAllMoves : 1; // flag to signal to move generator to not bother find all moves, but to find at least one legal move
-			uint32_t WhiteIsInCheck : 1;
-			uint32_t BlackIsInCheck : 1;
-			uint32_t WhiteIsStalemated : 1;
-			uint32_t BlackIsStalemated : 1;
-			uint32_t WhiteIsCheckmated : 1;
-			uint32_t BlackIsCheckmated : 1;
+			// move-generation options
+			uint32_t dontGenerateAllMoves : 1; // used just to prove whether there is at least one legal move
+			uint32_t dontDetectCheckmates : 1; // if set, generateMoves() will not test for 'IsCheckmated' flags
+			uint32_t dontDetectChecks : 1; // if set, generateMoves() will not test for 'isInCheck' flags (implies dontDetectCheckmates)
+			uint32_t unused : 10;
+			// actual position flags
+			uint32_t whiteCanCastle : 1;
+			uint32_t whiteCanCastleLong : 1;
+			uint32_t blackCanCastle : 1;
+			uint32_t blackCanCastleLong : 1;
+			uint32_t whiteForfeitedCastle : 1;
+			uint32_t whiteForfeitedCastleLong : 1;
+			uint32_t blackForfeitedCastle : 1;
+			uint32_t blackForfeitedCastleLong : 1;
+			uint32_t whiteDidCastle : 1;
+			uint32_t whiteDidCastleLong : 1;
+			uint32_t blackDidCastle : 1;
+			uint32_t blackDidCastleLong : 1;
+			uint32_t whiteIsInCheck : 1;
+			uint32_t blackIsInCheck : 1;
+			uint32_t whiteIsStalemated : 1;
+			uint32_t blackIsStalemated : 1;
+			uint32_t whiteIsCheckmated : 1;
+			uint32_t blackIsCheckmated : 1;
+			uint32_t blackToMove : 1;
 		};
 		uint32_t flags;
 	};
-	uint16_t MoveNumber;
-	uint16_t HalfMoves;
+	uint16_t moveNumber;
+	uint16_t halfMoves;
 	bool operator==(const ChessPosition& Q) {
 		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::flags == Q.flags));
 	}

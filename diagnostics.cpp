@@ -125,7 +125,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		fenString.assign(fenBuffer);
 
 		std::cout << "After Move: ";
-		if (pP->BlackToMove)
+		if (pP->blackToMove)
 			std::cout << "... ";
 		dumpMove(*pM);
 		std::cout << "Position: " << fenString << std::endl;
