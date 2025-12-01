@@ -11,6 +11,7 @@
 #define _RAIITIMER_H 1
 
 #include <cstdint>
+
 #include <iomanip>
 #include <iostream>
 #include <chrono>

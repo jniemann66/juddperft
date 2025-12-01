@@ -25,23 +25,24 @@ SOFTWARE.
 */
 
 #ifndef _HASH_TABLE_H
-#define _HASH_TABLE_H 
+#define _HASH_TABLE_H
 
 #include "movegen.h"
 #include "utils.h"
 
 #include <cstring>
+
 #include <atomic>
 #include <iostream>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace juddperft {
 
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000
 
-typedef uint64_t HashKey;
+typedef uint64_t Hashkey;
 typedef uint64_t ZobristKey;
 
 class ZobristKeySet
@@ -75,7 +76,7 @@ public:
 	~HashTable();
 
 	// getters
-	T* getAddress(const HashKey& SearchHK) const;
+	T* getAddress(const Hashkey& SearchHK) const;
 	std::string getName() const;
 	uint64_t getSize() const;			// return currently-allocated size in bytes
 	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
@@ -178,7 +179,7 @@ inline bool HashTable<T>::deAllocate()
 }
 
 template<class T>
-inline T * HashTable<T>::getAddress(const HashKey & SearchHK) const
+inline T * HashTable<T>::getAddress(const Hashkey & SearchHK) const
 {
 	return m_pTable + (SearchHK & m_nIndexMask);
 }
@@ -235,7 +236,7 @@ void HashTable<T>::setQuiet(bool newQuiet)
 
 struct PerftTableEntry
 {
-	HashKey Hash;
+	Hashkey Hash;
 
 	union {
 		struct {

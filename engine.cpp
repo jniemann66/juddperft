@@ -27,6 +27,7 @@ SOFTWARE.
 // engine.cpp
 
 #include "engine.h"
+#include "search.h"
 
 namespace juddperft {
 

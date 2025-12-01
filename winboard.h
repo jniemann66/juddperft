@@ -72,7 +72,7 @@ struct WinboardInputCommandDefinition {
 // -- all Winboard output should be via this function !! --
 void winBoardOutput(const char* s);
 
-// functions for dumping output to log file
+// functions for printing output to log file
 void logInput(std::ofstream& logfile, const char* s);
 void logOutput(std::ofstream& logfile, const char* s);
 

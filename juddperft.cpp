@@ -25,11 +25,13 @@ SOFTWARE.
 */
 
 #include "juddperft.h"
-#include "diagnostics.h"
-#include "fen.h"
-#include "hash_table.h"
+//#include "chessposition.h"
 #include "movegen.h"
-#include "search.h"
+//#include "diagnostics.h"
+//#include "fen.h"
+#include "hash_table.h"
+//#include "search.h"
+#include "engine.h"
 #include "winboard.h"
 
 #ifdef _MSC_VER
@@ -39,10 +41,7 @@ SOFTWARE.
 #include <x86intrin.h>
 #endif
 
-#include <cinttypes>
 #include <iostream>
-#include <atomic>
-#include <bitset>
 
 using namespace juddperft;
 
@@ -67,10 +66,10 @@ int main(int argc, char *argv[], char *envp[])
 	// readFen(&X, "r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1");
 	// readFen(&X, "1rb5/4r3/3p1npb/3kp1P1/1P3P1P/5nR1/2Q1BK2/bN4NR w - - 3 61");
 	// readFen(&X, "6k1/8/8/Q1Q1Q3/8/Q1q1Q3/8/Q1Q1Q1K1 w - -");
-	// dumpChessPosition(X);
+	// printChessPosition(X);
 	// ChessMove movelist[MOVELIST_SIZE];
 	// X.getLegalMoves(movelist);
-	// dumpMoveList(movelist, StandardAlgebraic, nullptr);
+	// printMoveList(movelist, StandardAlgebraic, nullptr);
 
 	// ZobristKeySet::findBestSeed(0x4a1b5d94);
 

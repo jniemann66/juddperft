@@ -25,6 +25,11 @@ SOFTWARE.
 */
 
 #include "fen.h"
+#include "chessposition.h"
+
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
 
 /////////////////////////////////////////////////////////
 // readFen() - Reads a FEN string and sets up position

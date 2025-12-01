@@ -19,6 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mavx2 -DNDEBUG")
 find_package(Threads REQUIRED)
 
 add_executable(juddperft
+	chessposition.h
 	diagnostics.h
 	engine.h
 	fen.h
@@ -31,6 +32,7 @@ add_executable(juddperft
 	timemanage.h
 	utils.h
 	winboard.h
+	chessposition.cpp
 	diagnostics.cpp
 	engine.cpp
 	fen.cpp

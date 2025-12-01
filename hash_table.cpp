@@ -25,6 +25,7 @@ SOFTWARE.
 */
 
 #include "hash_table.h"
+#include "chessposition.h"
 #include "search.h"
 #include "raiitimer.h"
 

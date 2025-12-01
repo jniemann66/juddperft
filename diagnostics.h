@@ -43,7 +43,7 @@ namespace juddperft {
 int perftValidateWithExternal(const std::string& validatorPath, const std::string& fenString, int depth, int64_t value);
 void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int depth);
 void runTestSuite();
-void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
+void printPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer);
 #endif // INCLUDE_DIAGNOSTICS
 
 } // namespace juddperft

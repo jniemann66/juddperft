@@ -26,17 +26,19 @@ SOFTWARE.
 
 #include "search.h"
 #include "engine.h"
+//#include "fen.h"
+#include "hash_table.h"
 #include "movegen.h"
-#include "fen.h"
+
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <numeric>
-#include <fstream>
+//#include <fstream>
 #include <queue>
-#include <string>
+//#include <string>
 #include <thread>
 #include <vector>
 
@@ -97,7 +99,7 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 				// 	outfile << "\"" << buf << "\"\n";
 				// 	outfile.close();
-				// 	//dumpChessPosition(*this);
+				// 	//printChessPosition(*this);
 				// }
 			}
 		}
@@ -124,7 +126,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 #ifdef _USE_HASH
 	// Consult the HashTable:
-	HashKey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
+	Hashkey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
 	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk); // get address of atomic record
 	PerftTableEntry retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
 	if (retrievedRecord.Hash == hk) {
@@ -172,10 +174,10 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 //{
 //	printf("keys Don't match!\n ");
 //	printf("before:\n");
-//	dumpChessPosition(P);
+//	printChessPosition(P);
 //	printf("after:\n");
-//	dumpMove(*pM);
-//	dumpChessPosition(Q);
+//	printMove(*pM);
+//	printChessPosition(Q);
 //	printf("\n\n");
 //	getchar();
 //	Q.calculateHash(); // Repair the bad hash Key
@@ -183,7 +185,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 //else
 //{
 //	//	printf( "keys Match: " );
-//	//	dumpMove(*pM);
+//	//	printMove(*pM);
 //	//	getchar();
 //}
 //// ---------------------------------------------------
@@ -297,7 +299,8 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	// Since perftfast doesn't collect stats,
 	// there is no point counting checks and checkmates - which is a _LOT_ of extra work for the move generator
 	// switching-off check/checkmate detection can result in about 25% speed-up.
-	// (this does not affect overall generation of legal moves, it just means that the moves don't have "this-is-a-check", or "this-is-a-checkmate" status set)
+	// (this does not affect overall generation of legal moves and positions,
+	// it just means that the moves don't have "this-is-a-check", or "this-is-a-checkmate" status set)
 
 	P.dontDetectChecks = 1;
 

@@ -289,13 +289,14 @@ void parse_input_movelist(const char* s, Engine* pE)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
 	generateMoves(pE->currentPosition, MoveList);
-	dumpMoveList(MoveList, CoOrdinate);
+	printMoveList(MoveList, CoOrdinate);
 }
 
 void parse_input_showposition(const char* s, Engine* pE)
 {
-	dumpChessPosition(pE->currentPosition);
+	pE->currentPosition.printPosition();
 }
+
 void parse_input_showhash(const char* s, Engine* pE)
 {
 
@@ -387,7 +388,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		Q = pE->currentPosition;
 		Q.performMove(*pM);
 		Q.switchSides();
-		dumpMove(*pM, LongAlgebraicNoNewline);
+		printMove(*pM, LongAlgebraicNoNewline);
 		PerftInfo t;
 		perftMT(Q, depth-1, 1, &t);
 		printf("Perft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
@@ -450,7 +451,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 		Q = pE->currentPosition;
 		Q.performMove(*pM).switchSides();
 
-		dumpMove(*pM, LongAlgebraicNoNewline);
+		printMove(*pM, LongAlgebraicNoNewline);
 		nodecount_t nNumPositions = 0;
 		perftFastMT(Q, depth - 1, nNumPositions);
 		printf(" %" PRIu64 " \n",
@@ -511,7 +512,7 @@ void parse_input_testExternal(const char* s, Engine* pE) {
 			std::cout << " to depth of " << depth;
 			std::cout << "\nPosition:\n" << std::endl;
 			ChessPosition currentPosition = pE->currentPosition;
-			dumpChessPosition(currentPosition);
+			currentPosition.printPosition();
 			std::cout << "Off we go ... " << std::endl;
 			findPerftBug(perftValidatorPath, &currentPosition, depth);
 		}

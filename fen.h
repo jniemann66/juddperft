@@ -30,9 +30,6 @@ SOFTWARE.
 #define __FEN_H 1
 
 #include "movegen.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace juddperft {
 

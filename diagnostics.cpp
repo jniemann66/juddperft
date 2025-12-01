@@ -25,13 +25,15 @@ SOFTWARE.
 */
 
 #include "diagnostics.h"
+#include "chessposition.h"
 #include "search.h"
 #include "movegen.h"
 #include "fen.h"
 #include "raiitimer.h"
 
+#include <cstring>
 #include <cinttypes>
-#include <stdio.h>
+#include <cstdio>
 
 ////////////////////////////////////////////////////////
 //
@@ -43,12 +45,12 @@ SOFTWARE.
 
 namespace juddperft {
 
-void dumpPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer)
+void printPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64_t correctAnswer)
 {
 	RaiiTimer timer;
 	ChessPosition P;
 	readFen(&P, pzFENstring);
-	dumpChessPosition(P);
+	P.printPosition();
 
 	nodecount_t n = 0;
 	perftFastMT(P, depth, n);
@@ -93,8 +95,8 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 
 		std::cout << "Reached Single Position!\n";
 
-		dumpChessPosition(*pP);
-		dumpMoveList(MoveList);
+		pP->printPosition();
+		printMoveList(MoveList);
 		perftMT(*pP, 1, 1, &T);
 		int nResult = perftValidateWithExternal(validatorPath, fenString, 1, T.nMoves);
 		if (nResult == PERFTVALIDATE_FALSE) {
@@ -127,7 +129,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 		std::cout << "After Move: ";
 		if (pP->blackToMove)
 			std::cout << "... ";
-		dumpMove(*pM);
+		printMove(*pM);
 		std::cout << "Position: " << fenString << std::endl;
 
 		T.nMoves = T.nCapture = T.nEPCapture = T.nCastle = T.nCastleLong = T.nPromotion = T.nCheck = T.nCheckmate = 0LL;
@@ -156,14 +158,14 @@ void runTestSuite()
 {
 	// see https://chessprogramming.wikispaces.com/perft+Results
 	printf("Running Test Suite\n\n");
-//	dumpPerftScoreFfromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860);				// Position 1: Initial Position
-	dumpPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25", 6, 8031647685);	// Position 2: 'Kiwipete' position
-	dumpPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0", 8, 3009794393);								// Position 3
-	dumpPerftScoreFfromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 6, 706045033);		// Position 4
-	dumpPerftScoreFfromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", 6, 706045033);		// Position 4 Mirrored (should be same score as previous)
-	dumpPerftScoreFfromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194);				// Position 5
-	dumpPerftScoreFfromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 7, 287188994746); // Position 6 28/1/2016: Correct (took 8454195 ms)
-	dumpPerftScoreFfromFEN("r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1", 6, 8419356881); // https://www.talkchess.com/forum3/viewtopic.php?f=2&t=70543
+//	printPerftScoreFfromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 7, 3195901860);				// Position 1: Initial Position
+	printPerftScoreFfromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 25", 6, 8031647685);	// Position 2: 'Kiwipete' position
+	printPerftScoreFfromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0", 8, 3009794393);								// Position 3
+	printPerftScoreFfromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1", 6, 706045033);		// Position 4
+	printPerftScoreFfromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", 6, 706045033);		// Position 4 Mirrored (should be same score as previous)
+	printPerftScoreFfromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194);				// Position 5
+	printPerftScoreFfromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 7, 287188994746); // Position 6 28/1/2016: Correct (took 8454195 ms)
+	printPerftScoreFfromFEN("r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1", 6, 8419356881); // https://www.talkchess.com/forum3/viewtopic.php?f=2&t=70543
 
 		// (Position 6 21/11/25 : correct, 211945 ms - but on more modern hardware)
 }
