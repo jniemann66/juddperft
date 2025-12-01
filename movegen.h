@@ -322,6 +322,8 @@ bool isInCheck(const ChessPosition& P, bool bIsBlack);
 // White Move-Generation Functions:
 void generateWhiteMoves(const ChessPosition& P, ChessMove*);
 inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
+inline void addWhiteMove2(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
+inline bool approveWhiteMove(ChessPosition Q, ChessMove *pM);
 Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
 void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
 
