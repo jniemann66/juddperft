@@ -966,17 +966,6 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		pM->capture = 1;
 	}
 
-	bool promote = false;
-	if (piece == WPAWN) {
-		if (from & RANK2 && to & RANK4) {
-			pM->doublePawnMove = 1;
-		} else if (to & BlackOccupied & PAB & ~P.C) {
-			pM->enPassantCapture = 1;
-		} else if (to & RANK8) {
-			promote = true;
-		}
-	}
-
 	ChessPosition Q = P;
 
 	// clear old and new square:
@@ -990,15 +979,29 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
 	Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
 	Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
-	Q.D |= static_cast<int64_t>((piece & 8) >> 3) << tosquare;
 
-	if (pM->enPassantCapture) {
-		// remove the actual pawn (dest was EP square)
-		const Bitboard x = to >> 8;
-		Q.A &= ~x;
-		Q.B &= ~x;
-		Q.C &= ~x;
-		Q.D &= ~x;
+
+	bool promote = false;
+	if (piece == WPAWN) {
+		if (from & RANK2 && to & RANK4) {
+			pM->doublePawnMove = 1;
+			// e.p. square
+			const Bitboard x = to >> 8;
+			Q.A |= x;
+			Q.B |= x;
+			Q.C &= ~x;
+			Q.D &= ~x;
+		} else if (to & BlackOccupied & PAB & ~P.C) {
+			pM->enPassantCapture = 1;
+			// remove the actual pawn (dest was EP square)
+			const Bitboard x = to >> 8;
+			Q.A &= ~x;
+			Q.B &= ~x;
+			Q.C &= ~x;
+			Q.D &= ~x;
+		} else if (to & RANK8) {
+			promote = true;
+		}
 	}
 
 	// test if doing all this puts white in check. If so, move isn't legal
@@ -1007,42 +1010,30 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		return;
 	}
 
-
-
 	if (promote) {
 		// make an additional 3 copies for the underpromotions
 		*(pM + 1) = *pM;
 		*(pM + 2) = *pM;
 		*(pM + 3) = *pM;
 
-		// todo: best order is P, N, R, Q, B ( C|=to, A&=~to, B|=to, C&=~to)
-
-		// promote to queen
-		pM->promoteQueen = 1;
-		Q.A &= ~to;
-		Q.B |= to;
+		// parsimonious ordering : P=> N, R, Q, B
+		pM->promoteKnight = 1;
 		Q.C |= to;
 		scanWhiteMoveForChecks(Q, pM);
 		pM++;
 
-		// rook underpromotion
 		pM->promoteRook = 1;
-		Q.B &= ~to;
+		Q.A &= ~to;
 		scanWhiteMoveForChecks(Q, pM);
 		pM++;
 
-		// bishop underpromotion
+		pM->promoteQueen = 1;
+		Q.B |= to;
+		scanWhiteMoveForChecks(Q, pM);
+		pM++;
+
 		pM->promoteBishop = 1;
 		Q.C &= ~to;
-		Q.B |= to;
-		scanWhiteMoveForChecks(Q, pM);
-		pM++;
-
-		// knight underpromotion
-		pM->promoteKnight = 1;
-		Q.A |= to;
-		Q.B &= ~to;
-		Q.C |= to;
 	}
 
 	scanWhiteMoveForChecks(Q, pM);
@@ -1430,17 +1421,6 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		pM->capture = 1;
 	}
 
-	bool promote = false;
-	if (piece == BPAWN) {
-		if (from & RANK7 && to & RANK5) {
-			pM->doublePawnMove = 1;
-		} else if (to & WhiteOccupied & PAB & ~P.C) {
-			pM->enPassantCapture = 1;
-		} else if (to & RANK1) {
-			promote = true;
-		}
-	}
-
 	ChessPosition Q = P;
 
 	// clear old and new square
@@ -1454,15 +1434,29 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
 	Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
 	Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
-	Q.D |= static_cast<int64_t>((piece & 8) >> 3) << tosquare;
+	Q.D |= to;
 
-	if (pM->enPassantCapture) {
-		// remove the actual pawn (dest was EP square)
-		const Bitboard x = to << 8;
-		Q.A &= ~x;
-		Q.B &= ~x;
-		Q.C &= ~x;
-		Q.D &= ~x;
+	bool promote = false;
+	if (piece == BPAWN) {
+		if (from & RANK7 && to & RANK5) {
+			pM->doublePawnMove = 1;
+			// e.p. square
+			const Bitboard x = to << 8;
+			Q.A |= x;
+			Q.B |= x;
+			Q.C &= ~x;
+			Q.D |= x;
+		} else if (to & WhiteOccupied & PAB & ~P.C) {
+			pM->enPassantCapture = 1;
+			// remove the actual pawn (dest was EP square)
+			const Bitboard x = to << 8;
+			Q.A &= ~x;
+			Q.B &= ~x;
+			Q.C &= ~x;
+			Q.D &= ~x;
+		} else if (to & RANK1) {
+			promote = true;
+		}
 	}
 
 	// test if doing all this puts black in check. If so, move isn't legal
@@ -1477,33 +1471,24 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		*(pM + 2) = *pM;
 		*(pM + 3) = *pM;
 
-		// promote to queen
-		pM->promoteQueen = 1;
-		Q.A &= ~to;
-		Q.B |= to;
+		// parsimonious ordering : P=> N, R, Q, B
+		pM->promoteKnight = 1;
 		Q.C |= to;
-		Q.D |= to;
-		scanBlackMoveForChecks(Q, pM);
+		scanWhiteMoveForChecks(Q, pM);
 		pM++;
 
-		// rook underpromotion
 		pM->promoteRook = 1;
-		Q.B &= ~to;
-		scanBlackMoveForChecks(Q, pM);
+		Q.A &= ~to;
+		scanWhiteMoveForChecks(Q, pM);
 		pM++;
 
-		// bishop underpromotion
+		pM->promoteQueen = 1;
+		Q.B |= to;
+		scanWhiteMoveForChecks(Q, pM);
+		pM++;
+
 		pM->promoteBishop = 1;
 		Q.C &= ~to;
-		Q.B |= to;
-		scanBlackMoveForChecks(Q, pM);
-		pM++;
-
-		// knight underpromotion
-		pM->promoteKnight = 1;
-		Q.A |= to;
-		Q.B &= ~to;
-		Q.C |= to;
 	}
 
 	scanBlackMoveForChecks(Q, pM);
