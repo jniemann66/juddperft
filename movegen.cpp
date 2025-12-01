@@ -25,7 +25,7 @@ SOFTWARE.
 */
 
 #include "movegen.h"
-#include "hashtable.h"
+#include "hash_table.h"
 
 #include "fen.h"
 

@@ -29,7 +29,7 @@ SOFTWARE.
 #ifndef _ENGINE_H
 #define _ENGINE_H 1
 
-#include "hashtable.h"
+#include "hash_table.h"
 #include "movegen.h"
 #include "search.h"
 #include "timemanage.h"

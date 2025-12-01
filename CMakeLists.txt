@@ -22,7 +22,7 @@ add_executable(juddperft
 	diagnostics.h
 	engine.h
 	fen.h
-	hashtable.h
+	hash_table.h
 	juddperft.h
 	movegen.h
 	raiitimer.h
@@ -34,7 +34,7 @@ add_executable(juddperft
 	diagnostics.cpp
 	engine.cpp
 	fen.cpp
-	hashtable.cpp
+	hash_table.cpp
 	juddperft.cpp
 	movegen.cpp
 	search.cpp

@@ -31,7 +31,7 @@ SOFTWARE.
 #include "diagnostics.h"
 #include "engine.h"
 #include "fen.h"
-#include "hashtable.h"
+#include "hash_table.h"
 #include "movegen.h"
 #include "raiitimer.h"
 #include "search.h"

@@ -27,7 +27,7 @@ SOFTWARE.
 #include "juddperft.h"
 #include "diagnostics.h"
 #include "fen.h"
-#include "hashtable.h"
+#include "hash_table.h"
 #include "movegen.h"
 #include "search.h"
 #include "winboard.h"

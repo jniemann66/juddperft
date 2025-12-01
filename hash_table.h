@@ -24,14 +24,13 @@ SOFTWARE.
 
 */
 
-#ifndef _HASHTABLE_H
-#define _HASHTABLE_H 1
+#ifndef _HASH_TABLE_H
+#define _HASH_TABLE_H 
 
 #include "movegen.h"
 #include "utils.h"
 
 #include <cstring>
-
 #include <atomic>
 #include <iostream>
 #include <string>
@@ -257,5 +256,5 @@ extern HashTable <std::atomic<PerftTableEntry>> perftTable;
 #endif
 
 } // namespace juddperft
-#endif // _HASHTABLE_H
+#endif // _HASH_TABLE_H
 

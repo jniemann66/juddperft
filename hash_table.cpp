@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-#include "hashtable.h"
+#include "hash_table.h"
 #include "search.h"
 #include "raiitimer.h"
 
