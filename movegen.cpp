@@ -1007,11 +1007,15 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		return;
 	}
 
+
+
 	if (promote) {
 		// make an additional 3 copies for the underpromotions
 		*(pM + 1) = *pM;
 		*(pM + 2) = *pM;
 		*(pM + 3) = *pM;
+
+		// todo: best order is P, N, R, Q, B ( C|=to, A&=~to, B|=to, C&=~to)
 
 		// promote to queen
 		pM->promoteQueen = 1;
