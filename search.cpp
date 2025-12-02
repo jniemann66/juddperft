@@ -153,7 +153,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 	do {
 		// if (RetrievedRecord has changed) {} // do something (if we care)
-	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
 }
 
 //// ---------------------------------------------------

@@ -27,7 +27,6 @@ SOFTWARE.
 #ifndef _HASH_TABLE_H
 #define _HASH_TABLE_H
 
-#include "movegen.h"
 #include "utils.h"
 
 #include <cstring>
@@ -77,12 +76,11 @@ public:
 	~HashTable();
 
 	// getters
-	T* getAddress(const HashKey& SearchHK) const;
+	std::atomic<T>* getAddress(const HashKey& SearchHK) const;
 	std::string getName() const;
 	uint64_t getSize() const;			// return currently-allocated size in bytes
 	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
 	uint64_t getNumEntries() const;
-	double getLoadFactor() const;
 
 	// setters
 	bool setSize(uint64_t nBytes);
@@ -93,12 +91,10 @@ public:
 	void setQuiet(bool newQuiet);
 
 private:
-	T* m_pTable;
-	uint64_t m_nEntries;
-	uint64_t m_nIndexMask;
-	uint64_t m_nRequestedSize;
-	uint64_t m_nWrites;
-	uint64_t m_nCollisions;
+	std::atomic<T>* m_pTable{nullptr};
+	size_t m_nEntries;
+	size_t m_nIndexMask;
+	size_t m_nRequestedSize;
 	std::string m_Name;
 	bool quiet{false};
 };
@@ -108,10 +104,8 @@ inline HashTable<T>::HashTable(const std::string& name)
 	: m_Name(name)
 {
 	m_pTable = nullptr;
-	m_nCollisions = 0;
 	m_nEntries = 0;
 	m_nIndexMask = 0;
-	m_nWrites = 0;
 }
 
 template<class T>
@@ -131,7 +125,7 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 
 	uint64_t nNewNumEntries = 1ull;
 	// Make nNewSize a power of 2:
-	while (nNewNumEntries*sizeof(T) <= nBytes) {
+	while (nNewNumEntries * sizeof (std::atomic<T>) <= nBytes) {
 		nNewNumEntries <<= 1;
 	}
 
@@ -142,7 +136,7 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 	m_nIndexMask = m_nEntries - 1;
 	deAllocate();
 
-	m_pTable = new (std::nothrow) T[m_nEntries];
+	m_pTable = new (std::nothrow) std::atomic<T>[m_nEntries];
 
 	if (m_pTable == nullptr) {
 		std::cout << "Failed to allocate " << nBytes << " bytes for " << m_Name << std::endl;
@@ -155,12 +149,12 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 					  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
 					  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
 		}
-		m_nCollisions = 0;
-		m_nWrites = 0;
 
 		// std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
+		// note: on x86-64, gcc has a tendency to report this as false,
+		// even when the expected cmpxchg16b instruction is actually being used (inside calls to libatomic)
 
-		HashTable<T>::clear();
+		clear();
 		return true;
 	}
 }
@@ -168,8 +162,7 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 template<class T>
 inline bool HashTable<T>::deAllocate()
 {
-	if (HashTable::m_pTable != nullptr) // to-do: do we need to do all this nullptr crap ?
-	{
+	if (m_pTable) {
 		if (!quiet) {
 			std::cout << "deallocating " << m_Name << std::endl;
 		}
@@ -177,13 +170,12 @@ inline bool HashTable<T>::deAllocate()
 		m_pTable = nullptr;
 		return true;
 	}
-	else {
-		return false;
-	}
+
+	return false;
 }
 
 template<class T>
-inline T * HashTable<T>::getAddress(const HashKey & SearchHK) const
+inline std::atomic<T> *HashTable<T>::getAddress(const HashKey & SearchHK) const
 {
 	return m_pTable + (SearchHK & m_nIndexMask);
 }
@@ -191,7 +183,7 @@ inline T * HashTable<T>::getAddress(const HashKey & SearchHK) const
 template<class T>
 inline uint64_t HashTable<T>::getSize() const
 {
-	return m_nEntries*sizeof(T);
+	return m_nEntries * sizeof(std::atomic<T>);
 }
 
 template<class T>
@@ -207,16 +199,21 @@ inline uint64_t HashTable<T>::getNumEntries() const
 }
 
 template<class T>
-inline double HashTable<T>::getLoadFactor() const
-{
-	return static_cast<double>((1000 * m_nWrites) / m_nEntries) / 1000;
-}
-
-template<class T>
 inline void HashTable<T>::clear()
 {
-	if (m_pTable != nullptr) {
-		std::memset(m_pTable, 0, sizeof(T) * m_nEntries);
+	static constexpr bool use_memset_ftw = true;
+
+	if constexpr (use_memset_ftw) {
+		// todo: find the "proper" way to clear these ...
+		if (m_pTable != nullptr) {
+			std::memset(m_pTable, 0, sizeof(std::atomic<T>) * m_nEntries);
+		}
+	} else {
+		// seriously, this sucks ... takes more time to initialize than it does to do a perft(7) haha ...
+		T t = T();
+		for (size_t i = 0; i < m_nEntries; i++) {
+			std::atomic_init<T>(m_pTable + i, t);
+		}
 	}
 }
 
@@ -255,7 +252,7 @@ struct PerftTableEntry
 
 // Global instances:
 extern ZobristKeySet zobristKeys;
-extern HashTable <std::atomic<PerftTableEntry>> perftTable;
+extern HashTable <PerftTableEntry> perftTable;
 
 } // namespace juddperft
 

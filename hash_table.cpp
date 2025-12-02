@@ -46,10 +46,10 @@ namespace juddperft {
 	uint64_t ZobristKeySet::generate(std::optional<uint64_t> seed)
 	{
 		if (!seed.has_value()) {
-			// std::random_device rd;
-			// seed = rd();
+			std::random_device rd;
+			seed = rd();
 
-			seed = 0x4a1b5d94; // for consistency during dev. "best" seed yet to be found
+			// seed = 0x4a1b5d94; // for consistency during dev. "best" seed yet to be found
 		}
 
 		// Create a Random Number Generator, using the 64-bit Mersenne Twister Algorithm
@@ -116,7 +116,8 @@ namespace juddperft {
 		perftTable.setQuiet(true);
 		{
 			std::cout << "warming up the CPU with a perft(8)" << std::endl;
-			perftTable.setSize(perftTable.getSize());
+			perftTable.clear();
+			//perftTable.setSize(perftTable.getSize());
 
 			ChessPosition P;
 			P.setupStartPosition();
@@ -185,6 +186,6 @@ namespace juddperft {
 
 	ZobristKeySet zobristKeys;
 
-	HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
+	HashTable <PerftTableEntry> perftTable("Perft table");
 
 } // namespace juddperft
