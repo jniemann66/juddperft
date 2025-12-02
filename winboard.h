@@ -32,6 +32,9 @@ SOFTWARE.
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include "engine.h"
+
+#include <cstring>
+
 #include <fstream>
 
 #ifndef _MSC_VER

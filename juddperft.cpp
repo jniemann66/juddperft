@@ -70,7 +70,7 @@ int main(int argc, char *argv[], char *envp[])
 	// X.getLegalMoves(movelist);
 	// printMoveList(movelist, StandardAlgebraic, nullptr);
 
-	ZobristKeySet::findBestSeed(0x4a1b5d94);
+	// ZobristKeySet::findBestSeed(0x4a1b5d94);
 
 	// runTestSuite();
 
