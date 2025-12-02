@@ -33,7 +33,7 @@ SOFTWARE.
 namespace juddperft {
 
 #define PV_SIZE 64
-#define MAX_THREADS 64 // Hard limit for number of threads to use
+constexpr int MAX_THREADS = 96; // Hard limit for number of threads to use
 
 #define SEARCH_STOPPED 0x80000000
 

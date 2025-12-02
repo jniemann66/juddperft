@@ -299,8 +299,6 @@ void parse_input_showposition(const char* s, Engine* pE)
 
 void parse_input_showhash(const char* s, Engine* pE)
 {
-
-#ifdef _USE_HASH
 	printf("Perft Table Size: %" PRIu64 " bytes\n", perftTable.getSize());
 	uint64_t numEntries = perftTable.getNumEntries();
 	std::vector<uint64_t> depthTally(16, 0);
@@ -317,8 +315,6 @@ void parse_input_showhash(const char* s, Engine* pE)
 		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
 	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
-#endif
-
 }
 
 void parse_input_perft(const char* s, Engine* pE)

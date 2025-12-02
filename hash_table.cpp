@@ -185,8 +185,6 @@ namespace juddperft {
 
 	ZobristKeySet zobristKeys;
 
-#ifdef _USE_HASH
 	HashTable <std::atomic<PerftTableEntry>> perftTable("Perft table");
-#endif
 
 } // namespace juddperft

@@ -42,7 +42,7 @@ namespace juddperft {
 // HTs are "shrunk" to this size when not in use:
 #define MINIMAL_HASHTABLE_SIZE 1000000
 
-typedef uint64_t Hashkey;
+typedef uint64_t HashKey;
 typedef uint64_t ZobristKey;
 
 class ZobristKeySet
@@ -69,14 +69,15 @@ public:
 };
 
 // generic Hashtable template:
-template<class T> class HashTable
+template<class T>
+class HashTable
 {
 public:
 	HashTable(const std::string& name = std::string("Hash Table"));
 	~HashTable();
 
 	// getters
-	T* getAddress(const Hashkey& SearchHK) const;
+	T* getAddress(const HashKey& SearchHK) const;
 	std::string getName() const;
 	uint64_t getSize() const;			// return currently-allocated size in bytes
 	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
@@ -156,6 +157,9 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 		}
 		m_nCollisions = 0;
 		m_nWrites = 0;
+
+		std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
+
 		HashTable<T>::clear();
 		return true;
 	}
@@ -179,7 +183,7 @@ inline bool HashTable<T>::deAllocate()
 }
 
 template<class T>
-inline T * HashTable<T>::getAddress(const Hashkey & SearchHK) const
+inline T * HashTable<T>::getAddress(const HashKey & SearchHK) const
 {
 	return m_pTable + (SearchHK & m_nIndexMask);
 }
@@ -212,7 +216,7 @@ template<class T>
 inline void HashTable<T>::clear()
 {
 	if (m_pTable != nullptr) {
-		std::memset(m_pTable, 0, sizeof(T)*m_nEntries);
+		std::memset(m_pTable, 0, sizeof(T) * m_nEntries);
 	}
 }
 
@@ -236,7 +240,7 @@ void HashTable<T>::setQuiet(bool newQuiet)
 
 struct PerftTableEntry
 {
-	Hashkey Hash;
+	HashKey Hash;
 
 	union {
 		struct {
@@ -251,11 +255,9 @@ struct PerftTableEntry
 
 // Global instances:
 extern ZobristKeySet zobristKeys;
-
-#ifdef _USE_HASH
 extern HashTable <std::atomic<PerftTableEntry>> perftTable;
-#endif
 
 } // namespace juddperft
+
 #endif // _HASH_TABLE_H
 

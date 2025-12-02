@@ -124,9 +124,8 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	ChessPosition Q = P;
 	nodecount_t orig_nNodes = nNodes;
 
-#ifdef _USE_HASH
 	// Consult the HashTable:
-	Hashkey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
+	HashKey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
 	std::atomic<PerftTableEntry> *pAtomicRecord = perftTable.getAddress(hk); // get address of atomic record
 	PerftTableEntry retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
 	if (retrievedRecord.Hash == hk) {
@@ -137,16 +136,13 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	PerftTableEntry newRecord;
 	newRecord.Hash = hk;
 	newRecord.depth = depth;
-#endif // _USE_HASH
+	generateMoves(P, moveList);
+	const int movecount = moveList->moveCount;
 
 	if (depth == 1) { /* Leaf Node*/
-		generateMoves(P, moveList);
-		int movecount = moveList->moveCount;
 		newRecord.count = movecount;
 		nNodes += movecount;
 	} else { /* Branch Node */
-		generateMoves(P, moveList);
-		int movecount = moveList->moveCount;
 		for (int i = 0; i < movecount; i++) {
 			Q = P; // unmake move
 			Q.performMove(moveList[i]).switchSides(); // make move
@@ -155,12 +151,9 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
 	}
 
-#ifdef _USE_HASH
 	do {
 		// if (RetrievedRecord has changed) {} // do something (if we care)
 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
-#endif
-
 }
 
 //// ---------------------------------------------------

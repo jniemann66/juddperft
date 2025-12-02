@@ -14,7 +14,7 @@
 namespace juddperft {
 
 using Bitboard = uint64_t;
-using Hashkey = uint64_t;
+using HashKey = uint64_t;
 using piece_t = uint32_t;
 
 enum Piece : piece_t {
@@ -143,7 +143,7 @@ public:
 		return((ChessPosition::A == Q.A) && (ChessPosition::B == Q.B) && (ChessPosition::C == Q.C) && (ChessPosition::D == Q.D) && (ChessPosition::flags == Q.flags));
 	}
 
-	Hashkey hk;
+	HashKey hk;
 
 public:
 	ChessPosition();

@@ -49,7 +49,6 @@ int main(int argc, char *argv[], char *envp[])
 {
 	// std::cout << "sizeof(ChessMove) == " << sizeof(ChessMove) << " sizeof(ChessPosition) == " << sizeof(ChessPosition) << std::endl;
 
-#ifdef _USE_HASH
 	uint64_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
 	while (!setMemory(nBytesToAllocate)) {
@@ -57,7 +56,7 @@ int main(int argc, char *argv[], char *envp[])
 		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
 			return EXIT_FAILURE;	// not going to end well ...
 	}
-#endif
+
 	setProcessPriority();
 
 	// testMoveTables();
@@ -88,20 +87,18 @@ int main(int argc, char *argv[], char *envp[])
 
 namespace juddperft {
 
-	bool setMemory(uint64_t nTotalBytes) {
-
-#ifdef _USE_HASH
+	bool setMemory(uint64_t nTotalBytes)
+	{
 
 		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
 
 		return perftTable.setSize(nTotalBytes);
-#else
 		return false;
-#endif
 	}
 
 	void setProcessPriority()
 	{
+
 #ifdef _MSC_VER
 		DWORD dwError;
 
@@ -110,6 +107,7 @@ namespace juddperft {
 			std::cout << "Failed to set Process priority: " << dwError << std::endl;
 		}
 #endif
+
 	}
 
 } // namespace juddperft

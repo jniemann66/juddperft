@@ -37,4 +37,5 @@ bool readFen(ChessPosition* pP, const char* pzFENString);
 bool writeFen(char* pzFENBuffer, const ChessPosition* pP);
 
 } // namespace juddperft
+
 #endif // __FEN_H
