@@ -159,7 +159,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			return *this;
 		}
 
-		if (M.castleLong) {
+		else if (M.castleLong) {
 			A ^= 0x2800000000000000;
 			B ^= 0x2800000000000000;
 			C ^= 0xb800000000000000;
@@ -210,7 +210,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			return *this;
 		}
 
-		if (M.castleLong) {
+		else if (M.castleLong) {
 			A ^= 0x0000000000000028;
 			B ^= 0x0000000000000028;
 			C ^= 0x00000000000000b8;
@@ -429,7 +429,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			return *this;
 		}
 
-		if (M.castleLong) {
+		else if (M.castleLong) {
 			A ^= 0x2800000000000000;
 			B ^= 0x2800000000000000;
 			C ^= 0xb800000000000000;
@@ -460,7 +460,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			return *this;
 		}
 
-		if (M.castleLong) {
+		else if (M.castleLong) {
 			A ^= 0x0000000000000028;
 			B ^= 0x0000000000000028;
 			C ^= 0x00000000000000b8;

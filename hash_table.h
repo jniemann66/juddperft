@@ -158,7 +158,7 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 		m_nCollisions = 0;
 		m_nWrites = 0;
 
-		std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
+		// std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
 
 		HashTable<T>::clear();
 		return true;
