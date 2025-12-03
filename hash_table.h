@@ -33,7 +33,6 @@ SOFTWARE.
 
 #include <atomic>
 #include <iostream>
-#include <optional>
 #include <string>
 
 namespace juddperft {

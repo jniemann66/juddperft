@@ -27,13 +27,10 @@ SOFTWARE.
 #include "movegen.h"
 
 #include "chessposition.h"
-//#include "fen.h"
 
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-
-
 
 #include <set>
 
@@ -375,128 +372,6 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	pM++; // Add to list (advance pointer)
 	pM->flags = 0;
 }
-
-// new (split) version -- still NQR
-
-// inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
-// {
-// 	if (tosquare > 63) {
-// 		return;
-// 	}
-
-// 	const Bitboard to = (1ull << tosquare) & F;
-// 	if (to == 0) {
-// 		return;
-// 	}
-
-// 	const Bitboard from = (1ull << fromsquare);
-
-// 	pM->origin = fromsquare;
-// 	pM->destination = tosquare;
-// 	pM->flags = 0;
-// 	pM->blackToMove = 0;
-// 	pM->piece = piece;
-
-// 	// Test for capture:
-// 	const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings:
-// 	const Bitboard BlackOccupied = P.D;
-// 	if (to & BlackOccupied & ~PAB) {
-// 		// Only considered a capture if dest is not an enpassant or king.
-// 		pM->capture = 1;
-// 	}
-
-// 	if (piece == WPAWN) {
-// 		if (from & RANK2 && to & RANK4) {
-// 			pM->doublePawnMove = 1;
-// 		} else if (to & BlackOccupied & PAB & ~P.C) {
-// 			pM->enPassantCapture = 1;
-// 		} else if (to & RANK8) {
-// 			// make an additional 3 copies for the underpromotions
-// 			*(pM + 1) = *pM;
-// 			*(pM + 2) = *pM;
-// 			*(pM + 3) = *pM;
-
-// 			pM->promoteQueen = 1;
-// 			pM->promoteKnight = 1;
-// 			pM->promoteBishop = 1;
-// 			pM->promoteRook = 1;
-// 			pM += 3;
-// 		}
-// 	}
-
-// 	pM++;
-// 	pM->flags = 0;
-// }
-
-inline bool approveWhiteMove(ChessPosition Q, ChessMove *pM)
-{
-	const Bitboard to = (1ull << pM->destination);
-	const Bitboard from = (1ull << pM->origin);
-
-	// clear old and new square:
-	const Bitboard O = ~(from | to);
-	Q.A &= O;
-	Q.B &= O;
-	Q.C &= O;
-	Q.D &= O;
-
-	// Populate new square with piece
-	Q.A |= static_cast<int64_t>(pM->piece & 1) << pM->destination;
-	Q.B |= static_cast<int64_t>((pM->piece & 2) >> 1) << pM->destination;
-	Q.C |= static_cast<int64_t>((pM->piece & 4) >> 2) << pM->destination;
-	Q.D |= static_cast<int64_t>((pM->piece & 8) >> 3) << pM->destination;
-
-	if (pM->enPassantCapture) {
-		// remove the actual pawn (dest was EP square)
-		const Bitboard x = to >> 8;
-		Q.A &= ~x;
-		Q.B &= ~x;
-		Q.C &= ~x;
-		Q.D &= ~x;
-	}
-
-	// test if doing all this puts white in check. If so, move isn't legal
-	if (isWhiteInCheck(Q)) {
-		pM->illegalMove = 1;
-		return false;
-	}
-
-	// clear any enpassant squares
-	const Bitboard EnPassant = Q.A & Q.B & ~Q.C;
-	Q.A &= ~EnPassant;
-	Q.B &= ~EnPassant;
-	Q.C &= ~EnPassant;
-	Q.D &= ~EnPassant;
-
-	if (pM->piece == WPAWN) {
-		if (pM->doublePawnMove) {
-			const Bitboard x = to >> 8;
-			Q.A |= x;
-			Q.B |= x;
-			Q.C &= ~x;
-			Q.D &= ~x;
-		} else if (pM->promoteQueen) {
-			Q.A &= ~to;
-			Q.B |= to;
-			Q.C |= to;
-		} else if (pM->promoteKnight) {
-			pM->promoteKnight = 1;
-			Q.A |= to;
-			Q.B &= ~to;
-		} else if (pM->promoteBishop) {
-			Q.A &= ~to;
-			Q.C &= ~to;
-			Q.B |= to;
-		} else if (pM->promoteRook) {
-			Q.B &= ~to;
-			Q.C |= to;
-		}
-	}
-
-	scanWhiteMoveForChecks(Q, pM);
-	return true;
-}
-
 
 inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 {

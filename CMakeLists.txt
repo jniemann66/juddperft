@@ -28,10 +28,12 @@ add_executable(juddperft
 	movegen.h
 	raiitimer.h
 	search.h
+	tablegroup.h
 	targetver.h
 	timemanage.h
 	utils.h
 	winboard.h
+	zobristkeyset.h
 	chessposition.cpp
 	diagnostics.cpp
 	engine.cpp
@@ -40,11 +42,11 @@ add_executable(juddperft
 	juddperft.cpp
 	movegen.cpp
 	search.cpp
+	tablegroup.cpp
 	timemanage.cpp
 	utils.cpp
 	winboard.cpp
-	tablegroup.h tablegroup.cpp
-	zobristkeyset.h zobristkeyset.cpp
+	zobristkeyset.cpp
 )
 
 set_property(TARGET juddperft PROPERTY
