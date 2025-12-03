@@ -26,11 +26,12 @@ SOFTWARE.
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace juddperft {
 
-bool setMemory(uint64_t nTotalBytes);
+bool setMemory(size_t nTotalBytes);
 void setProcessPriority();
 
 } // namespace juddperft

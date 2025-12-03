@@ -29,8 +29,11 @@ SOFTWARE.
 #include "movegen.h"
 //#include "diagnostics.h"
 //#include "fen.h"
-#include "hash_table.h"
+//#include "hash_table.h"
 //#include "search.h"
+
+#include "tablegroup.h"
+
 #include "engine.h"
 #include "winboard.h"
 
@@ -49,12 +52,12 @@ int main(int argc, char *argv[], char *envp[])
 {
 	// std::cout << "sizeof(ChessMove) == " << sizeof(ChessMove) << " sizeof(ChessPosition) == " << sizeof(ChessPosition) << std::endl;
 
-	uint64_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster !!!)
+	size_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster !!!)
 
-	while (!setMemory(nBytesToAllocate)) {
-		nBytesToAllocate >>= 1;	// Progressively halve until acceptable size found
-		if (nBytesToAllocate < MINIMAL_HASHTABLE_SIZE)
-			return EXIT_FAILURE;	// not going to end well ...
+	// size_t nBytesToAllocate = 1ull << 34; 16GiB
+
+	if (!setMemory(nBytesToAllocate)) {
+		return EXIT_FAILURE;	// not going to end well ...
 	}
 
 	setProcessPriority();
@@ -87,12 +90,10 @@ int main(int argc, char *argv[], char *envp[])
 
 namespace juddperft {
 
-	bool setMemory(uint64_t nTotalBytes)
+	bool setMemory(size_t nTotalBytes)
 	{
-
 		std::cout << "\nAttempting to allocate up to " << nTotalBytes << " bytes of RAM ..." << std::endl;
-
-		return perftTable.setSize(nTotalBytes);
+		return TableGroup::setMemory(nTotalBytes);
 		return false;
 	}
 

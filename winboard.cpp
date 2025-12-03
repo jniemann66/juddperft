@@ -31,7 +31,7 @@ SOFTWARE.
 #include "diagnostics.h"
 #include "engine.h"
 #include "fen.h"
-#include "hash_table.h"
+#include "tablegroup.h"
 #include "movegen.h"
 #include "raiitimer.h"
 #include "search.h"
@@ -299,15 +299,15 @@ void parse_input_showposition(const char* s, Engine* pE)
 
 void parse_input_showhash(const char* s, Engine* pE)
 {
-	printf("Perft Table Size: %" PRIu64 " bytes\n", perftTable.getSize());
-	uint64_t numEntries = perftTable.getNumEntries();
-	std::vector<uint64_t> depthTally(16, 0);
-	std::atomic<PerftTableEntry> *pBaseAddress = perftTable.getAddress(0);
-	std::atomic<PerftTableEntry> *pAtomicRecord;
+	printf("Perft Table Size: %" PRIu64 " bytes\n", TableGroup::perftTable.getSize());
+	size_t numEntries = TableGroup::perftTable.getNumRecords();
+	std::vector<size_t> depthTally(16, 0);
+	std::atomic<PerftRecord> *pBaseAddress = TableGroup::perftTable.getAddress(0);
+	std::atomic<PerftRecord> *pAtomicRecord;
 
-	for (uint64_t x = 0; x < numEntries; x++) {
+	for (size_t x = 0; x < numEntries; x++) {
 		pAtomicRecord = pBaseAddress + x;
-		PerftTableEntry RetrievedRecord = pAtomicRecord->load();
+		PerftRecord RetrievedRecord = pAtomicRecord->load();
 		++depthTally[RetrievedRecord.depth];
 	}
 
@@ -315,6 +315,27 @@ void parse_input_showhash(const char* s, Engine* pE)
 		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
 	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
+
+	// printf("\n");
+	// {
+	// 	printf("Perft Leaf Table Size: %" PRIu64 " bytes\n", TableOrganiser::perftLeafTable.getSize());
+	// 	size_t numEntries = TableOrganiser::perftLeafTable.getNumEntries();
+	// 	std::vector<size_t> depthTally(2, 0);
+	// 	std::atomic<PerftLeafRecord> *pBaseAddress = TableOrganiser::perftLeafTable.getAddress(0);
+	// 	std::atomic<PerftLeafRecord> *pAtomicRecord;
+
+	// 	for (size_t x = 0; x < numEntries; x++) {
+	// 		pAtomicRecord = pBaseAddress + x;
+	// 		PerftLeafRecord RetrievedRecord = pAtomicRecord->load();
+	// 		++depthTally[RetrievedRecord.count > 0 ? 1 : 0];
+	// 	}
+
+	// 	for (unsigned int d = 0; d < 2; d++) {
+	// 		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
+	// 	}
+	// 	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
+	// }
+
 }
 
 void parse_input_perft(const char* s, Engine* pE)
@@ -469,7 +490,7 @@ void parse_input_lookuphash(const char* s, Engine* pE)
 }
 
 void parse_input_memory(const char* s, Engine* pE) {
-	uint64_t BytesRequested = _atoi64(s);
+	size_t BytesRequested = _atoi64(s);
 	if (s == nullptr) {
 		return;
 	}

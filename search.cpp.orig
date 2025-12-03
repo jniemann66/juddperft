@@ -27,9 +27,8 @@ SOFTWARE.
 #include "search.h"
 #include "engine.h"
 //#include "fen.h"
-#include "zobristkeyset.h"
 #include "hash_table.h"
-#include "tablegroup.h"
+#include "tableorganiser.h"
 #include "movegen.h"
 
 
@@ -126,96 +125,13 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	ChessPosition Q = P;
 	nodecount_t orig_nNodes = nNodes;
 
-	// Consult the HashTable:
-	HashKey hk = Q.hk ^ zobristKeys.zkPerftDepth[depth];
-	std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk); // get address
-	PerftRecord retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
-	if (retrievedRecord.Hash == hk) {
-		nNodes += retrievedRecord.count;
-		return;
-	}
+	const HashKey hk = Q.hk^zobristKeys.zkPerftDepth[depth];
 
-	PerftRecord newRecord;
-	newRecord.Hash = hk;
-	newRecord.depth = depth;
-	generateMoves(P, moveList);
-	const int movecount = moveList->moveCount;
 
-	if (depth == 1) { /* Leaf Node*/
-		newRecord.count = movecount;
-		nNodes += movecount;
-	} else { /* Branch Node */
-		for (int i = 0; i < movecount; i++) {
-			Q = P; // unmake move
-			Q.performMove(moveList[i]).switchSides(); // make move
-			perftFast(Q, depth - 1, nNodes);
-		}
-		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
-	}
 
-	do {
-		// if (RetrievedRecord has changed) {} // do something (if we care)
-	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
 
-	// --- //
 
-	// leaf-table code 2025-12-3 (couldn't get it performing well - not sure what was going wrong)
 
-	// if (depth == 1) { /* Leaf Node */
-
-	// 	static constexpr uint64_t hkm = - 1ll & ~0xff;
-	// 	const uint64_t k = hk & hkm;
-
-	// 	// Consult the HashTable:
-	// 	std::atomic<PerftLeafRecord> *pAtomicRecord = TableOrganiser::perftLeafTable.getAddress(hk);
-	// 	PerftLeafRecord retrievedRecord = pAtomicRecord->load();
-
-	// 	// validate the top 56 bits
-	// 	if (retrievedRecord.k == k) {
-	// 		nNodes += retrievedRecord.count;
-	// 		return;
-	// 	}
-
-	// 	PerftLeafRecord newRecord;
-	// 	newRecord.k = hk & hkm;
-	// 	generateMoves(P, moveList);
-	// 	const int movecount = moveList->moveCount;
-
-	// 	newRecord.count = movecount;
-	// 	nNodes += movecount;
-
-	// 	do {
-	// 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
-	// } else { /* Branch Node */
-
-	// 	// Consult the HashTable:
-	// 	std::atomic<PerftRecord> *pAtomicRecord =TableOrganiser::perftTable.getAddress(hk);
-	// 	PerftRecord retrievedRecord = pAtomicRecord->load();
-
-	// 	// validate entire hk
-	// 	if (retrievedRecord.Hash == hk) {
-	// 		nNodes += retrievedRecord.count;
-	// 		return;
-	// 	}
-
-	// 	PerftRecord newRecord;
-	// 	newRecord.Hash = hk;
-	// 	newRecord.depth = depth;
-	// 	generateMoves(P, moveList);
-	// 	const int movecount = moveList->moveCount;
-
-	// 	for (int i = 0; i < movecount; i++) {
-	// 		Q = P; // unmake move
-	// 		Q.performMove(moveList[i]).switchSides(); // make move
-	// 		perftFast(Q, depth - 1, nNodes);
-	// 	}
-
-	// 	newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
-
-	// 	do {
-	// 		// todo: if theirs is bigger than ours, use theirs ?
-	// 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
-	// }
 }
 
 //// ---------------------------------------------------
@@ -292,7 +208,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
 			std::unique_lock<std::mutex> lock(q_mutex);
 			std::chrono::milliseconds startDelay(500);
-			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
+			cv.wait_for (lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up (lock acquired):
 			while (!MoveQueue.empty()) {

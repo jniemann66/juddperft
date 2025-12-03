@@ -38,34 +38,7 @@ SOFTWARE.
 
 namespace juddperft {
 
-// HTs are "shrunk" to this size when not in use:
-#define MINIMAL_HASHTABLE_SIZE 1000000
-
 typedef uint64_t HashKey;
-typedef uint64_t ZobristKey;
-
-class ZobristKeySet
-{
-public:
-	ZobristKeySet();
-	ZobristKey zkPieceOnSquare[16][64];
-	ZobristKey zkBlackToMove;
-	ZobristKey zkWhiteCanCastle;
-	ZobristKey zkWhiteCanCastleLong;
-	ZobristKey zkBlackCanCastle;
-	ZobristKey zkBlackCanCastleLong;
-	ZobristKey zkPerftDepth[24];
-
-	// pre-fabricated combinations of keys for castling:
-	ZobristKey zkDoBlackCastle;
-	ZobristKey zkDoBlackCastleLong;
-	ZobristKey zkDoWhiteCastle;
-	ZobristKey zkDoWhiteCastleLong;
-
-	uint64_t generate(std::optional<uint64_t> seed = {});
-
-	static void findBestSeed(const std::optional<unsigned int>& prev_best_seed = {}, const std::optional<int>& maxAttempts = {});
-};
 
 // generic Hashtable template:
 template<class T>
@@ -78,12 +51,12 @@ public:
 	// getters
 	std::atomic<T>* getAddress(const HashKey& SearchHK) const;
 	std::string getName() const;
-	uint64_t getSize() const;			// return currently-allocated size in bytes
-	uint64_t getRequestedSize() const;	// return what was originally requested in bytes
-	uint64_t getNumEntries() const;
+	size_t getSize() const;			// return currently-allocated size in bytes
+	size_t getRequestedSize() const;	// return what was originally requested in bytes
+	size_t getNumRecords() const;
 
 	// setters
-	bool setSize(uint64_t nBytes);
+	bool setSize(size_t nBytes);
 	void setName(const std::string &newName);
 	bool deAllocate();
 	void clear();
@@ -119,11 +92,11 @@ inline HashTable<T>::~HashTable()
 }
 
 template<class T>
-inline bool HashTable<T>::setSize(uint64_t nBytes)
+inline bool HashTable<T>::setSize(size_t nBytes)
 {
 	m_nRequestedSize = nBytes;
 
-	uint64_t nNewNumEntries = 1ull;
+	size_t nNewNumEntries = 1ull;
 	// Make nNewSize a power of 2:
 	while (nNewNumEntries * sizeof (std::atomic<T>) <= nBytes) {
 		nNewNumEntries <<= 1;
@@ -141,9 +114,8 @@ inline bool HashTable<T>::setSize(uint64_t nBytes)
 	if (m_pTable == nullptr) {
 		std::cout << "Failed to allocate " << nBytes << " bytes for " << m_Name << std::endl;
 		return false;
-	}
-	else {
-		const uint64_t bytes = m_nEntries * sizeof(T);
+	} else {
+		const size_t bytes = m_nEntries * sizeof(T);
 		if (!quiet) {
 			std::cout << "Allocated " << bytes << " bytes ("
 					  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
@@ -181,19 +153,13 @@ inline std::atomic<T> *HashTable<T>::getAddress(const HashKey & SearchHK) const
 }
 
 template<class T>
-inline uint64_t HashTable<T>::getSize() const
+inline size_t HashTable<T>::getSize() const
 {
 	return m_nEntries * sizeof(std::atomic<T>);
 }
 
 template<class T>
-inline uint64_t HashTable<T>::getRequestedSize() const
-{
-	return m_nRequestedSize;
-}
-
-template<class T>
-inline uint64_t HashTable<T>::getNumEntries() const
+inline size_t HashTable<T>::getNumRecords() const
 {
 	return m_nEntries;
 }
@@ -234,25 +200,6 @@ void HashTable<T>::setQuiet(bool newQuiet)
 {
 	quiet = newQuiet;
 }
-
-struct PerftTableEntry
-{
-	HashKey Hash;
-
-	union {
-		struct {
-			// warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
-			// which only allows up to perft 12 from start position
-			uint64_t depth : 4;
-			uint64_t count : 60;
-		};
-		uint64_t data{0};
-	};
-};
-
-// Global instances:
-extern ZobristKeySet zobristKeys;
-extern HashTable <PerftTableEntry> perftTable;
 
 } // namespace juddperft
 

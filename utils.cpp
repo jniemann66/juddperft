@@ -5,10 +5,10 @@
 
 namespace juddperft {
 
-std::string Utils::memorySizeWithBinaryPrefix(uint64_t bytes)
+std::string Utils::memorySizeWithBinaryPrefix(size_t bytes)
 {
     int shift = 60;
-    uint64_t n = 0;
+    size_t n = 0;
     if (bytes) {
         while (shift >= 0) {
             n = (bytes >> shift) & 0x3ff;

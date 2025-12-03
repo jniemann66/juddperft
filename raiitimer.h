@@ -43,7 +43,7 @@ public:
 		return std::chrono::duration_cast<std::chrono::milliseconds>(t - beginTimer).count();
 	}
 
-	void setNodes(uint64_t n)
+	void setNodes(size_t n)
 	{
 		nodes = n;
 	}
@@ -71,7 +71,7 @@ private:
 		return stream.str();
 	}
 
-	uint64_t nodes{0};
+	size_t nodes{0};
 };
 
 

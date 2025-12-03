@@ -10,7 +10,7 @@ class Utils
 {
 public:
     // convert a large number of bytes into "B", "KiB", "MiB", "GiB" ... etc
-    static std::string memorySizeWithBinaryPrefix(uint64_t bytes);
+    static std::string memorySizeWithBinaryPrefix(size_t bytes);
 };
 
 } // namespace juddperft

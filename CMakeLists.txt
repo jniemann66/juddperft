@@ -43,6 +43,8 @@ add_executable(juddperft
 	timemanage.cpp
 	utils.cpp
 	winboard.cpp
+	tablegroup.h tablegroup.cpp
+	zobristkeyset.h zobristkeyset.cpp
 )
 
 set_property(TARGET juddperft PROPERTY
