@@ -43,6 +43,9 @@ SOFTWARE.
 #include <bitset>
 #include <cassert>
 
+#include <iostream>
+#include <type_traits>
+
 namespace juddperft {
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
@@ -50,12 +53,14 @@ uint64_t movegen_call_count = 0;
 uint64_t movegen_total_cycles = 0;
 #endif
 
+// --- begin definition of MoveGenerator ---
+
 ////////////////////////////////////////////
 // Move Generation Functions
 // generateMoves()
 ////////////////////////////////////////////
 
-void generateMoves(const ChessPosition& P, ChessMove* pM)
+void MoveGenerator::generateMoves(const ChessPosition& P, ChessMove* pM)
 {
 	assert((~(P.A | P.B | P.C) & P.D) == 0); // Should not be any "black" empty squares
 
@@ -83,7 +88,7 @@ void generateMoves(const ChessPosition& P, ChessMove* pM)
 // set IsBlack to true to test if Black is in check
 // set IsBlack to false to test if White is in check.
 
-inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
+inline bool MoveGenerator::isInCheck(const ChessPosition& P, bool bIsBlack)
 {
 	return bIsBlack ? isBlackInCheck(P) != 0 : isWhiteInCheck(P) != 0;
 }
@@ -96,7 +101,7 @@ inline bool isInCheck(const ChessPosition& P, bool bIsBlack)
 // genBlackAttacks()                    //
 //////////////////////////////////////////
 
-void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
+void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.whiteIsCheckmated || P.whiteIsStalemated) {
 		pM->moveCount = 0;
@@ -254,6 +259,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			Q.C ^= 0x00000000000000b8;
 			Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
+
 			scanWhiteMoveForChecks(Q, pM);
 			pM++; // Add to list (advance pointer)
 			pM->flags = 0;
@@ -271,7 +277,7 @@ void generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->endOfMoveList = 1;
 }
 
-inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
+inline void MoveGenerator::addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
 {
 	if (tosquare > 63) {
 		return;
@@ -373,7 +379,7 @@ inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	pM->flags = 0;
 }
 
-inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
+inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 {
 	Bitboard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
 	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -398,7 +404,7 @@ inline Bitboard isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 	return X & WhiteKing;
 }
 
-inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
+inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
 	if (Q.dontDetectChecks)
 		return;
@@ -430,7 +436,7 @@ inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 // scanBlackMoveForChecks()             //
 //////////////////////////////////////////
 
-void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
+void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.blackIsCheckmated || P.blackIsStalemated) {
 		pM->moveCount = 0;
@@ -605,7 +611,7 @@ void generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->endOfMoveList = 1;
 }
 
-inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
+inline void MoveGenerator::addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
 {
 	if (tosquare > 63) {
 		return;
@@ -685,17 +691,17 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 		// parsimonious ordering : P=> N, R, Q, B
 		pM->promoteKnight = 1;
 		Q.C |= to;
-		scanWhiteMoveForChecks(Q, pM);
+		scanBlackMoveForChecks(Q, pM);
 		pM++;
 
 		pM->promoteRook = 1;
 		Q.A &= ~to;
-		scanWhiteMoveForChecks(Q, pM);
+		scanBlackMoveForChecks(Q, pM);
 		pM++;
 
 		pM->promoteQueen = 1;
 		Q.B |= to;
-		scanWhiteMoveForChecks(Q, pM);
+		scanBlackMoveForChecks(Q, pM);
 		pM++;
 
 		pM->promoteBishop = 1;
@@ -707,7 +713,7 @@ inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char f
 	pM->flags = 0;
 }
 
-inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
+inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 {
 	Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
 	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
@@ -733,7 +739,7 @@ inline Bitboard isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 	return X & BlackKing;
 }
 
-inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
+inline void MoveGenerator::scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
 	if (Q.dontDetectChecks)
 		return;

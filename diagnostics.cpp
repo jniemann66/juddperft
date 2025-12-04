@@ -82,7 +82,7 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 
 	// generate Move List
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(*pP, MoveList);
+	MoveGenerator::generateMoves(*pP, MoveList);
 
 	PerftInfo T;
 

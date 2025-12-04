@@ -598,7 +598,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 std::vector<ChessMove> ChessPosition::getLegalMoves() const
 {
 	std::vector<ChessMove> movelist(MOVELIST_SIZE);
-	generateMoves(*this, movelist.data());
+	MoveGenerator::generateMoves(*this, movelist.data());
 	movelist.resize(movelist.at(0).moveCount);
 	return movelist;
 }
@@ -606,7 +606,7 @@ std::vector<ChessMove> ChessPosition::getLegalMoves() const
 void ChessPosition::getLegalMoves(ChessMove *movelist) const
 {
 	if (movelist) {
-		generateMoves(*this, movelist);
+		MoveGenerator::generateMoves(*this, movelist);
 	}
 }
 

@@ -52,7 +52,7 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	ChessPosition Q = P;
 	ChessMove* pM;
 
-	generateMoves(P, MoveList);
+	MoveGenerator::generateMoves(P, MoveList);
 	const int movecount = MoveList->moveCount;
 
 	if (depth == maxdepth)
@@ -138,7 +138,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	PerftRecord newRecord;
 	newRecord.Hash = hk;
 	newRecord.depth = depth;
-	generateMoves(P, moveList);
+	MoveGenerator::generateMoves(P, moveList);
 	const int movecount = moveList->moveCount;
 
 	if (depth == 1) { /* Leaf Node*/
@@ -248,7 +248,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(P, MoveList);
+	MoveGenerator::generateMoves(P, MoveList);
 
 	if (depth == maxdepth) {
 		for (ChessMove* pM = MoveList; pM->endOfMoveList == 0; pM++)
@@ -360,7 +360,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	P.dontDetectChecks = 1;
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(P, MoveList);
+	MoveGenerator::generateMoves(P, MoveList);
 
 	if (depth == 1) {
 		nNodes = MoveList->moveCount;

@@ -288,7 +288,7 @@ void parse_input_resume(const char* s, Engine* pE){}
 void parse_input_movelist(const char* s, Engine* pE)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(pE->currentPosition, MoveList);
+	MoveGenerator::generateMoves(pE->currentPosition, MoveList);
 	printMoveList(MoveList, CoOrdinate);
 }
 
@@ -394,7 +394,7 @@ void parse_input_divide(const char* s, Engine* pE)
 	depth = std::max(2, atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(pE->currentPosition, MoveList);
+	MoveGenerator::generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	PerftInfo gt;
 	ChessPosition Q;
@@ -457,7 +457,7 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	depth = std::max(2, atoi(s));
 
 	ChessMove MoveList[MOVELIST_SIZE];
-	generateMoves(pE->currentPosition, MoveList);
+	MoveGenerator::generateMoves(pE->currentPosition, MoveList);
 	ChessMove* pM = MoveList;
 	ChessPosition Q;
 	nodecount_t grandtotal = 0;

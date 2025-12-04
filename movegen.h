@@ -48,6 +48,7 @@ SOFTWARE.
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 // Build Options:
 #define _USE_HASH 1								// if undefined, entire hash table system will be excluded from build
@@ -136,7 +137,6 @@ struct ChessMove {
 	};
 };
 
-
 /////////////////////////////////////////////
 // Move notation styles:
 // ---------------------
@@ -153,22 +153,26 @@ enum MoveNotationStyle{
 	LongAlgebraicNoNewline
 };
 
+class MoveGenerator
+{
+public:
+	static void generateMoves(const ChessPosition & P, ChessMove * pM);
+	static bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
-// Move-Generation (and verification)
-void generateMoves(const ChessPosition & P, ChessMove * pM);
-bool isInCheck(const ChessPosition& P, bool bIsBlack);
+private:
+	// White Move-Generation Functions:
+	static void generateWhiteMoves(const ChessPosition& P, ChessMove*);
+	static inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
+	static Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
+	static void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
 
-// White Move-Generation Functions:
-void generateWhiteMoves(const ChessPosition& P, ChessMove*);
-inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
-Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
-void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
+	// Black Move-Generation Functions:
+	static void generateBlackMoves(const ChessPosition& P, ChessMove*);
+	static inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 
-// Black Move-Generation Functions:
-void generateBlackMoves(const ChessPosition& P, ChessMove*);
-inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
-Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
-void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
+	static Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
+	static void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
+};
 
 // Print I/O functions:
 void printMove(const ChessMove& mv, MoveNotationStyle style = LongAlgebraic, char *pBuffer = nullptr, const ChessMove *movelist = nullptr);
@@ -212,7 +216,6 @@ Bitboard moveKnight5Occluded(Bitboard g, Bitboard p);
 Bitboard moveKnight6Occluded(Bitboard g, Bitboard p);
 Bitboard moveKnight7Occluded(Bitboard g, Bitboard p);
 Bitboard moveKnight8Occluded(Bitboard g, Bitboard p);
-
 
 // some observations / ruminations regarding Bitboards & square indexes
 // --------------------------------------------------------------------
