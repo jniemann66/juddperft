@@ -406,8 +406,9 @@ inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard e
 
 inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
-	if (Q.dontDetectChecks)
+	if (Q.dontDetectChecks) {
 		return;
+	}
 
 	// test if white's move will put black in check or checkmate
 	if (isBlackInCheck(Q))	{
@@ -741,8 +742,9 @@ inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard e
 
 inline void MoveGenerator::scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM)
 {
-	if (Q.dontDetectChecks)
+	if (Q.dontDetectChecks) {
 		return;
+	}
 
 	// test if black's move will put white in check or checkmate
 	if (isWhiteInCheck(Q))	{
