@@ -15,7 +15,6 @@ class ZobristKeySet
 public:
 	ZobristKeySet();
 
-	// todo: if these are all static, will they be faster without a this pointer ??
 	ZobristKey zkPieceOnSquare[16][64];
 	ZobristKey zkBlackToMove;
 	ZobristKey zkWhiteCanCastle;
@@ -35,7 +34,6 @@ public:
 
 private:
 	uint64_t generate(std::optional<uint64_t> seed = {});
-
 };
 
 // Global instances:
