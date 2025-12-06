@@ -773,81 +773,126 @@ void MoveGenerator::populate_mvtable()
 	for (int p = 0; p < 16; p++) {
 		for (int sq = 0; sq < 64; sq++) {
 			switch(p) {
-			case WEMPTY:
-			case BEMPTY:
-			{
-			}
-				break;
 			case WPAWN:
 			{
+				int m = 0;
 
+				// captures
+				if (const auto captLeft = MoveUpLeftIndex[sq]; captLeft != xx) {
+					mvtable[p][sq][m++] = captLeft;
+				}
+
+				if (const auto captRight = MoveUpRightIndex[sq]; captRight != xx) {
+					mvtable[p][sq][m++] = captRight;
+				}
+
+				// advances
+				if (const auto step1 = MoveUpIndex[sq]; step1 != xx) {
+					mvtable[p][sq][m++] = step1;
+					if (sq >= h2 && sq <= a2) { // double pawn advance only available from rank 2
+						if (const auto step2 = MoveUpIndex[step1]; step2 != xx) {
+							mvtable[p][sq][m++] = step2;
+						}
+					}
+				}
 			}
 				break;
+
+			case BPAWN:
+			{
+				int m = 0;
+
+				// captures
+				if (const auto captLeft = MoveDownLeftIndex[sq]; captLeft != xx) {
+					mvtable[p][sq][m++] = captLeft;
+				}
+
+				if (const auto captRight = MoveDownRightIndex[sq]; captRight != xx) {
+					mvtable[p][sq][m++] = captRight;
+				}
+
+				// advances
+				if (const auto step1 = MoveDownIndex[sq]; step1 != xx) {
+					mvtable[p][sq][m++] = step1;
+					if (sq >= h7 && sq <= a7) { // double pawn advance only available from rank 7
+						if (const auto step2 = MoveDownIndex[step1]; step2 != xx) {
+							mvtable[p][sq][m++] = step2;
+						}
+					}
+				}
+			}
+				break;
+
 			case WBISHOP:
 			case BBISHOP:
 			{
 				int m = 0;
-				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
+				Bitboard D = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
 				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
-					if ((1ull << dsq) & d) {
+					if ((1ull << dsq) & D) {
 						mvtable[p][sq][m++] = dsq;
 					}
 				}
 			}
 				break;
+
 			case WROOK:
 			case BROOK:
 			{
 				int m = 0;
-				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
+				Bitboard S = fillStraightAttacksOccluded(1ull << sq, -1ll);
 				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
-					if ((1ull << dsq) & s) {
+					if ((1ull << dsq) & S) {
 						mvtable[p][sq][m++] = dsq;
 					}
 				}
 			}
 				break;
+
 			case WKNIGHT:
 			case BKNIGHT:
 			{
 				int m = 0;
-				Bitboard n = fillKnightAttacks(1ull << sq);
+				Bitboard N = fillKnightAttacks(1ull << sq);
 				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
-					if ((1ull << dsq) & n) {
+					if ((1ull << dsq) & N) {
 						mvtable[p][sq][m++] = dsq;
 					}
 				}
 			}
 				break;
+
 			case WQUEEN:
 			case BQUEEN:
 			{
 				int m = 0;
-				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
-				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
+				Bitboard D = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
+				Bitboard S = fillStraightAttacksOccluded(1ull << sq, -1ll);
 				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
-					if ((1ull << dsq) & d) {
+					if ((1ull << dsq) & D) {
 						mvtable[p][sq][m++] = dsq;
 					}
-					if ((1ull << dsq) & s) {
+					if ((1ull << dsq) & S) {
 						mvtable[p][sq][m++] = dsq;
 					}
 				}
 			}
 				break;
+
 			case WKING:
 			case BKING:
 			{
 				int m = 0;
-				Bitboard k = fillKingAttacks(1ull<<sq);
+				Bitboard K = fillKingAttacks(1ull << sq);
 				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
-					if ((1ull << dsq) & k) {
+					if ((1ull << dsq) & K) {
 						mvtable[p][sq][m++] = dsq;
 					}
 				}
 			}
 				break;
-			case BPAWN:
+
+			default:
 				break;
 			}
 		}
