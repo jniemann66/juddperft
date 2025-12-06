@@ -900,7 +900,7 @@ inline Bitboard fillKnightAttacksOccluded(Bitboard g, Bitboard p)
 
 }
 
-inline Bitboard FillKnightAttacks(Bitboard g)
+inline Bitboard fillKnightAttacks(Bitboard g)
 {
 	Bitboard l1 = (g >> 1) & 0x7f7f7f7f7f7f7f7f;
 	Bitboard l2 = (g >> 2) & 0x3f3f3f3f3f3f3f3f;

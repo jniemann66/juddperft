@@ -399,7 +399,7 @@ inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard e
 	Bitboard X = fillStraightAttacksOccluded(S, V);
 	X |= fillDiagonalAttacksOccluded(D, V);
 	X |= fillKingAttacks(K);
-	X |= FillKnightAttacks(N);
+	X |= fillKnightAttacks(N);
 	X |= MoveDownLeftRightSingle(P);
 	return X & WhiteKing;
 }
@@ -734,7 +734,7 @@ inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard e
 	Bitboard X = fillStraightAttacksOccluded(S, V);
 	X |= fillDiagonalAttacksOccluded(D, V);
 	X |= fillKingAttacks(K);
-	X |= FillKnightAttacks(N);
+	X |= fillKnightAttacks(N);
 	X |= MoveUpLeftRightSingle(P);
 
 	return X & BlackKing;
