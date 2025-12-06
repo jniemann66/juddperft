@@ -764,12 +764,11 @@ inline void MoveGenerator::scanBlackMoveForChecks(ChessPosition& Q, ChessMove* p
 	}
 }
 
-uint8_t MoveGenerator::mvtable[16][64][32];
+squareindex_t MoveGenerator::mvtable[16][64][32];
 
 void MoveGenerator::populate_mvtable()
 {
-	using sqindx_t = uint8_t;
-	memset(mvtable, xx, 16 * 64 * 32 * sizeof(sqindx_t));
+	memset(mvtable, xx, 16 * 64 * 32 * sizeof(squareindex_t));
 
 	for (int p = 0; p < 16; p++) {
 		for (int sq = 0; sq < 64; sq++) {
@@ -789,7 +788,7 @@ void MoveGenerator::populate_mvtable()
 			{
 				int m = 0;
 				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
-				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
 					if ((1ull << dsq) & d) {
 						mvtable[p][sq][m++] = dsq;
 					}
@@ -801,7 +800,7 @@ void MoveGenerator::populate_mvtable()
 			{
 				int m = 0;
 				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
-				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
 					if ((1ull << dsq) & s) {
 						mvtable[p][sq][m++] = dsq;
 					}
@@ -813,7 +812,7 @@ void MoveGenerator::populate_mvtable()
 			{
 				int m = 0;
 				Bitboard n = fillKnightAttacks(1ull << sq);
-				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
 					if ((1ull << dsq) & n) {
 						mvtable[p][sq][m++] = dsq;
 					}
@@ -826,7 +825,7 @@ void MoveGenerator::populate_mvtable()
 				int m = 0;
 				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
 				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
-				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
 					if ((1ull << dsq) & d) {
 						mvtable[p][sq][m++] = dsq;
 					}
@@ -841,7 +840,7 @@ void MoveGenerator::populate_mvtable()
 			{
 				int m = 0;
 				Bitboard k = fillKingAttacks(1ull<<sq);
-				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+				for (squareindex_t dsq = 0; dsq < 64; dsq++) {
 					if ((1ull << dsq) & k) {
 						mvtable[p][sq][m++] = dsq;
 					}

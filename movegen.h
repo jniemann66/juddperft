@@ -99,6 +99,7 @@ class ChessPosition;
 
 using Bitboard = uint64_t;
 using nodecount_t = uint64_t;
+using squareindex_t = uint8_t;
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
 extern uint64_t movegen_call_count;
@@ -174,7 +175,7 @@ private:
 	static void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
 
 	// precomputed move table: contains potential moves (except castling) for every piece on every square
-	static uint8_t mvtable[16][64][32]; // piece(16) x origin-square(64) x dest-square(32) = 32k ... (max dest squares = 27 for queen, but using 32 for alignment)
+	static squareindex_t mvtable[16][64][32]; // piece(16) x origin-square(64) x dest-square(32) = 32k ... (max dest squares = 27 for queen, but using 32 for alignment)
 
 	// function to initialise the move table
 	void populate_mvtable();
@@ -244,7 +245,7 @@ constexpr int xx = -1; // value for "no square"
 // if (sq > 63) { // no-square ... }
 
 // all the square indexes
-enum SquareIndex : unsigned char {
+enum SquareIndex : squareindex_t {
 	h1 = 0, g1, f1, e1, d1, c1, b1, a1,
 	h2, g2, f2, e2, d2, c2, b2, a2,
 	h3, g3, f3, e3, d3, c3, b3, a3,
