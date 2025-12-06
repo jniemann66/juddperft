@@ -157,20 +157,21 @@ enum MoveNotationStyle{
 class MoveGenerator
 {
 public:
+	MoveGenerator() {
+		populate_mvtable();
+	};
+
 	static void generateMoves(const ChessPosition & P, ChessMove * pM);
 	static bool isInCheck(const ChessPosition& P, bool bIsBlack);
 
 private:
 	// White Move-Generation Functions:
 	static void generateWhiteMoves(const ChessPosition& P, ChessMove*);
-	static inline void addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
 	static Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
 	static void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
 
 	// Black Move-Generation Functions:
 	static void generateBlackMoves(const ChessPosition& P, ChessMove*);
-	static inline void addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece);
-
 	static Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
 	static void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
 
@@ -178,7 +179,7 @@ private:
 	static squareindex_t mvtable[16][64][32]; // piece(16) x origin-square(64) x dest-square(32) = 32k ... (max dest squares = 27 for queen, but using 32 for alignment)
 
 	// function to initialise the move table
-	void populate_mvtable();
+	static void populate_mvtable();
 };
 
 // Print I/O functions:

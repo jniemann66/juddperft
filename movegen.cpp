@@ -60,6 +60,8 @@ uint64_t movegen_total_cycles = 0;
 // generateMoves()
 ////////////////////////////////////////////
 
+MoveGenerator moveGenerator; // instance, to ensure movetable is initialised
+
 void MoveGenerator::generateMoves(const ChessPosition& P, ChessMove* pM)
 {
 	assert((~(P.A | P.B | P.C) & P.D) == 0); // Should not be any "black" empty squares
@@ -96,9 +98,8 @@ inline bool MoveGenerator::isInCheck(const ChessPosition& P, bool bIsBlack)
 //////////////////////////////////////////
 // White Move Generation Functions:     //
 // generateWhiteMoves(),                //
-// addWhiteMove(),                      //
 // isWhiteInCheck(),                    //
-// genBlackAttacks()                    //
+// scanWhiteMoveForChecks()             //
 //////////////////////////////////////////
 
 void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
@@ -123,76 +124,41 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 	const Bitboard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
 
-	// note: tried system using bit-scans to get start and end squares.
-	// it works fine, but the simpler system of just counting pieces seems marginally faster
-	// unsigned long firstSq = h1;
-	// unsigned long lastSq = a8;
-	// const Bitboard WhiteOccupied = (Occupied & ~P.D) & ~(P.A & P.B & ~P.C);	// all squares occupied by W, excluding EP Squares
-	// getFirstAndLastPiece(WhiteOccupied, firstSq, lastSq);
-
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int pieces = 0;
 
-	for (int q = h1; q <= a8; q++) { // start from white's side of board
-		const Bitboard fromSQ = 1ull << q;
-		const piece_t piece = P.getPieceAtSquare(q);
+	for (int origin = h1; origin <= a8; origin++) { // start from white's side of board
+		const Bitboard FROM = 1ull << origin; // Bitboard representation of origin square
+		const piece_t piece = P.getPieceAtSquare(origin);
+
+		Bitboard mask = 0; // Bitboard representing all the squares wher pice can go
 
 		switch (piece) {
-		case WPAWN:
-		{
-			const Bitboard marchZone =  WhiteFree & ~BlackOccupied;
-			const int step1 = MoveUpIndex[q];
-			addWhiteMove(P, pM, q, step1, marchZone, WPAWN);   // single pawn advance
-			if (fromSQ & RANK2 && ((1ull << step1) & marchZone)) {
-				const int step2 = MoveUpIndex[step1];
-				addWhiteMove(P, pM, q, step2, marchZone, WPAWN); // double pawn advance
-			}
-
-			const Bitboard captureZone = WhiteFree & BlackOccupied;  // area into which pawns may capture
-			addWhiteMove(P, pM, q, MoveUpLeftIndex[q], captureZone, WPAWN); // capture left
-			addWhiteMove(P, pM, q, MoveUpRightIndex[q], captureZone, WPAWN); // capture right
-		}
-			break;
-
-		case WKNIGHT:
-			addWhiteMove(P, pM, q, MoveKnight1Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight2Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight3Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight4Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight5Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight6Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight7Index[q], WhiteFree, WKNIGHT);
-			addWhiteMove(P, pM, q, MoveKnight8Index[q], WhiteFree, WKNIGHT);
-			break;
 
 		case WKING:
-			addWhiteMove(P, pM, q, MoveLeftIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveUpLeftIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveUpIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveUpRightIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveRightIndex[q],  WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveDownRightIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveDownIndex[q], WhiteFree, WKING);
-			addWhiteMove(P, pM, q, MoveDownLeftIndex[q], WhiteFree, WKING);
+		case WKNIGHT:
+			mask = WhiteFree;
+			break;
+
+		case WPAWN:
+			mask = fillUpOccluded(FROM, (WhiteFree & ~BlackOccupied))  // pawns cannot capture while advancing
+					| moveUpLeftSingleOccluded(FROM, WhiteFree & BlackOccupied)
+					| moveUpRightSingleOccluded(FROM, WhiteFree & BlackOccupied);
 			break;
 
 		case WBISHOP:
 		case WROOK:
 		case WQUEEN:
 		{
-			const Bitboard B = P.B & fromSQ;
-			const Bitboard C = P.C & fromSQ;
+			const Bitboard B = P.B & FROM;
+			const Bitboard C = P.C & FROM;
 
-			if (B != 0) {
-				/* diagonal slider (either B or Q) */
-				std::bitset<64> bs = getDiagonalMoveSquares(fromSQ, WhiteFree, SolidBlackPiece);
-				BITSET_LOOP(addWhiteMove(P, pM, q, bit, WhiteFree, piece))
+			if (B) { /* diagonal slider (either B or Q) */
+				mask |= getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece);
 			}
 
-			if (C != 0) {
-				/* straight slider (either R or Q) */
-				std::bitset<64> bs =  getStraightMoveSquares(fromSQ, WhiteFree, SolidBlackPiece);
-				BITSET_LOOP(addWhiteMove(P, pM, q, bit, WhiteFree, piece))
+			if (C) { /* straight slider (either R or Q) */
+				mask |=  getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
 			}
 		}
 			break;
@@ -200,7 +166,109 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		default:
 			continue;
 
-		} // ends switch
+		} // ends switch (piece)
+
+		// loop over potential moves, and test their legality
+		for (int mv = 0; mv < 32; mv++) {
+			squareindex_t dest = mvtable[piece][origin][mv];
+			if (dest > a8) {
+				break; // reached end of potential moves for this piece
+			}
+
+			const Bitboard TO = (1ull << dest) & mask; // Bitboard representation of destination square
+			if (TO == 0) {
+				continue; // piece cannot go that square; go on to next potential move
+			}
+
+			// start initialising the move
+			pM->origin = origin;
+			pM->destination = dest;
+			pM->flags = 0;
+			pM->blackToMove = 0;
+			pM->piece = piece;
+
+			// Test for capture:
+			const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings:
+			const Bitboard BlackOccupied = P.D;
+			if (TO & BlackOccupied & ~PAB) {
+				// Only considered a capture if dest is not an enpassant or king.
+				pM->capture = 1;
+			}
+
+			// perform the move on the board (to test for check)
+			ChessPosition Q = P;
+
+			// clear old and new square:
+			const Bitboard O = ~(FROM | TO);
+			Q.A &= O;
+			Q.B &= O;
+			Q.C &= O;
+			Q.D &= O;
+
+			// Populate new square with piece
+			Q.A |= static_cast<int64_t>(piece & 1) << dest;
+			Q.B |= static_cast<int64_t>((piece & 2) >> 1) << dest;
+			Q.C |= static_cast<int64_t>((piece & 4) >> 2) << dest;
+
+			bool promote = false;
+			if (piece == WPAWN) {
+				if (FROM & RANK2 && TO & RANK4) {
+					pM->doublePawnMove = 1;
+					// e.p. square
+					const Bitboard x = TO >> 8;
+					Q.A |= x;
+					Q.B |= x;
+					Q.C &= ~x;
+					Q.D &= ~x;
+				} else if (TO & BlackOccupied & PAB & ~P.C) {
+					pM->enPassantCapture = 1;
+					// remove the actual pawn (dest was EP square)
+					const Bitboard x = TO >> 8;
+					Q.A &= ~x;
+					Q.B &= ~x;
+					Q.C &= ~x;
+					Q.D &= ~x;
+				} else if (TO & RANK8) {
+					promote = true;
+				}
+			}
+
+			// test if doing all this puts white in check. If so, move isn't legal
+			if (isWhiteInCheck(Q)) {
+				pM->illegalMove = 1;
+				continue; // go on to next potential move
+			}
+
+			if (promote) {
+				// make an additional 3 copies for the underpromotions
+				*(pM + 1) = *pM;
+				*(pM + 2) = *pM;
+				*(pM + 3) = *pM;
+
+				// parsimonious ordering : P=> N, R, Q, B
+				pM->promoteKnight = 1;
+				Q.C |= TO;
+				scanWhiteMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteRook = 1;
+				Q.A &= ~TO;
+				scanWhiteMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteQueen = 1;
+				Q.B |= TO;
+				scanWhiteMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteBishop = 1;
+				Q.C &= ~TO;
+			}
+
+			scanWhiteMoveForChecks(Q, pM);
+			pM++; // Add to list (advance pointer)
+			pM->flags = 0;
+		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
 			goto cleanup; // get the hell outa here ...
@@ -223,8 +291,8 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		{
 			ChessPosition Q = P;
 			pM->piece = WKING;
-			pM->origin = static_cast<unsigned char>(SquareIndex::e1);
-			pM->destination = static_cast<unsigned char>(SquareIndex::g1);
+			pM->origin = e1;
+			pM->destination = g1;
 			pM->flags = 0;
 			pM->blackToMove = 0;
 			pM->castle = 1;
@@ -248,8 +316,8 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			// Ok to Castle Long
 			ChessPosition Q = P;
 			pM->piece = WKING;
-			pM->origin = static_cast<unsigned char>(SquareIndex::e1);
-			pM->destination = static_cast<unsigned char>(SquareIndex::c1);
+			pM->origin = e1;
+			pM->destination = c1;
 			pM->flags = 0;
 			pM->blackToMove = 0;
 			pM->castleLong = 1;
@@ -275,108 +343,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pM->destination = 0;
 	pM->piece = 0;
 	pM->endOfMoveList = 1;
-}
-
-inline void MoveGenerator::addWhiteMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
-{
-	if (tosquare > 63) {
-		return;
-	}
-
-	const Bitboard to = (1ull << tosquare) & F;
-	if (to == 0) {
-		return;
-	}
-
-	const Bitboard from = (1ull << fromsquare);
-
-	pM->origin = fromsquare;
-	pM->destination = tosquare;
-	pM->flags = 0;
-	pM->blackToMove = 0;
-	pM->piece = piece;
-
-	// Test for capture:
-	const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings:
-	const Bitboard BlackOccupied = P.D;
-	if (to & BlackOccupied & ~PAB) {
-		// Only considered a capture if dest is not an enpassant or king.
-		pM->capture = 1;
-	}
-
-	ChessPosition Q = P;
-
-	// clear old and new square:
-	const Bitboard O = ~(from | to);
-	Q.A &= O;
-	Q.B &= O;
-	Q.C &= O;
-	Q.D &= O;
-
-	// Populate new square with piece
-	Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
-	Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
-	Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
-
-
-	bool promote = false;
-	if (piece == WPAWN) {
-		if (from & RANK2 && to & RANK4) {
-			pM->doublePawnMove = 1;
-			// e.p. square
-			const Bitboard x = to >> 8;
-			Q.A |= x;
-			Q.B |= x;
-			Q.C &= ~x;
-			Q.D &= ~x;
-		} else if (to & BlackOccupied & PAB & ~P.C) {
-			pM->enPassantCapture = 1;
-			// remove the actual pawn (dest was EP square)
-			const Bitboard x = to >> 8;
-			Q.A &= ~x;
-			Q.B &= ~x;
-			Q.C &= ~x;
-			Q.D &= ~x;
-		} else if (to & RANK8) {
-			promote = true;
-		}
-	}
-
-	// test if doing all this puts white in check. If so, move isn't legal
-	if (isWhiteInCheck(Q)) {
-		pM->illegalMove = 1;
-		return;
-	}
-
-	if (promote) {
-		// make an additional 3 copies for the underpromotions
-		*(pM + 1) = *pM;
-		*(pM + 2) = *pM;
-		*(pM + 3) = *pM;
-
-		// parsimonious ordering : P=> N, R, Q, B
-		pM->promoteKnight = 1;
-		Q.C |= to;
-		scanWhiteMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteRook = 1;
-		Q.A &= ~to;
-		scanWhiteMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteQueen = 1;
-		Q.B |= to;
-		scanWhiteMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteBishop = 1;
-		Q.C &= ~to;
-	}
-
-	scanWhiteMoveForChecks(Q, pM);
-	pM++; // Add to list (advance pointer)
-	pM->flags = 0;
 }
 
 inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
@@ -432,7 +398,6 @@ inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* p
 //////////////////////////////////////////
 // Black Move Generation Functions:     //
 // generateBlackMoves(),                //
-// addBlackMove(),                      //
 // isBlackInCheck()                     //
 // scanBlackMoveForChecks()             //
 //////////////////////////////////////////
@@ -459,57 +424,27 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 	const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
 
-	// note: tried system using bit-scans to get start and end squares.
-	// it works fine, but the simpler system of just counting pieces seems marginally faster
-	// unsigned long firstSq = h1;
-	// unsigned long lastSq = a8;
-	// const Bitboard BlackOccupied = P.D & ~(P.A & P.B & ~P.C); // all squares occupied by B, excluding EP Squares
-	// getFirstAndLastPiece(BlackOccupied, firstSq, lastSq);
-
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int pieces = 0;
 
-	for (int q = a8; q >= h1; q--) { // start from black's side of board
-		const Bitboard fromSQ = 1ull << q;
-		const piece_t piece = P.getPieceAtSquare(q);
+	for (int origin = a8; origin >= h1; origin--) { // start from black's side of board
+		const Bitboard fromSQ = 1ull << origin;  // Bitboard representation of origin square
+		const piece_t piece = P.getPieceAtSquare(origin);
+
+		Bitboard mask = 0;  // Bitboard representing all the squares wher pice can go
 
 		switch (piece) {
-		case BPAWN:
-		{
-			const Bitboard marchZone = BlackFree & ~WhiteOccupied; // area into which pawns may advance
-			const int step1 = MoveDownIndex[q];
-			addBlackMove(P, pM, q, step1, marchZone, BPAWN);   // single pawn advance
-			if (fromSQ & RANK7 && ((1ull << step1) & marchZone)) {
-				const int step2 = MoveDownIndex[step1];
-				addBlackMove(P, pM, q, step2, marchZone, BPAWN); // double pawn advance
-			}
-
-			const Bitboard captureZone = BlackFree & WhiteOccupied;  // area into which pawns may capture
-			addBlackMove(P, pM, q, MoveDownLeftIndex[q], captureZone, BPAWN); // capture left
-			addBlackMove(P, pM, q, MoveDownRightIndex[q], captureZone, BPAWN); // capture right
-		}
-			break;
-
-		case BKNIGHT:
-			addBlackMove(P, pM, q, MoveKnight1Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight2Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight3Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight4Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight5Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight6Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight7Index[q], BlackFree, BKNIGHT);
-			addBlackMove(P, pM, q, MoveKnight8Index[q], BlackFree, BKNIGHT);
-			break;
 
 		case BKING:
-			addBlackMove(P, pM, q, MoveLeftIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveUpLeftIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveUpIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveUpRightIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveRightIndex[q],  BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveDownRightIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveDownIndex[q], BlackFree, BKING);
-			addBlackMove(P, pM, q, MoveDownLeftIndex[q], BlackFree, BKING);
+		case BKNIGHT:
+			mask = BlackFree;
+			break;
+
+		case BPAWN:
+			mask = fillDownOccluded(fromSQ, (BlackFree & ~WhiteOccupied))  // pawns cannot capture while advancing
+					| moveDownLeftSingleOccluded(fromSQ, BlackFree & WhiteOccupied)
+					| moveDownRightSingleOccluded(fromSQ, BlackFree & WhiteOccupied);
+
 			break;
 
 		case BBISHOP:
@@ -519,16 +454,12 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			const Bitboard B = P.B & fromSQ;
 			const Bitboard C = P.C & fromSQ;
 
-			if (B != 0) {
-				/* diagonal slider (either B or Q) */
-				std::bitset<64> bs = getDiagonalMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
-				BITSET_LOOP(addBlackMove(P, pM, q, bit, BlackFree, piece))
+			if (B) { /* diagonal slider (either B or Q) */
+				mask |= getDiagonalMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
 			}
 
-			if (C != 0) {
-				/* straight slider (either R or Q) */
-				std::bitset<64> bs = getStraightMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
-				BITSET_LOOP(addBlackMove(P, pM, q, bit, BlackFree, piece))
+			if (C) { /* straight slider (either R or Q) */
+				mask |= getStraightMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
 			}
 		}
 			break;
@@ -536,7 +467,110 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		default:
 			continue;
 
-		} // ends switch
+		} // ends switch (piece)
+
+		// loop over potential moves, and test their legality
+		for (int mv = 0; mv < 32; mv++) {
+			squareindex_t dest = mvtable[piece][origin][mv];
+			if (dest > a8) {
+				break; // reached end of potential moves for this piece
+			}
+
+			const Bitboard TO = (1ull << dest) & mask;  // Bitboard representation of destination square
+			if (TO == 0) {
+				continue; // piece cannot go that square; go on to next potential move
+			}
+
+			// start initialising the move
+			pM->origin = origin;
+			pM->destination = dest;
+			pM->flags = 0;
+			pM->blackToMove = 1;
+			pM->piece = piece;
+
+			// Test for capture:
+			const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings
+			Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
+			if (TO & WhiteOccupied & ~PAB) {
+				// Only considered a capture if dest is not an enpassant or king.
+				pM->capture = 1;
+			}
+
+			ChessPosition Q = P;
+
+			// clear old and new square
+			const Bitboard O = ~(fromSQ | TO);
+			Q.A &= O;
+			Q.B &= O;
+			Q.C &= O;
+			Q.D &= O;
+
+			// Populate new square with piece
+			Q.A |= static_cast<int64_t>(piece & 1) << dest;
+			Q.B |= static_cast<int64_t>((piece & 2) >> 1) << dest;
+			Q.C |= static_cast<int64_t>((piece & 4) >> 2) << dest;
+			Q.D |= TO;
+
+			bool promote = false;
+			if (piece == BPAWN) {
+				if (fromSQ & RANK7 && TO & RANK5) {
+					pM->doublePawnMove = 1;
+					// e.p. square
+					const Bitboard x = TO << 8;
+					Q.A |= x;
+					Q.B |= x;
+					Q.C &= ~x;
+					Q.D |= x;
+				} else if (TO & WhiteOccupied & PAB & ~P.C) {
+					pM->enPassantCapture = 1;
+					// remove the actual pawn (dest was EP square)
+					const Bitboard x = TO << 8;
+					Q.A &= ~x;
+					Q.B &= ~x;
+					Q.C &= ~x;
+					Q.D &= ~x;
+				} else if (TO & RANK1) {
+					promote = true;
+				}
+			}
+
+			// test if doing all this puts black in check. If so, move isn't legal
+			if (isBlackInCheck(Q)) {
+				pM->illegalMove = 1;
+				continue; // go on to next potential move
+			}
+
+			if (promote) {
+				// make an additional 3 copies for underpromotions
+				*(pM + 1) = *pM;
+				*(pM + 2) = *pM;
+				*(pM + 3) = *pM;
+
+				// parsimonious ordering : P=> N, R, Q, B
+				pM->promoteKnight = 1;
+				Q.C |= TO;
+				scanBlackMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteRook = 1;
+				Q.A &= ~TO;
+				scanBlackMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteQueen = 1;
+				Q.B |= TO;
+				scanBlackMoveForChecks(Q, pM);
+				pM++;
+
+				pM->promoteBishop = 1;
+				Q.C &= ~TO;
+			}
+
+			scanBlackMoveForChecks(Q, pM);
+			pM++; // Add to list (advance pointer)
+			pM->flags = 0;
+
+		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
 			goto cleanup;  // get the hell outa here ...
@@ -559,8 +593,8 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		{
 			ChessPosition Q = P;
 			pM->piece = BKING;
-			pM->origin = static_cast<unsigned char>(SquareIndex::e8);
-			pM->destination = static_cast<unsigned char>(SquareIndex::g8);
+			pM->origin = e8;
+			pM->destination = g8;
 			pM->flags = 0;
 			pM->blackToMove = 1;
 			pM->castle = 1;
@@ -583,8 +617,8 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		{
 			ChessPosition Q = P;
 			pM->piece = BKING;
-			pM->origin = static_cast<unsigned char>(SquareIndex::e8);
-			pM->destination = static_cast<unsigned char>(SquareIndex::c8);
+			pM->origin = e8;
+			pM->destination = c8;
 			pM->flags = 0;
 			pM->blackToMove = 1;
 			pM->castleLong = 1;
@@ -610,108 +644,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pM->destination = 0;
 	pM->piece = 0;
 	pM->endOfMoveList = 1;
-}
-
-inline void MoveGenerator::addBlackMove(const ChessPosition& P, ChessMove*& pM, unsigned char fromsquare, unsigned char tosquare, Bitboard F, int32_t piece)
-{
-	if (tosquare > 63) {
-		return;
-	}
-
-	const Bitboard to = (1ull << tosquare) & F;
-	if (to == 0) {
-		return;
-	}
-
-	const Bitboard from = (1ull << fromsquare);
-
-	pM->origin = fromsquare;
-	pM->destination = tosquare;
-	pM->flags = 0;
-	pM->blackToMove = 1;
-	pM->piece = piece;
-
-	// Test for capture:
-	const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings
-	Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
-	if (to & WhiteOccupied & ~PAB) {
-		// Only considered a capture if dest is not an enpassant or king.
-		pM->capture = 1;
-	}
-
-	ChessPosition Q = P;
-
-	// clear old and new square
-	const Bitboard O = ~(from | to);
-	Q.A &= O;
-	Q.B &= O;
-	Q.C &= O;
-	Q.D &= O;
-
-	// Populate new square with piece
-	Q.A |= static_cast<int64_t>(piece & 1) << tosquare;
-	Q.B |= static_cast<int64_t>((piece & 2) >> 1) << tosquare;
-	Q.C |= static_cast<int64_t>((piece & 4) >> 2) << tosquare;
-	Q.D |= to;
-
-	bool promote = false;
-	if (piece == BPAWN) {
-		if (from & RANK7 && to & RANK5) {
-			pM->doublePawnMove = 1;
-			// e.p. square
-			const Bitboard x = to << 8;
-			Q.A |= x;
-			Q.B |= x;
-			Q.C &= ~x;
-			Q.D |= x;
-		} else if (to & WhiteOccupied & PAB & ~P.C) {
-			pM->enPassantCapture = 1;
-			// remove the actual pawn (dest was EP square)
-			const Bitboard x = to << 8;
-			Q.A &= ~x;
-			Q.B &= ~x;
-			Q.C &= ~x;
-			Q.D &= ~x;
-		} else if (to & RANK1) {
-			promote = true;
-		}
-	}
-
-	// test if doing all this puts black in check. If so, move isn't legal
-	if (isBlackInCheck(Q)) {
-		pM->illegalMove = 1;
-		return;
-	}
-
-	if (promote) {
-		// make an additional 3 copies for underpromotions
-		*(pM + 1) = *pM;
-		*(pM + 2) = *pM;
-		*(pM + 3) = *pM;
-
-		// parsimonious ordering : P=> N, R, Q, B
-		pM->promoteKnight = 1;
-		Q.C |= to;
-		scanBlackMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteRook = 1;
-		Q.A &= ~to;
-		scanBlackMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteQueen = 1;
-		Q.B |= to;
-		scanBlackMoveForChecks(Q, pM);
-		pM++;
-
-		pM->promoteBishop = 1;
-		Q.C &= ~to;
-	}
-
-	scanBlackMoveForChecks(Q, pM);
-	pM++; // Add to list (advance pointer)
-	pM->flags = 0;
 }
 
 inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard extend)
