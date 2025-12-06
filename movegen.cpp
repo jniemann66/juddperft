@@ -764,6 +764,98 @@ inline void MoveGenerator::scanBlackMoveForChecks(ChessPosition& Q, ChessMove* p
 	}
 }
 
+uint8_t MoveGenerator::mvtable[16][64][32];
+
+void MoveGenerator::populate_mvtable()
+{
+	using sqindx_t = uint8_t;
+	memset(mvtable, xx, 16 * 64 * 32 * sizeof(sqindx_t));
+
+	for (int p = 0; p < 16; p++) {
+		for (int sq = 0; sq < 64; sq++) {
+			switch(p) {
+			case WEMPTY:
+			case BEMPTY:
+			{
+			}
+				break;
+			case WPAWN:
+			{
+
+			}
+				break;
+			case WBISHOP:
+			case BBISHOP:
+			{
+				int m = 0;
+				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
+				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+					if ((1ull << dsq) & d) {
+						mvtable[p][sq][m++] = dsq;
+					}
+				}
+			}
+				break;
+			case WROOK:
+			case BROOK:
+			{
+				int m = 0;
+				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
+				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+					if ((1ull << dsq) & s) {
+						mvtable[p][sq][m++] = dsq;
+					}
+				}
+			}
+				break;
+			case WKNIGHT:
+			case BKNIGHT:
+			{
+				int m = 0;
+				Bitboard n = fillKnightAttacks(1ull << sq);
+				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+					if ((1ull << dsq) & n) {
+						mvtable[p][sq][m++] = dsq;
+					}
+				}
+			}
+				break;
+			case WQUEEN:
+			case BQUEEN:
+			{
+				int m = 0;
+				Bitboard d = fillDiagonalAttacksOccluded(1ull << sq, -1ll);
+				Bitboard s = fillStraightAttacksOccluded(1ull << sq, -1ll);
+				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+					if ((1ull << dsq) & d) {
+						mvtable[p][sq][m++] = dsq;
+					}
+					if ((1ull << dsq) & s) {
+						mvtable[p][sq][m++] = dsq;
+					}
+				}
+			}
+				break;
+			case WKING:
+			case BKING:
+			{
+				int m = 0;
+				Bitboard k = fillKingAttacks(1ull<<sq);
+				for (sqindx_t dsq = 0; dsq < 64; dsq++) {
+					if ((1ull << dsq) & k) {
+						mvtable[p][sq][m++] = dsq;
+					}
+				}
+			}
+				break;
+			case BPAWN:
+				break;
+			}
+		}
+	}
+}
+
+
 inline Bitboard genWhiteAttacks(const ChessPosition& Z)
 {
 	Bitboard Occupied = Z.A | Z.B | Z.C;

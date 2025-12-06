@@ -62,6 +62,7 @@ int main(int argc, char *argv[], char *envp[])
 
 	setProcessPriority();
 
+
 	// testMoveTables();
 
 	// ChessPosition X;

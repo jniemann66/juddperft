@@ -172,6 +172,12 @@ private:
 
 	static Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
 	static void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
+
+	// precomputed move table: contains potential moves (except castling) for every piece on every square
+	static uint8_t mvtable[16][64][32]; // piece(16) x origin-square(64) x dest-square(32) = 32k ... (max dest squares = 27 for queen, but using 32 for alignment)
+
+	// function to initialise the move table
+	void populate_mvtable();
 };
 
 // Print I/O functions:
