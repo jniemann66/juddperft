@@ -130,7 +130,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 	ChessMove* pFirstMove = pM;
 
-	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
+	static constexpr int maxPieces = 16; // maximum per side
 	int piecesFound = 0;
 
 	// create test board
@@ -283,10 +283,12 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
-			goto cleanup; // get the hell outa here ...
+			pM->endOfMoveList = 1;
+			pFirstMove->moveCount = pM - pFirstMove;
+			return;
 		}
 
-		if (++piecesFound > maxPieces) {
+		if (++piecesFound >= maxPieces) {
 			break;
 		}
 
@@ -339,43 +341,39 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			Q.C ^= 0x00000000000000b8;
 			Q.D &= 0xffffffffffffff07;	// clear colour of a1, b1, c1, d1, e1 (make white)
 
-
 			scanWhiteMoveForChecks(Q, pM);
 			pM++; // Add to list (advance pointer)
 			pM->flags = 0;
 		}
 	} // ends castling
 
-	cleanup:
-	// put the move count into the first move
-	pFirstMove->moveCount = pM - pFirstMove;
-
-	// Create 'no more moves' move to mark end of list
 	pM->endOfMoveList = 1;
+	pFirstMove->moveCount = pM - pFirstMove;
 }
 
 inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
 {
-	Bitboard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
-	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	const Bitboard WhiteKing = (Z.A & Z.B & Z.C & ~Z.D) | extend;
+	const Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 WhiteKing |			// White King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
 
-	Bitboard A = Z.A & Z.D;				// Black A-Plane
-	Bitboard B = Z.B & Z.D;				// Black B-Plane
-	Bitboard C = Z.C & Z.D;				// Black C-Plane
+	const Bitboard A = Z.A & Z.D; // Black A-Plane
+	const Bitboard B = Z.B & Z.D; // Black B-Plane
+	const Bitboard C = Z.C & Z.D; // Black C-Plane
 
-	Bitboard S = C & ~A;				// Straight-moving Pieces
-	Bitboard D = B & ~A;				// Diagonal-moving Pieces
-	Bitboard K = A & B & C;				// King
-	Bitboard P = A & ~B & ~C;			// Pawns
-	Bitboard N = A & ~B & C;			// Knights
+	const Bitboard S = C & ~A; // Black Straight-moving Pieces
+	const Bitboard D = B & ~A; // Black Diagonal-moving Pieces
+	const Bitboard K = A & B & C; // Black King
+	const Bitboard P = A & ~B & ~C; // Black Pawns
+	const Bitboard N = A & ~B & C; // Black Knights
 
-	Bitboard X = fillStraightAttacksOccluded(S, V);
-	X |= fillDiagonalAttacksOccluded(D, V);
-	X |= fillKingAttacks(K);
-	X |= fillKnightAttacks(N);
-	X |= MoveDownLeftRightSingle(P);
+	const Bitboard X = fillStraightAttacksOccluded(S, V)
+			| fillDiagonalAttacksOccluded(D, V)
+			| fillKingAttacks(K)
+			| fillKnightAttacks(N)
+			| MoveDownLeftRightSingle(P);
+
 	return X & WhiteKing;
 }
 
@@ -439,7 +437,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 	ChessMove* pFirstMove = pM;
 
-	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
+	static constexpr int maxPieces = 16; // maximum per side
 	int piecesFound = 0;
 
 	// create test board
@@ -462,7 +460,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			mask = fillDownOccluded(FROM, (BlackRoam & ~WhiteOccupied))  // pawns cannot capture while advancing
 					| moveDownLeftSingleOccluded(FROM, BlackRoam & WhiteOccupied)
 					| moveDownRightSingleOccluded(FROM, BlackRoam & WhiteOccupied);
-
 			break;
 
 		case BBISHOP:
@@ -595,10 +592,12 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
-			goto cleanup;  // get the hell outa here ...
+			pM->endOfMoveList = 1;
+			pFirstMove->moveCount = pM - pFirstMove;
+			return;
 		}
 
-		if (++piecesFound > maxPieces) {
+		if (++piecesFound >= maxPieces) {
 			break;
 		}
 
@@ -657,36 +656,32 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 	} // ends castling
 
-	cleanup:
-	// put the move count into the first move
-	pFirstMove->moveCount = pM - pFirstMove;
-
-	// Create 'no more moves' move to mark end of list
 	pM->endOfMoveList = 1;
+	pFirstMove->moveCount = pM - pFirstMove;
 }
 
 inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard extend)
 {
-	Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
-	Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
+	const Bitboard BlackKing = (Z.A & Z.B & Z.C & Z.D) | extend;
+	const Bitboard V = (Z.A & Z.B & ~Z.C) |	// All EP squares, regardless of colour
 				 BlackKing |			// Black King
 				 ~(Z.A | Z.B | Z.C);	// All Unoccupied squares
 
-	Bitboard A = Z.A & ~Z.D;			// White A-Plane
-	Bitboard B = Z.B & ~Z.D;			// White B-Plane
-	Bitboard C = Z.C & ~Z.D;			// White C-Plane
+	const Bitboard A = Z.A & ~Z.D; // White A-Plane
+	const Bitboard B = Z.B & ~Z.D; // White B-Plane
+	const Bitboard C = Z.C & ~Z.D; // White C-Plane
 
-	Bitboard S = C & ~A;				// Straight-moving Pieces
-	Bitboard D = B & ~A;				// Diagonal-moving Pieces
-	Bitboard K = A & B & C;				// King
-	Bitboard P = A & ~B & ~C;			// Pawns
-	Bitboard N = A & ~B & C;			// Knights
+	const Bitboard S = C & ~A; // White Straight-moving Pieces
+	const Bitboard D = B & ~A; // White Diagonal-moving Pieces
+	const Bitboard K = A & B & C; // White King
+	const Bitboard P = A & ~B & ~C; // White Pawns
+	const Bitboard N = A & ~B & C; // White Knights
 
-	Bitboard X = fillStraightAttacksOccluded(S, V);
-	X |= fillDiagonalAttacksOccluded(D, V);
-	X |= fillKingAttacks(K);
-	X |= fillKnightAttacks(N);
-	X |= MoveUpLeftRightSingle(P);
+	Bitboard X = fillStraightAttacksOccluded(S, V)
+			| fillDiagonalAttacksOccluded(D, V)
+			| fillKingAttacks(K)
+			| fillKnightAttacks(N)
+			| MoveUpLeftRightSingle(P);
 
 	return X & BlackKing;
 }
