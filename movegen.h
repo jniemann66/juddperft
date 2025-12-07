@@ -166,14 +166,14 @@ public:
 
 private:
 	// White Move-Generation Functions:
-	static void generateWhiteMoves(const ChessPosition& P, ChessMove*);
-	static Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
-	static void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
+	static inline void generateWhiteMoves(const ChessPosition& P, ChessMove*);
+	static inline Bitboard isWhiteInCheck(const ChessPosition & Z, Bitboard extend = 0);
+	static inline void scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether white's proposed move will put black in check or checkmate. updates pM->Check and pM->Checkmate
 
 	// Black Move-Generation Functions:
-	static void generateBlackMoves(const ChessPosition& P, ChessMove*);
-	static Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
-	static void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
+	static inline void generateBlackMoves(const ChessPosition& P, ChessMove*);
+	static inline Bitboard isBlackInCheck(const ChessPosition & Z, Bitboard extend = 0);
+	static inline void scanBlackMoveForChecks(ChessPosition& Q, ChessMove* pM); // detects whether black's proposed move will put white in check or checkmate. updates pM->Check and pM->Checkmate
 
 	// precomputed move table: contains potential moves (except castling) for every piece on every square
 	static squareindex_t mvtable[16][64][32]; // piece(16) x origin-square(64) x dest-square(32) = 32k ... (max dest squares = 27 for queen, but using 32 for alignment)

@@ -102,7 +102,7 @@ inline bool MoveGenerator::isInCheck(const ChessPosition& P, bool bIsBlack)
 // scanWhiteMoveForChecks()             //
 //////////////////////////////////////////
 
-void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
+inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.whiteIsCheckmated || P.whiteIsStalemated) {
 		pM->moveCount = 0;
@@ -194,42 +194,27 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			if (TO & BlackCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
 				pM->capture = 1;
+			} else if (piece == WPAWN && (TO & BlackOccupied & EP)) {
+				pM->enPassantCapture = 1;
+				// remove the actual pawn (dest was EP square)
+				const Bitboard X = TO >> 8;
+				Q.A &= ~X;
+				Q.B &= ~X;
+				Q.C &= ~X;
+				Q.D &= ~X;
 			}
 
 			// clear old and new square:
-			const Bitboard O = ~(FROM | TO);
-			Q.A &= O;
-			Q.B &= O;
-			Q.C &= O;
-			Q.D &= O;
+			const Bitboard CLEAR = ~(FROM | TO);
+			Q.A &= CLEAR;
+			Q.B &= CLEAR;
+			Q.C &= CLEAR;
+			Q.D &= CLEAR;
 
 			// Populate new square with piece
 			Q.A |= static_cast<int64_t>(piece & 1) << dest;
 			Q.B |= static_cast<int64_t>((piece & 2) >> 1) << dest;
 			Q.C |= static_cast<int64_t>((piece & 4) >> 2) << dest;
-
-			bool promote = false;
-			if (piece == WPAWN) {
-				if (FROM & RANK2 && TO & RANK4) {
-					pM->doublePawnMove = 1;
-					// e.p. square
-					const Bitboard x = TO >> 8;
-					Q.A |= x;
-					Q.B |= x;
-					Q.C &= ~x;
-					Q.D &= ~x;
-				} else if (TO & BlackOccupied & EP) {
-					pM->enPassantCapture = 1;
-					// remove the actual pawn (dest was EP square)
-					const Bitboard x = TO >> 8;
-					Q.A &= ~x;
-					Q.B &= ~x;
-					Q.C &= ~x;
-					Q.D &= ~x;
-				} else if (TO & RANK8) {
-					promote = true;
-				}
-			}
 
 			// test if doing all this puts white in check. If so, move isn't legal
 			if (isWhiteInCheck(Q)) {
@@ -243,30 +228,40 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 				continue; // go on to next potential move
 			}
 
-			if (promote) {
-				// make an additional 3 copies for the underpromotions
-				*(pM + 1) = *pM;
-				*(pM + 2) = *pM;
-				*(pM + 3) = *pM;
+			if (piece == WPAWN) {
+				if (FROM & RANK2 && TO & RANK4) {
+					pM->doublePawnMove = 1;
+					// e.p. square
+					const Bitboard x = TO >> 8;
+					Q.A |= x;
+					Q.B |= x;
+					Q.C &= ~x;
+					Q.D &= ~x;
+				} else if (TO & RANK8) {
+					// make an additional 3 copies for the underpromotions
+					*(pM + 1) = *pM;
+					*(pM + 2) = *pM;
+					*(pM + 3) = *pM;
 
-				// parsimonious ordering : P=> N, R, Q, B
-				pM->promoteKnight = 1;
-				Q.C |= TO;
-				scanWhiteMoveForChecks(Q, pM);
-				pM++;
+					// parsimonious ordering : P=> N, R, Q, B
+					pM->promoteKnight = 1;
+					Q.C |= TO;
+					scanWhiteMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteRook = 1;
-				Q.A &= ~TO;
-				scanWhiteMoveForChecks(Q, pM);
-				pM++;
+					pM->promoteRook = 1;
+					Q.A &= ~TO;
+					scanWhiteMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteQueen = 1;
-				Q.B |= TO;
-				scanWhiteMoveForChecks(Q, pM);
-				pM++;
+					pM->promoteQueen = 1;
+					Q.B |= TO;
+					scanWhiteMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteBishop = 1;
-				Q.C &= ~TO;
+					pM->promoteBishop = 1;
+					Q.C &= ~TO;
+				}
 			}
 
 			scanWhiteMoveForChecks(Q, pM);
@@ -406,7 +401,7 @@ inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* p
 // scanBlackMoveForChecks()             //
 //////////////////////////////////////////
 
-void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
+inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.blackIsCheckmated || P.blackIsStalemated) {
 		pM->moveCount = 0;
@@ -498,43 +493,28 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			if (TO & WhiteCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
 				pM->capture = 1;
+			} if (piece == BPAWN && (TO & WhiteOccupied & EP)) {
+				pM->enPassantCapture = 1;
+				// remove the actual pawn (dest was EP square)
+				const Bitboard X = TO << 8;
+				Q.A &= ~X;
+				Q.B &= ~X;
+				Q.C &= ~X;
+				Q.D &= ~X;
 			}
 
 			// clear old and new square
-			const Bitboard O = ~(FROM | TO);
-			Q.A &= O;
-			Q.B &= O;
-			Q.C &= O;
-			Q.D &= O;
+			const Bitboard CLEAR = ~(FROM | TO);
+			Q.A &= CLEAR;
+			Q.B &= CLEAR;
+			Q.C &= CLEAR;
+			Q.D &= CLEAR;
 
 			// Populate new square with piece
 			Q.A |= static_cast<int64_t>(piece & 1) << dest;
 			Q.B |= static_cast<int64_t>((piece & 2) >> 1) << dest;
 			Q.C |= static_cast<int64_t>((piece & 4) >> 2) << dest;
 			Q.D |= TO;
-
-			bool promote = false;
-			if (piece == BPAWN) {
-				if (FROM & RANK7 && TO & RANK5) {
-					pM->doublePawnMove = 1;
-					// e.p. square
-					const Bitboard x = TO << 8;
-					Q.A |= x;
-					Q.B |= x;
-					Q.C &= ~x;
-					Q.D |= x;
-				} else if (TO & WhiteOccupied & EP) {
-					pM->enPassantCapture = 1;
-					// remove the actual pawn (dest was EP square)
-					const Bitboard x = TO << 8;
-					Q.A &= ~x;
-					Q.B &= ~x;
-					Q.C &= ~x;
-					Q.D &= ~x;
-				} else if (TO & RANK1) {
-					promote = true;
-				}
-			}
 
 			// test if doing all this puts black in check. If so, move isn't legal
 			if (isBlackInCheck(Q)) {
@@ -548,30 +528,40 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 				continue; // go on to next potential move
 			}
 
-			if (promote) {
-				// make an additional 3 copies for underpromotions
-				*(pM + 1) = *pM;
-				*(pM + 2) = *pM;
-				*(pM + 3) = *pM;
+			if (piece == BPAWN) {
+				if (FROM & RANK7 && TO & RANK5) {
+					pM->doublePawnMove = 1;
+					// e.p. square
+					const Bitboard x = TO << 8;
+					Q.A |= x;
+					Q.B |= x;
+					Q.C &= ~x;
+					Q.D |= x;
+				} else if (TO & RANK1) {
+					// make an additional 3 copies for underpromotions
+					*(pM + 1) = *pM;
+					*(pM + 2) = *pM;
+					*(pM + 3) = *pM;
 
-				// parsimonious ordering : P=> N, R, Q, B
-				pM->promoteKnight = 1;
-				Q.C |= TO;
-				scanBlackMoveForChecks(Q, pM);
-				pM++;
+					// parsimonious ordering : P=> N, R, Q, B
+					pM->promoteKnight = 1;
+					Q.C |= TO;
+					scanBlackMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteRook = 1;
-				Q.A &= ~TO;
-				scanBlackMoveForChecks(Q, pM);
-				pM++;
+					pM->promoteRook = 1;
+					Q.A &= ~TO;
+					scanBlackMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteQueen = 1;
-				Q.B |= TO;
-				scanBlackMoveForChecks(Q, pM);
-				pM++;
+					pM->promoteQueen = 1;
+					Q.B |= TO;
+					scanBlackMoveForChecks(Q, pM);
+					pM++;
 
-				pM->promoteBishop = 1;
-				Q.C &= ~TO;
+					pM->promoteBishop = 1;
+					Q.C &= ~TO;
+				}
 			}
 
 			scanBlackMoveForChecks(Q, pM);

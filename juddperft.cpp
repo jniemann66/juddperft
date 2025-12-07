@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include "juddperft.h"
 //#include "chessposition.h"
+#include "diagnostics.h"
 #include "movegen.h"
 //#include "diagnostics.h"
 //#include "fen.h"
