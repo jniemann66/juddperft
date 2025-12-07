@@ -133,6 +133,9 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int piecesFound = 0;
 
+	// create test board
+	ChessPosition Q = P;
+
 	for (int origin = h1; origin <= a8; origin++) { // start from white's side of board
 		const Bitboard FROM = 1ull << origin; // Bitboard representation of origin square
 		const piece_t piece = P.getPieceAtSquare(origin);
@@ -190,14 +193,10 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			pM->piece = piece;
 
 			// Test for capture:
-
 			if (TO & BlackCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
 				pM->capture = 1;
 			}
-
-			// perform the move on the board (to test for check)
-			ChessPosition Q = P;
 
 			// clear old and new square:
 			const Bitboard O = ~(FROM | TO);
@@ -237,6 +236,12 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			// test if doing all this puts white in check. If so, move isn't legal
 			if (isWhiteInCheck(Q)) {
 				pM->illegalMove = 1;
+
+				// restore test board
+				Q.A = PA;
+				Q.B = PB;
+				Q.C = PC;
+				Q.D = PD;
 				continue; // go on to next potential move
 			}
 
@@ -269,6 +274,12 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			scanWhiteMoveForChecks(Q, pM);
 			pM++; // Add to list (advance pointer)
 			pM->flags = 0;
+
+			// restore test board
+			Q.A = PA;
+			Q.B = PB;
+			Q.C = PC;
+			Q.D = PD;
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
@@ -340,9 +351,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	pFirstMove->moveCount = pM - pFirstMove;
 
 	// Create 'no more moves' move to mark end of list
-	pM->origin = 0;
-	pM->destination = 0;
-	pM->piece = 0;
 	pM->endOfMoveList = 1;
 }
 
@@ -434,6 +442,9 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int piecesFound = 0;
 
+	// create test board
+	ChessPosition Q = P;
+
 	for (int origin = a8; origin >= h1; origin--) { // start from black's side of board
 		const Bitboard FROM = 1ull << origin;  // Bitboard representation of origin square
 		const piece_t piece = P.getPieceAtSquare(origin);
@@ -497,8 +508,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 				pM->capture = 1;
 			}
 
-			ChessPosition Q = P;
-
 			// clear old and new square
 			const Bitboard O = ~(FROM | TO);
 			Q.A &= O;
@@ -538,6 +547,12 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			// test if doing all this puts black in check. If so, move isn't legal
 			if (isBlackInCheck(Q)) {
 				pM->illegalMove = 1;
+
+				// restore test board
+				Q.A = PA;
+				Q.B = PB;
+				Q.C = PC;
+				Q.D = PD;
 				continue; // go on to next potential move
 			}
 
@@ -570,6 +585,12 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			scanBlackMoveForChecks(Q, pM);
 			pM++; // Add to list (advance pointer)
 			pM->flags = 0;
+
+			// restore test board
+			Q.A = PA;
+			Q.B = PB;
+			Q.C = PC;
+			Q.D = PD;
 
 		} // ends loop over mv
 
@@ -641,9 +662,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	pFirstMove->moveCount = pM - pFirstMove;
 
 	// Create 'no more moves' move to mark end of list
-	pM->origin = 0;
-	pM->destination = 0;
-	pM->piece = 0;
 	pM->endOfMoveList = 1;
 }
 
