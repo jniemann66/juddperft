@@ -131,7 +131,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		const Bitboard FROM = 1ull << origin; // Bitboard representation of origin square
 		const piece_t piece = P.getPieceAtSquare(origin);
 
-		Bitboard mask = 0; // Bitboard representing all the squares wher pice can go
+		Bitboard mask; // Bitboard representing all the squares where piece can go
 
 		switch (piece) {
 
@@ -147,20 +147,16 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 
 		case WBISHOP:
+			mask = getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece);
+			break;
+
 		case WROOK:
+			mask =  getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
+			break;
+
 		case WQUEEN:
-		{
-			const Bitboard B = P.B & FROM;
-			const Bitboard C = P.C & FROM;
-
-			if (B) { /* diagonal slider (either B or Q) */
-				mask |= getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece);
-			}
-
-			if (C) { /* straight slider (either R or Q) */
-				mask |=  getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
-			}
-		}
+			mask = getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece)
+					| getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
 			break;
 
 		default:
@@ -278,7 +274,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 		}
 
-	} // ends loop over q
+	} // ends loop over origin
 
 	// castling
 	if (P.A & P.B & P.C & ~P.D & E1) { // King still in original position
@@ -428,10 +424,10 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	int pieces = 0;
 
 	for (int origin = a8; origin >= h1; origin--) { // start from black's side of board
-		const Bitboard fromSQ = 1ull << origin;  // Bitboard representation of origin square
+		const Bitboard FROM = 1ull << origin;  // Bitboard representation of origin square
 		const piece_t piece = P.getPieceAtSquare(origin);
 
-		Bitboard mask = 0;  // Bitboard representing all the squares wher pice can go
+		Bitboard mask;  // Bitboard representing all the squares where piece can go
 
 		switch (piece) {
 
@@ -441,27 +437,23 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 
 		case BPAWN:
-			mask = fillDownOccluded(fromSQ, (BlackFree & ~WhiteOccupied))  // pawns cannot capture while advancing
-					| moveDownLeftSingleOccluded(fromSQ, BlackFree & WhiteOccupied)
-					| moveDownRightSingleOccluded(fromSQ, BlackFree & WhiteOccupied);
+			mask = fillDownOccluded(FROM, (BlackFree & ~WhiteOccupied))  // pawns cannot capture while advancing
+					| moveDownLeftSingleOccluded(FROM, BlackFree & WhiteOccupied)
+					| moveDownRightSingleOccluded(FROM, BlackFree & WhiteOccupied);
 
 			break;
 
 		case BBISHOP:
+			mask = getDiagonalMoveSquares(FROM, BlackFree, SolidWhitePiece);
+			break;
+
 		case BROOK:
+			mask =  getStraightMoveSquares(FROM, BlackFree, SolidWhitePiece);
+			break;
+
 		case BQUEEN:
-		{
-			const Bitboard B = P.B & fromSQ;
-			const Bitboard C = P.C & fromSQ;
-
-			if (B) { /* diagonal slider (either B or Q) */
-				mask |= getDiagonalMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
-			}
-
-			if (C) { /* straight slider (either R or Q) */
-				mask |= getStraightMoveSquares(fromSQ, BlackFree, SolidWhitePiece);
-			}
-		}
+			mask = getDiagonalMoveSquares(FROM, BlackFree, SolidWhitePiece)
+					| getStraightMoveSquares(FROM, BlackFree, SolidWhitePiece);
 			break;
 
 		default:
@@ -499,7 +491,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			ChessPosition Q = P;
 
 			// clear old and new square
-			const Bitboard O = ~(fromSQ | TO);
+			const Bitboard O = ~(FROM | TO);
 			Q.A &= O;
 			Q.B &= O;
 			Q.C &= O;
@@ -513,7 +505,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 			bool promote = false;
 			if (piece == BPAWN) {
-				if (fromSQ & RANK7 && TO & RANK5) {
+				if (FROM & RANK7 && TO & RANK5) {
 					pM->doublePawnMove = 1;
 					// e.p. square
 					const Bitboard x = TO << 8;
@@ -580,7 +572,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 		}
 
-	} // ends loop over q;
+	} // ends loop over origin;
 
 	// castling
 	if (P.A & P.B & P.C & P.D & E8) { // King still in original position
