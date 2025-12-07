@@ -143,7 +143,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		Bitboard mask; // Bitboard representing all the squares where piece can go
 
 		switch (piece) {
-
 		case WKING:
 		case WKNIGHT:
 			mask = WhiteRoam;
@@ -170,7 +169,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 		default:
 			continue;
-
 		} // ends switch (piece)
 
 		// loop over potential moves, and test their legality
@@ -280,6 +278,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			Q.B = PB;
 			Q.C = PC;
 			Q.D = PD;
+
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
@@ -303,7 +302,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 				(WHITECASTLEZONE & Occupied) == 0 && // Castle Zone (f1, g1) is clear
 				!isWhiteInCheck(P, WHITECASTLECHECKZONE)) // King is not in Check (in e1, f1, g1)
 		{
-			ChessPosition Q = P;
 			pM->piece = WKING;
 			pM->origin = e1;
 			pM->destination = g1;
@@ -328,7 +326,6 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 				!isWhiteInCheck(P, WHITECASTLELONGCHECKZONE)) // King is not in check (in e1, d1, c1)
 		{
 			// Ok to Castle Long
-			ChessPosition Q = P;
 			pM->piece = WKING;
 			pM->origin = e1;
 			pM->destination = c1;
@@ -450,7 +447,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		Bitboard mask;  // Bitboard representing all the squares where piece can go
 
 		switch (piece) {
-
 		case BKING:
 		case BKNIGHT:
 			mask = BlackRoam;
@@ -477,7 +473,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 		default:
 			continue;
-
 		} // ends switch (piece)
 
 		// loop over potential moves, and test their legality
@@ -612,7 +607,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 				(BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
 				!isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
 		{
-			ChessPosition Q = P;
 			pM->piece = BKING;
 			pM->origin = e8;
 			pM->destination = g8;
@@ -636,7 +630,6 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 				(BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
 				!isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
 		{
-			ChessPosition Q = P;
 			pM->piece = BKING;
 			pM->origin = e8;
 			pM->destination = c8;
