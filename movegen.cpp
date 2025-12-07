@@ -117,19 +117,18 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 	const Bitboard& PB = P.B;
 	const Bitboard& PC = P.C;
 	const Bitboard& PD = P.D;
-	const Bitboard PAB = PA & PB;	// Bitboard containing EnPassants and kings
+
+	const Bitboard PAB = PA & PB; // Bitboard containing EnPassants and kings
+	const Bitboard Occupied = PA | PB | PC;	// all squares occupied by something
+	const Bitboard BlackOccupied = Occupied & PD; // all squares occupied by B, including Black EP Squares
+	const Bitboard BlackCapturables = BlackOccupied & ~PAB; // All black pieces except enpassants and black king
+	const Bitboard EP = PAB & ~PC; // E.P. squares (any color)
+	const Bitboard WhiteRoam // all squares where White is potentially free to go
+			= ~Occupied // vacant
+			| BlackCapturables // enemy pieces (except King)
+			| EP; // EP squares
 
 	ChessMove* pFirstMove = pM;
-	const Bitboard Occupied = PA | PB | PC;								// all squares occupied by something
-	const Bitboard BlackOccupied = Occupied & PD;							// all squares occupied by B, including Black EP Squares
-	const Bitboard WhiteFree // all squares where W is free to move
-			= (PA & PB & ~PC)        // any EP square
-			  |	~(Occupied)				// any vacant square
-			|	(~PA & PD)			// Black Bishop, Rook or Queen
-			|	(~PB & PD);			// Black Pawn or Knight
-
-	const Bitboard BlackCapturables = BlackOccupied & ~PAB; // All black pieces except enpassants and black king
-	const Bitboard EP = BlackOccupied & PAB & ~PC;  // Black E.P. capture target
 
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int piecesFound = 0;
@@ -144,26 +143,26 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 		case WKING:
 		case WKNIGHT:
-			mask = WhiteFree;
+			mask = WhiteRoam;
 			break;
 
 		case WPAWN:
-			mask = fillUpOccluded(FROM, (WhiteFree & ~BlackOccupied))  // pawns cannot capture while advancing
-					| moveUpLeftSingleOccluded(FROM, WhiteFree & BlackOccupied)
-					| moveUpRightSingleOccluded(FROM, WhiteFree & BlackOccupied);
+			mask = fillUpOccluded(FROM, (WhiteRoam & ~BlackOccupied))  // pawns cannot capture while advancing
+					| moveUpLeftSingleOccluded(FROM, WhiteRoam & BlackOccupied)
+					| moveUpRightSingleOccluded(FROM, WhiteRoam & BlackOccupied);
 			break;
 
 		case WBISHOP:
-			mask = getDiagonalMoveSquares(FROM, WhiteFree, BlackCapturables);
+			mask = getDiagonalMoveSquares(FROM, WhiteRoam, BlackCapturables);
 			break;
 
 		case WROOK:
-			mask =  getStraightMoveSquares(FROM, WhiteFree, BlackCapturables);
+			mask =  getStraightMoveSquares(FROM, WhiteRoam, BlackCapturables);
 			break;
 
 		case WQUEEN:
-			mask = getDiagonalMoveSquares(FROM, WhiteFree, BlackCapturables)
-					| getStraightMoveSquares(FROM, WhiteFree, BlackCapturables);
+			mask = getDiagonalMoveSquares(FROM, WhiteRoam, BlackCapturables)
+					| getStraightMoveSquares(FROM, WhiteRoam, BlackCapturables);
 			break;
 
 		default:
@@ -222,7 +221,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					Q.B |= x;
 					Q.C &= ~x;
 					Q.D &= ~x;
-				} else if (TO & EP) {
+				} else if (TO & BlackOccupied & EP) {
 					pM->enPassantCapture = 1;
 					// remove the actual pawn (dest was EP square)
 					const Bitboard x = TO >> 8;
@@ -419,19 +418,18 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 	const Bitboard& PB = P.B;
 	const Bitboard& PC = P.C;
 	const Bitboard& PD = P.D;
-	const Bitboard PAB = PA & PB;	// Bitboard containing EnPassants and kings
+
+	const Bitboard PAB = PA & PB; // Bitboard containing EnPassants and kings
+	const Bitboard Occupied = PA | PB | PC; // all squares occupied by something
+	const Bitboard WhiteOccupied = Occupied & ~PD; // all squares occupied by W, including white EP Squares
+	const Bitboard WhiteCapturables = WhiteOccupied & ~PAB; // All white pieces except enpassants and white king
+	const Bitboard EP = PAB & ~PC; // E.P. squares (any color)
+	const Bitboard BlackRoam // all squares where Black is potentially free to go
+			= ~Occupied // vacant
+			| WhiteCapturables // enemy pieces (except King)
+			| EP; // EP squares
 
 	ChessMove* pFirstMove = pM;
-	const Bitboard Occupied = PA | PB | PC; // all squares occupied by something
-	const Bitboard WhiteOccupied = (Occupied & ~PD); // all squares occupied by W, including white EP Squares
-	const Bitboard BlackFree // all squares where B is free to move
-			= (PA & PB & ~PC)		// any EP square
-			  | ~(Occupied)				// any vacant square
-			| (~PA & ~PD)			// White Bishop, Rook or Queen
-			| (~PB & ~PD);			// White Pawn or Knight
-
-	const Bitboard WhiteCapturables = WhiteOccupied & ~PAB; // All white pieces except enpassants and white king
-	const Bitboard EP = WhiteOccupied & PAB & ~PC; // White E.P. capture target
 
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
 	int piecesFound = 0;
@@ -446,27 +444,27 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 		case BKING:
 		case BKNIGHT:
-			mask = BlackFree;
+			mask = BlackRoam;
 			break;
 
 		case BPAWN:
-			mask = fillDownOccluded(FROM, (BlackFree & ~WhiteOccupied))  // pawns cannot capture while advancing
-					| moveDownLeftSingleOccluded(FROM, BlackFree & WhiteOccupied)
-					| moveDownRightSingleOccluded(FROM, BlackFree & WhiteOccupied);
+			mask = fillDownOccluded(FROM, (BlackRoam & ~WhiteOccupied))  // pawns cannot capture while advancing
+					| moveDownLeftSingleOccluded(FROM, BlackRoam & WhiteOccupied)
+					| moveDownRightSingleOccluded(FROM, BlackRoam & WhiteOccupied);
 
 			break;
 
 		case BBISHOP:
-			mask = getDiagonalMoveSquares(FROM, BlackFree, WhiteCapturables);
+			mask = getDiagonalMoveSquares(FROM, BlackRoam, WhiteCapturables);
 			break;
 
 		case BROOK:
-			mask =  getStraightMoveSquares(FROM, BlackFree, WhiteCapturables);
+			mask =  getStraightMoveSquares(FROM, BlackRoam, WhiteCapturables);
 			break;
 
 		case BQUEEN:
-			mask = getDiagonalMoveSquares(FROM, BlackFree, WhiteCapturables)
-					| getStraightMoveSquares(FROM, BlackFree, WhiteCapturables);
+			mask = getDiagonalMoveSquares(FROM, BlackRoam, WhiteCapturables)
+					| getStraightMoveSquares(FROM, BlackRoam, WhiteCapturables);
 			break;
 
 		default:
@@ -524,7 +522,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 					Q.B |= x;
 					Q.C &= ~x;
 					Q.D |= x;
-				} else if (TO & EP) {
+				} else if (TO & WhiteOccupied & EP) {
 					pM->enPassantCapture = 1;
 					// remove the actual pawn (dest was EP square)
 					const Bitboard x = TO << 8;
