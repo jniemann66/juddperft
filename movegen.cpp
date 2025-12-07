@@ -113,19 +113,26 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 		return;
 	}
 
-	ChessMove* pFirstMove = pM;
-	const Bitboard Occupied = P.A | P.B | P.C;								// all squares occupied by something
-	const Bitboard BlackOccupied = Occupied & P.D;							// all squares occupied by B, including Black EP Squares
-	const Bitboard WhiteFree // all squares where W is free to move
-			= (P.A & P.B & ~P.C)        // any EP square
-			  |	~(Occupied)				// any vacant square
-			|	(~P.A & P.D)			// Black Bishop, Rook or Queen
-			|	(~P.B & P.D);			// Black Pawn or Knight
+	const Bitboard& PA = P.A;
+	const Bitboard& PB = P.B;
+	const Bitboard& PC = P.C;
+	const Bitboard& PD = P.D;
+	const Bitboard PAB = PA & PB;	// Bitboard containing EnPassants and kings
 
-	const Bitboard SolidBlackPiece = P.D & ~(P.A & P.B); // All black pieces except enpassants and black king
+	ChessMove* pFirstMove = pM;
+	const Bitboard Occupied = PA | PB | PC;								// all squares occupied by something
+	const Bitboard BlackOccupied = Occupied & PD;							// all squares occupied by B, including Black EP Squares
+	const Bitboard WhiteFree // all squares where W is free to move
+			= (PA & PB & ~PC)        // any EP square
+			  |	~(Occupied)				// any vacant square
+			|	(~PA & PD)			// Black Bishop, Rook or Queen
+			|	(~PB & PD);			// Black Pawn or Knight
+
+	const Bitboard BlackCapturables = BlackOccupied & ~PAB; // All black pieces except enpassants and black king
+	const Bitboard EP = BlackOccupied & PAB & ~PC;  // Black E.P. capture target
 
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
-	int pieces = 0;
+	int piecesFound = 0;
 
 	for (int origin = h1; origin <= a8; origin++) { // start from white's side of board
 		const Bitboard FROM = 1ull << origin; // Bitboard representation of origin square
@@ -147,16 +154,16 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 
 		case WBISHOP:
-			mask = getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece);
+			mask = getDiagonalMoveSquares(FROM, WhiteFree, BlackCapturables);
 			break;
 
 		case WROOK:
-			mask =  getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
+			mask =  getStraightMoveSquares(FROM, WhiteFree, BlackCapturables);
 			break;
 
 		case WQUEEN:
-			mask = getDiagonalMoveSquares(FROM, WhiteFree, SolidBlackPiece)
-					| getStraightMoveSquares(FROM, WhiteFree, SolidBlackPiece);
+			mask = getDiagonalMoveSquares(FROM, WhiteFree, BlackCapturables)
+					| getStraightMoveSquares(FROM, WhiteFree, BlackCapturables);
 			break;
 
 		default:
@@ -184,9 +191,8 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			pM->piece = piece;
 
 			// Test for capture:
-			const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings:
-			const Bitboard BlackOccupied = P.D;
-			if (TO & BlackOccupied & ~PAB) {
+
+			if (TO & BlackCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
 				pM->capture = 1;
 			}
@@ -216,7 +222,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 					Q.B |= x;
 					Q.C &= ~x;
 					Q.D &= ~x;
-				} else if (TO & BlackOccupied & PAB & ~P.C) {
+				} else if (TO & EP) {
 					pM->enPassantCapture = 1;
 					// remove the actual pawn (dest was EP square)
 					const Bitboard x = TO >> 8;
@@ -270,18 +276,18 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 			goto cleanup; // get the hell outa here ...
 		}
 
-		if (++pieces > maxPieces) {
+		if (++piecesFound > maxPieces) {
 			break;
 		}
 
 	} // ends loop over origin
 
 	// castling
-	if (P.A & P.B & P.C & ~P.D & E1) { // King still in original position
+	if (PA & PB & PC & ~PD & E1) { // King still in original position
 
 		// Conditionally generate O-O move:
 		if (P.whiteCanCastle && // White still has castle rights
-				(~P.A & ~P.B & P.C & ~P.D & H1) && // Kingside rook is in correct position
+				(~PA & ~PB & PC & ~PD & H1) && // Kingside rook is in correct position
 				(WHITECASTLEZONE & Occupied) == 0 && // Castle Zone (f1, g1) is clear
 				!isWhiteInCheck(P, WHITECASTLECHECKZONE)) // King is not in Check (in e1, f1, g1)
 		{
@@ -305,7 +311,7 @@ void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 
 		// Conditionally generate O-O-O move:
 		if (P.whiteCanCastleLong && // White still has castle-long rights
-				(~P.A & ~P.B & P.C & ~P.D & A1) && // Queenside rook is in correct Position
+				(~PA & ~PB & PC & ~PD & A1) && // Queenside rook is in correct Position
 				(WHITECASTLELONGZONE & Occupied) == 0 && // Castle-long zone (b1, c1, d1) is clear
 				!isWhiteInCheck(P, WHITECASTLELONGCHECKZONE)) // King is not in check (in e1, d1, c1)
 		{
@@ -409,19 +415,26 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 		return;
 	}
 
-	ChessMove* pFirstMove = pM;
-	const Bitboard Occupied = P.A | P.B | P.C; // all squares occupied by something
-	const Bitboard WhiteOccupied = (Occupied & ~P.D); // all squares occupied by W, including white EP Squares
-	const Bitboard BlackFree // all squares where B is free to move
-			= (P.A & P.B & ~P.C)		// any EP square
-			  | ~(Occupied)				// any vacant square
-			| (~P.A & ~P.D)			// White Bishop, Rook or Queen
-			| (~P.B & ~P.D);			// White Pawn or Knight
+	const Bitboard& PA = P.A;
+	const Bitboard& PB = P.B;
+	const Bitboard& PC = P.C;
+	const Bitboard& PD = P.D;
+	const Bitboard PAB = PA & PB;	// Bitboard containing EnPassants and kings
 
-	const Bitboard SolidWhitePiece = WhiteOccupied & ~(P.A & P.B); // All white pieces except enpassants and white king
+	ChessMove* pFirstMove = pM;
+	const Bitboard Occupied = PA | PB | PC; // all squares occupied by something
+	const Bitboard WhiteOccupied = (Occupied & ~PD); // all squares occupied by W, including white EP Squares
+	const Bitboard BlackFree // all squares where B is free to move
+			= (PA & PB & ~PC)		// any EP square
+			  | ~(Occupied)				// any vacant square
+			| (~PA & ~PD)			// White Bishop, Rook or Queen
+			| (~PB & ~PD);			// White Pawn or Knight
+
+	const Bitboard WhiteCapturables = WhiteOccupied & ~PAB; // All white pieces except enpassants and white king
+	const Bitboard EP = WhiteOccupied & PAB & ~PC; // White E.P. capture target
 
 	static constexpr int maxPieces = 17; // maximum per side; 16 actual pieces + E.P.
-	int pieces = 0;
+	int piecesFound = 0;
 
 	for (int origin = a8; origin >= h1; origin--) { // start from black's side of board
 		const Bitboard FROM = 1ull << origin;  // Bitboard representation of origin square
@@ -444,16 +457,16 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			break;
 
 		case BBISHOP:
-			mask = getDiagonalMoveSquares(FROM, BlackFree, SolidWhitePiece);
+			mask = getDiagonalMoveSquares(FROM, BlackFree, WhiteCapturables);
 			break;
 
 		case BROOK:
-			mask =  getStraightMoveSquares(FROM, BlackFree, SolidWhitePiece);
+			mask =  getStraightMoveSquares(FROM, BlackFree, WhiteCapturables);
 			break;
 
 		case BQUEEN:
-			mask = getDiagonalMoveSquares(FROM, BlackFree, SolidWhitePiece)
-					| getStraightMoveSquares(FROM, BlackFree, SolidWhitePiece);
+			mask = getDiagonalMoveSquares(FROM, BlackFree, WhiteCapturables)
+					| getStraightMoveSquares(FROM, BlackFree, WhiteCapturables);
 			break;
 
 		default:
@@ -481,9 +494,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			pM->piece = piece;
 
 			// Test for capture:
-			const Bitboard PAB = P.A & P.B;	// Bitboard containing EnPassants and kings
-			Bitboard WhiteOccupied = (P.A | P.B | P.C) & ~P.D;
-			if (TO & WhiteOccupied & ~PAB) {
+			if (TO & WhiteCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
 				pM->capture = 1;
 			}
@@ -513,7 +524,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 					Q.B |= x;
 					Q.C &= ~x;
 					Q.D |= x;
-				} else if (TO & WhiteOccupied & PAB & ~P.C) {
+				} else if (TO & EP) {
 					pM->enPassantCapture = 1;
 					// remove the actual pawn (dest was EP square)
 					const Bitboard x = TO << 8;
@@ -568,18 +579,18 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 			goto cleanup;  // get the hell outa here ...
 		}
 
-		if (++pieces > maxPieces) {
+		if (++piecesFound > maxPieces) {
 			break;
 		}
 
 	} // ends loop over origin;
 
 	// castling
-	if (P.A & P.B & P.C & P.D & E8) { // King still in original position
+	if (PA & PB & PC & PD & E8) { // King still in original position
 
 		// Conditionally generate O-O move:
 		if (P.blackCanCastle && // Black still has castle rights
-				(~P.A & ~P.B & P.C & P.D & H8) && // Kingside rook is in correct position
+				(~PA & ~PB & PC & PD & H8) && // Kingside rook is in correct position
 				(BLACKCASTLEZONE & Occupied) == 0 && // Castle Zone (f8, g8) is clear
 				!isBlackInCheck(P, BLACKCASTLECHECKZONE)) // King is not in Check (in e8, f8, g8)
 		{
@@ -603,7 +614,7 @@ void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 
 		// Conditionally generate O-O-O move:
 		if (P.blackCanCastleLong && // Black still has castle-long rights
-				(~P.A & ~P.B & P.C & P.D & A8) && // Queenside rook is in correct Position
+				(~PA & ~PB & PC & PD & A8) && // Queenside rook is in correct Position
 				(BLACKCASTLELONGZONE & Occupied) == 0 && // Castle Long Zone (b8, c8, d8) is clear
 				!isBlackInCheck(P, BLACKCASTLELONGCHECKZONE)) // King is not in Check (e8, d8, c8)
 		{
