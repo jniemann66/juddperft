@@ -295,6 +295,31 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 
 		// Update Hash
 		hk ^= zobristKeys.zkPieceOnSquare[capturedpiece][nToSquare]; // Remove captured Piece
+
+		// if a rook was captured, it may take away castling rights
+		if (To & CORNERS) {
+			switch (capturedpiece) {
+			case WROOK:
+				if (whiteCanCastle && (To & H1)) {
+					hk ^= zobristKeys.zkWhiteCanCastle;
+					whiteCanCastle = 0;
+				} else if (whiteCanCastleLong && (To & A1)) {
+					hk ^= zobristKeys.zkWhiteCanCastleLong;
+					whiteCanCastleLong = 0;
+				}
+				break;
+			case BROOK:
+				if (blackCanCastle && (To & H8)){
+					hk ^= zobristKeys.zkBlackCanCastle;
+					blackCanCastle = 0;
+				} else if (blackCanCastleLong && (To & A8)) {
+					hk ^= zobristKeys.zkBlackCanCastleLong;
+					blackCanCastleLong = 0;
+				}
+			default:
+				break;
+			}
+		}
 	}
 
 	// Render "ordinary" moves:
@@ -514,6 +539,39 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	default:
 		break;
 	} // ends switch (M.Piece)
+
+	// Ordinary Captures
+	if (M.capture) {
+		// find out what was captured
+		const unsigned int capturedpiece
+				= ((D & To) >> M.destination) << 3
+												 | ((C & To) >> M.destination) << 2
+												 | ((B & To) >> M.destination) << 1
+												 | ((A & To) >> M.destination);
+
+		// if a rook was captured, it may take away castling rights
+		if (To & CORNERS) {
+			switch (capturedpiece) {
+			case WROOK:
+				if (whiteCanCastle && (To & H1)) {
+					whiteCanCastle = 0;
+				} else if (whiteCanCastleLong && (To & A1)) {
+					whiteCanCastleLong = 0;
+				}
+
+				break;
+			case BROOK:
+				if (blackCanCastle && (To & H8)){
+					blackCanCastle = 0;
+				} else if (blackCanCastleLong && (To & A8)) {
+					blackCanCastleLong = 0;
+				}
+
+			default:
+				break;
+			}
+		}
+	}
 
 	// Render "ordinary" moves:
 	A &= O;

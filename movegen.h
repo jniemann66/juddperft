@@ -334,6 +334,8 @@ enum SQUARES : uint64_t {
 
 // Common board regions in binary (Bitboard) format
 enum Regions : Bitboard {
+
+	CORNERS = (H1 | A1 | H8 | A8),
 	RANK1 = 0x00000000000000ff,
 	RANK2 = 0x000000000000ff00,
 	RANK3 = 0x0000000000ff0000,
