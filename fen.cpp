@@ -146,6 +146,7 @@ namespace juddperft {
 			square -= shift;
 			s++;
 		} // ends while ((s != NULL) && (Square >= 0))
+
 		// Now, tokenize remainder of string:
 		strncpy(t, s, 1023);
 		token = strtok(t, " ");

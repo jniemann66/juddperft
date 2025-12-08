@@ -28,7 +28,6 @@ SOFTWARE.
 //#include "chessposition.h"
 #include "diagnostics.h"
 #include "movegen.h"
-//#include "diagnostics.h"
 //#include "fen.h"
 //#include "hash_table.h"
 //#include "search.h"
