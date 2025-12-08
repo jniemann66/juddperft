@@ -54,7 +54,7 @@ void printPerftScoreFfromFEN(const char* pzFENstring, unsigned int depth, uint64
 
 	nodecount_t n = 0;
 	perftFastMT(P, depth, n);
-	printf("Perft %d: %" PRIu64 " (Correct Answer= %" PRIu64 ")\n", depth, n, correctAnswer);
+	printf("Perft %d: %" PRIu64 " (Correct! Answer= %" PRIu64 ")\n", depth, n, correctAnswer);
 
 	if (n != correctAnswer)
 		printf("-== FAIL !!! ==-\n");
@@ -165,9 +165,15 @@ void runTestSuite()
 	printPerftScoreFfromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", 6, 706045033);		// Position 4 Mirrored (should be same score as previous)
 	printPerftScoreFfromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 5, 89941194);				// Position 5
 	printPerftScoreFfromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 7, 287188994746); // Position 6 28/1/2016: Correct (took 8454195 ms)
+	// (Position 6 21/11/25 : correct, 211945 ms - but on more modern hardware)
+
+	// this next position helped to find an embarassing castling bug, in which a captured, unmoved rook was not resulting in loss of castle rights -
+	// so if player could get their "other" rook (eg from a1) into position (h1), and didn't move their king, then they were still able to castle, which is illegal.
+	// It's a weird and rare scenario, but can happen in this position (eg: if 1 ... g2xh1=B):
+
 	printPerftScoreFfromFEN("r3k2r/1bp2pP1/5n2/1P1Q4/1pPq4/5N2/1B1P2p1/R3K2R b KQkq c3 0 1", 6, 8419356881); // https://www.talkchess.com/forum3/viewtopic.php?f=2&t=70543
 
-		// (Position 6 21/11/25 : correct, 211945 ms - but on more modern hardware)
+	// was getting 8419356941 (+60) when bug was in effect
 }
 
 } // namespace juddperft

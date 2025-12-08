@@ -2,7 +2,6 @@
 #include "zobristkeyset.h"
 
 #include "movegen.h"
-#include "hash_table.h"
 
 namespace juddperft {
 
