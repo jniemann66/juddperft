@@ -27,7 +27,7 @@ struct PerftRecord
 		uint64_t data{0};
 	};
 #else
-	// 64 bits of count
+	// 64 bits of nodecount
 	uint64_t count{0};
 #endif
 

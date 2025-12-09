@@ -129,13 +129,13 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 	std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk); // get address
 	PerftRecord retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
-	if (retrievedRecord.hash == hk) {
+	if (retrievedRecord.hk == hk) {
 		nNodes += retrievedRecord.count;
 		return;
 	}
 
 	PerftRecord newRecord;
-	newRecord.hash = hk;
+	newRecord.hk = hk;
 
 #if defined(HT_PERFT_DEPTH_TALLY)
 	newRecord.depth = depth;
