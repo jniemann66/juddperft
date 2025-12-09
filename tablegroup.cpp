@@ -15,13 +15,15 @@ bool TableGroup::setMemory(size_t requestedBytes)
 			}
 		}
 
-		// if (perftLeafTable.setSize(m / 2) && perftTable.setSize(m / 8)) { // 4:1 ratio
-		// 	return true;
-		// }
-
+#if defined(HT_PERFT_LEAF_TABLE)
+		if (perftLeafTable.setSize(m / 2) && perftTable.setSize(m / 8)) { // 4:1 ratio
+			return true;
+		}
+#else
 		if (perftTable.setSize(m)) {
 			return true;
 		}
+#endif
 
 		requestedBytes >>= 1;
 

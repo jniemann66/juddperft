@@ -104,8 +104,6 @@ inline bool HashTable<T>::setSize(size_t nBytes)
 	nNewNumEntries >>= 1;
 	m_nEntries = nNewNumEntries;
 
-	// create a mask with all 1's (2^n - 1) for address calculation:
-	m_nIndexMask = m_nEntries - 1;
 	deAllocate();
 
 	m_pTable = new (std::nothrow) std::atomic<T>[m_nEntries];
@@ -115,15 +113,19 @@ inline bool HashTable<T>::setSize(size_t nBytes)
 		return false;
 	} else {
 		const size_t bytes = m_nEntries * sizeof(T);
+		// create a mask with all 1's (2^n - 1) for address calculation:
+		m_nIndexMask = m_nEntries - 1;
+
 		if (!quiet) {
 			std::cout << "Allocated " << bytes << " bytes ("
 					  << Utils::memorySizeWithBinaryPrefix(bytes) << ") for "
 					  << m_Name << " (" << m_nEntries << " entries at " << sizeof(T) << " bytes each)" << std::endl;
-		}
 
-		// std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
-		// note: on x86-64, gcc has a tendency to report this as false,
-		// even when the expected cmpxchg16b instruction is actually being used (inside calls to libatomic)
+			// std::cout << std::hex << m_nIndexMask << std::dec << std::endl;
+			// std::cout << "Is lock free ? " << m_pTable->is_lock_free() << std::endl;
+			// note: on x86-64, gcc has a tendency to report this as false,
+			// even when the expected cmpxchg16b instruction is actually being used (inside calls to libatomic)
+		}
 
 		clear();
 		return true;

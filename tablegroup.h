@@ -7,6 +7,7 @@
 // and controlling how all the memory is divided-up and allocated
 
 #define HT_PERFT_DEPTH_TALLY
+// #define HT_PERFT_LEAF_TABLE // performs worse - IDK why - cache effects ? atomic shenanigans ?
 
 namespace juddperft {
 
@@ -31,6 +32,7 @@ struct PerftRecord
 #endif
 
 };
+
 
 struct PerftLeafRecord
 {

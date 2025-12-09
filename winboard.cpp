@@ -337,25 +337,36 @@ void parse_input_showhash(const char* s, Engine* pE)
 	const nodecount_t t = std::accumulate(depthTally.begin(), depthTally.end(), 0ull);
 	printf("Total: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n", t, table_size, 100.0 * static_cast<float>(t) / table_size);
 
-	// printf("\n");
-	// {
-	// 	printf("Perft Leaf Table Size: %" PRIu64 " bytes\n", TableOrganiser::perftLeafTable.getSize());
-	// 	size_t numEntries = TableOrganiser::perftLeafTable.getNumEntries();
-	// 	std::vector<size_t> depthTally(2, 0);
-	// 	std::atomic<PerftLeafRecord> *pBaseAddress = TableOrganiser::perftLeafTable.getAddress(0);
-	// 	std::atomic<PerftLeafRecord> *pAtomicRecord;
+#if defined(HT_PERFT_LEAF_TABLE)
+	printf("\n");
+	{
+		printf("Perft Leaf Table Size: %" PRIu64 " bytes\n", TableGroup::perftLeafTable.getSize());
+		size_t leafTableSize = TableGroup::perftLeafTable.getNumRecords();
+		std::atomic<PerftLeafRecord> *pBaseAddress = TableGroup::perftLeafTable.getAddress(0);
+		std::atomic<PerftLeafRecord> *pAtomicRecord;
 
-	// 	for (size_t x = 0; x < numEntries; x++) {
-	// 		pAtomicRecord = pBaseAddress + x;
-	// 		PerftLeafRecord RetrievedRecord = pAtomicRecord->load();
-	// 		++depthTally[RetrievedRecord.count > 0 ? 1 : 0];
-	// 	}
+		size_t incSize = leafTableSize / 10;
+		size_t nextProgUpdate = incSize;
 
-	// 	for (unsigned int d = 0; d < 2; d++) {
-	// 		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
-	// 	}
-	// 	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
-	// }
+		size_t t = 0;
+		printf("tallying");
+		for (size_t x = 0; x < leafTableSize; x++) {
+			pAtomicRecord = pBaseAddress + x;
+			PerftLeafRecord retrievedRecord = pAtomicRecord->load();
+
+			if (x >= nextProgUpdate) {
+				printf(".");
+				nextProgUpdate += incSize;
+			}
+
+			if (retrievedRecord.count) {
+				t ++;
+			}
+		}
+
+		printf("\nTotal: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n", t, leafTableSize, 100.0 * static_cast<float>(t) / leafTableSize);
+	}
+#endif
 
 }
 

@@ -127,7 +127,9 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	nodecount_t orig_nNodes = nNodes;
 
 	// Consult the HashTable:
-	HashKey hk = Q.hk ^ zobristKeys.zkPerftDepth[depth];
+	const HashKey hk = Q.hk ^ zobristKeys.zkPerftDepth[depth];
+
+#if !defined(HT_PERFT_LEAF_TABLE)
 	std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk); // get address
 	PerftRecord retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
 	if (retrievedRecord.Hash == hk) {
@@ -160,66 +162,66 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 	do {
 		// if (RetrievedRecord has changed) {} // do something (if we care)
 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
-
-	// --- //
+#else
 
 	// leaf-table code 2025-12-3 (couldn't get it performing well - not sure what was going wrong)
 
-	// if (depth == 1) { /* Leaf Node */
+	if (depth == 1) { /* Leaf Node */
 
-	// 	static constexpr uint64_t hkm = - 1ll & ~0xff;
-	// 	const uint64_t k = hk & hkm;
+		static constexpr uint64_t hkm = - 1ll & ~0xff;
+		const uint64_t k = hk & hkm;
 
-	// 	// Consult the HashTable:
-	// 	std::atomic<PerftLeafRecord> *pAtomicRecord = TableOrganiser::perftLeafTable.getAddress(hk);
-	// 	PerftLeafRecord retrievedRecord = pAtomicRecord->load();
+		// Consult the HashTable:
+		std::atomic<PerftLeafRecord> *pAtomicRecord = TableGroup::perftLeafTable.getAddress(hk);
+		PerftLeafRecord retrievedRecord = pAtomicRecord->load();
 
-	// 	// validate the top 56 bits
-	// 	if (retrievedRecord.k == k) {
-	// 		nNodes += retrievedRecord.count;
-	// 		return;
-	// 	}
+		// validate the top 56 bits
+		if (retrievedRecord.k == k) {
+			nNodes += retrievedRecord.count;
+			return;
+		}
 
-	// 	PerftLeafRecord newRecord;
-	// 	newRecord.k = hk & hkm;
-	// 	generateMoves(P, moveList);
-	// 	const int movecount = moveList->moveCount;
+		PerftLeafRecord newRecord;
+		newRecord.k = hk & hkm;
+		MoveGenerator::generateMoves(P, moveList);
+		const int movecount = moveList->moveCount;
 
-	// 	newRecord.count = movecount;
-	// 	nNodes += movecount;
+		newRecord.count = movecount;
+		nNodes += movecount;
 
-	// 	do {
-	// 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
-	// } else { /* Branch Node */
+		do {
+		} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+	} else { /* Branch Node */
 
-	// 	// Consult the HashTable:
-	// 	std::atomic<PerftRecord> *pAtomicRecord =TableOrganiser::perftTable.getAddress(hk);
-	// 	PerftRecord retrievedRecord = pAtomicRecord->load();
+		// Consult the HashTable:
+		std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk);
+		PerftRecord retrievedRecord = pAtomicRecord->load();
 
-	// 	// validate entire hk
-	// 	if (retrievedRecord.Hash == hk) {
-	// 		nNodes += retrievedRecord.count;
-	// 		return;
-	// 	}
+		// validate entire hk
+		if (retrievedRecord.Hash == hk) {
+			nNodes += retrievedRecord.count;
+			return;
+		}
 
-	// 	PerftRecord newRecord;
-	// 	newRecord.Hash = hk;
-	// 	newRecord.depth = depth;
-	// 	generateMoves(P, moveList);
-	// 	const int movecount = moveList->moveCount;
+		PerftRecord newRecord;
+		newRecord.Hash = hk;
+		newRecord.depth = depth;
+		MoveGenerator::generateMoves(P, moveList);
+		const int movecount = moveList->moveCount;
 
-	// 	for (int i = 0; i < movecount; i++) {
-	// 		Q = P; // unmake move
-	// 		Q.performMove(moveList[i]).switchSides(); // make move
-	// 		perftFast(Q, depth - 1, nNodes);
-	// 	}
+		for (int i = 0; i < movecount; i++) {
+			Q = P; // unmake move
+			Q.performMove(moveList[i]).switchSides(); // make move
+			perftFast(Q, depth - 1, nNodes);
+		}
 
-	// 	newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
+		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
 
-	// 	do {
-	// 		// todo: if theirs is bigger than ours, use theirs ?
-	// 	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
-	// }
+		do {
+			// todo: if theirs is bigger than ours, use theirs ?
+		} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+	}
+#endif
 }
 
 //// ---------------------------------------------------

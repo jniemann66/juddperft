@@ -52,9 +52,11 @@ int main(int argc, char *argv[], char *envp[])
 {
 	// std::cout << "sizeof(ChessMove) == " << sizeof(ChessMove) << " sizeof(ChessPosition) == " << sizeof(ChessPosition) << std::endl;
 
-	size_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster !!!)
+	// size_t nBytesToAllocate = 1ull << 32; // 4GiB
 
-	// size_t nBytesToAllocate = 1ull << 34; 16GiB
+	size_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster ... until you start hitting the page file then it gets significantly worse !!!)
+
+	// size_t nBytesToAllocate = 1ull << 34; // 16GiB
 
 	if (!setMemory(nBytesToAllocate)) {
 		return EXIT_FAILURE;	// not going to end well ...

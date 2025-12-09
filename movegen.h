@@ -172,7 +172,6 @@ enum MoveFlags : uint32_t
 // killer moves (caused beta cutoff)
 // MVV / LVA
 
-
 struct ChessMove2 {
 	bool blackToMove{false};
 	unsigned char piece;
