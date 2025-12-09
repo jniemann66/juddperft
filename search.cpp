@@ -122,104 +122,109 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 {
-	ChessMove moveList[MOVELIST_SIZE];
-	ChessPosition Q = P;
-	nodecount_t orig_nNodes = nNodes;
-
-	// Consult the HashTable:
-	const HashKey hk = Q.hk ^ zobristKeys.zkPerftDepth[depth];
 
 #if !defined(HT_PERFT_LEAF_TABLE)
+	// Consult the HashTable:
+	const HashKey hk = P.hk ^ zobristKeys.zkPerftDepth[depth];
+
 	std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk); // get address
 	PerftRecord retrievedRecord = pAtomicRecord->load(); // Load a copy of the record
-	if (retrievedRecord.Hash == hk) {
+	if (retrievedRecord.hash == hk) {
 		nNodes += retrievedRecord.count;
 		return;
 	}
 
 	PerftRecord newRecord;
-	newRecord.Hash = hk;
+	newRecord.hash = hk;
 
 #if defined(HT_PERFT_DEPTH_TALLY)
 	newRecord.depth = depth;
 #endif
 
+	ChessMove moveList[MOVELIST_SIZE];
+	nodecount_t orig_nNodes = nNodes;
 	MoveGenerator::generateMoves(P, moveList);
 	const int movecount = moveList->moveCount;
-
 	if (depth == 1) { /* Leaf Node*/
 		newRecord.count = movecount;
 		nNodes += movecount;
 	} else { /* Branch Node */
+		ChessPosition Q = P;
 		for (int i = 0; i < movecount; i++) {
-			Q = P; // unmake move
 			Q.performMove(moveList[i]).switchSides(); // make move
 			perftFast(Q, depth - 1, nNodes);
+			Q = P; // unmake move
 		}
 		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
 	}
 
-	do {
-		// if (RetrievedRecord has changed) {} // do something (if we care)
-	} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord, std::memory_order_relaxed)); // loop until successfully written;
+	while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
 #else
+	// leaf-table code
 
-	// leaf-table code 2025-12-3 (couldn't get it performing well - not sure what was going wrong)
+	// Consult the HashTable:
 
 	if (depth == 1) { /* Leaf Node */
 
-		static constexpr uint64_t hkm = - 1ll & ~0xff;
-		const uint64_t k = hk & hkm;
+		static constexpr uint64_t hk_mask = 0xffffffffffffff00;
+		static constexpr uint64_t mc_mask = 0x00000000000000ff;
+
+		const HashKey hk = P.hk;
+		const uint64_t hk_validate = hk & hk_mask;
 
 		// Consult the HashTable:
 		std::atomic<PerftLeafRecord> *pAtomicRecord = TableGroup::perftLeafTable.getAddress(hk);
 		PerftLeafRecord retrievedRecord = pAtomicRecord->load();
 
 		// validate the top 56 bits
-		if (retrievedRecord.k == k) {
-			nNodes += retrievedRecord.count;
+		if ((retrievedRecord & hk_mask) == hk_validate) {
+			nNodes += (retrievedRecord & mc_mask);
 			return;
 		}
 
-		PerftLeafRecord newRecord;
-		newRecord.k = hk & hkm;
+		ChessMove moveList[MOVELIST_SIZE];
 		MoveGenerator::generateMoves(P, moveList);
-		const int movecount = moveList->moveCount;
-
-		newRecord.count = movecount;
+		const uint64_t movecount = moveList->moveCount & mc_mask;
+		PerftLeafRecord newRecord = hk_validate | movecount;
 		nNodes += movecount;
 
-		do {
-		} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+		while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+
 	} else { /* Branch Node */
 
 		// Consult the HashTable:
+		const HashKey hk = P.hk ^ zobristKeys.zkPerftDepth[depth];
 		std::atomic<PerftRecord> *pAtomicRecord = TableGroup::perftTable.getAddress(hk);
 		PerftRecord retrievedRecord = pAtomicRecord->load();
 
 		// validate entire hk
-		if (retrievedRecord.Hash == hk) {
+		if (retrievedRecord.hk == hk) {
 			nNodes += retrievedRecord.count;
 			return;
 		}
 
 		PerftRecord newRecord;
-		newRecord.Hash = hk;
+		newRecord.hk = hk;
+
+#if defined(HT_PERFT_DEPTH_TALLY)
 		newRecord.depth = depth;
+#endif
+
+		ChessMove moveList[MOVELIST_SIZE];
+		nodecount_t orig_nNodes = nNodes;
 		MoveGenerator::generateMoves(P, moveList);
 		const int movecount = moveList->moveCount;
 
+		ChessPosition Q = P;
 		for (int i = 0; i < movecount; i++) {
-			Q = P; // unmake move
 			Q.performMove(moveList[i]).switchSides(); // make move
 			perftFast(Q, depth - 1, nNodes);
+			Q = P; // unmake move
 		}
 
 		newRecord.count = nNodes - orig_nNodes; // record RELATIVE increase in nodecount
 
-		do {
-			// todo: if theirs is bigger than ours, use theirs ?
-		} while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
+		while (!pAtomicRecord->compare_exchange_weak(retrievedRecord, newRecord)); // loop until successfully written;
 	}
 #endif
 }

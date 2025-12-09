@@ -340,7 +340,7 @@ void parse_input_showhash(const char* s, Engine* pE)
 #if defined(HT_PERFT_LEAF_TABLE)
 	printf("\n");
 	{
-		printf("Perft Leaf Table Size: %" PRIu64 " bytes\n", TableGroup::perftLeafTable.getSize());
+		printf("Perft Leaf Table (depth=1) Size: %" PRIu64 " bytes\n", TableGroup::perftLeafTable.getSize());
 		size_t leafTableSize = TableGroup::perftLeafTable.getNumRecords();
 		std::atomic<PerftLeafRecord> *pBaseAddress = TableGroup::perftLeafTable.getAddress(0);
 		std::atomic<PerftLeafRecord> *pAtomicRecord;
@@ -359,8 +359,8 @@ void parse_input_showhash(const char* s, Engine* pE)
 				nextProgUpdate += incSize;
 			}
 
-			if (retrievedRecord.count) {
-				t ++;
+			if (retrievedRecord & 0xffull) {
+				t++;
 			}
 		}
 

@@ -7,16 +7,16 @@
 // and controlling how all the memory is divided-up and allocated
 
 #define HT_PERFT_DEPTH_TALLY
-// #define HT_PERFT_LEAF_TABLE // performs worse - IDK why - cache effects ? atomic shenanigans ?
+#define HT_PERFT_LEAF_TABLE
 
 namespace juddperft {
 
 struct PerftRecord
 {
-	HashKey Hash;
+	HashKey hk;
 
 #ifdef HT_PERFT_DEPTH_TALLY
-	// 60 bits of count + 4 bits of depth
+	// 60 bits of nodecount + 4 bits of depth
 	union {
 		struct {
 			// warning: limitations are: max depth = 15, max count = 2^60 = 1,152,921,504,606,846,976
@@ -34,19 +34,18 @@ struct PerftRecord
 };
 
 
-struct PerftLeafRecord
-{
-	uint64_t k : 56;
-	uint64_t count : 8;
-};
+// this struct performed poorly ... need to look into what compiler is really doing with the bitfields
+// maybe it needs to be the other way around (8 + 56) ... but will probably be highly dependent on target architecture
+// struct PerftLeafRecord
+// {
+// 	uint64_t k : 56;
+// 	uint64_t count : 8;
+// };
 
-using PerftRecordType = PerftRecord;
+// for leaf nodes, cram the upper 56 bits of the hashkey and 8 bits of movecount into 64 bits
+// limitation: cannot handle more than 255 legal moves, if that is even possible (accepted max seems to be 218)
+using PerftLeafRecord = uint64_t;
 
-template <typename T, typename = void>
-struct has_depth : std::false_type {};
-
-template <typename T>
-struct has_depth<T, std::void_t<decltype(std::declval<T>().depth)> > : std::true_type {};
 
 class TableGroup
 {
