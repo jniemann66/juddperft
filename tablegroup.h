@@ -33,16 +33,7 @@ struct PerftRecord
 
 };
 
-
-// this struct performed poorly ... need to look into what compiler is really doing with the bitfields
-// maybe it needs to be the other way around (8 + 56) ... but will probably be highly dependent on target architecture
-// struct PerftLeafRecord
-// {
-// 	uint64_t k : 56;
-// 	uint64_t count : 8;
-// };
-
-// for leaf nodes, cram the upper 56 bits of the hashkey and 8 bits of movecount into 64 bits
+// for leaf nodes, we can simply cram the upper 56 bits of the hashkey and 8 bits of movecount into 64 bits
 // limitation: cannot handle more than 255 legal moves, if that is even possible (accepted max seems to be 218)
 using PerftLeafRecord = uint64_t;
 
