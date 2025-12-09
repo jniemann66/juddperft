@@ -138,6 +138,53 @@ struct ChessMove {
 	};
 };
 
+
+// todo: consider doing the bitflags manually (or use std::bitset) instead of bitfields
+// this will make it endian-agnostic and allow sorting-by-flags
+// but will be less pleasant to set / clear (ie need |= , &=~ respectively)
+
+// example ....
+
+enum MoveFlags : uint32_t
+{
+//	uint32_t moveCount : 8;			// bits 0-7: used in the first move of list; indicates how many moves there are
+	endOfMoveList = 1ULL << 8,		// if set, this marks the end of the move list (not a move)
+	illegalMove = 1ULL << 9,
+	// ... unused ... //
+	doublePawnMove= 1ULL << 20,
+	enPassantCapture= 1ULL << 21,
+	castle = 1ULL << 22,
+	castleLong = 1ULL << 23,
+	promoteKnight = 1ULL << 24,		// todo: ordering of promotions. Probably Knight is second most important after Queen (??)
+	promoteBishop = 1ULL << 25,
+	promoteRook = 1ULL << 26,
+	promoteQueen = 1ULL << 27,
+	capture = 1ULL << 28,
+	check = 1ULL << 29,				// if set, performing this move will put opponent in check
+	stalemate = 1ULL << 30,		// if set, performing this move will put opponent in checkmate
+	checkmate = 1ULL << 31			// if set, performing this move will result in stalemate
+};
+
+// other move-ordering factors (work out priorities) - 10 bits left :-)
+
+// PV from previous iteration
+// Hashtable moves
+// killer moves (caused beta cutoff)
+// MVV / LVA
+
+
+struct ChessMove2 {
+	bool blackToMove{false};
+	unsigned char piece;
+	unsigned char origin;
+	unsigned char destination;
+
+	uint32_t flags{0};
+};
+
+// --- //
+
+
 /////////////////////////////////////////////
 // Move notation styles:
 // ---------------------
