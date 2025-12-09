@@ -300,42 +300,25 @@ void parse_input_showposition(const char* s, Engine* pE)
 void parse_input_showhash(const char* s, Engine* pE)
 {
 	printf("Perft Table Size: %" PRIu64 " bytes\n", TableGroup::perftTable.getSize());
-	size_t table_size = TableGroup::perftTable.getNumRecords();
+	size_t numEntries = TableGroup::perftTable.getNumRecords();
 	std::vector<size_t> depthTally(16, 0);
-	std::atomic<PerftRecord> *pBaseAddress = TableGroup::perftTable.getAddress(0);
-	std::atomic<PerftRecord> *pAtomicRecord;
+	std::atomic<PerftRecordType> *pBaseAddress = TableGroup::perftTable.getAddress(0);
+	std::atomic<PerftRecordType> *pAtomicRecord;
 
-	size_t incSize = table_size / 10;
-	size_t nextProgUpdate = incSize;
-
-	printf("tallying");
-	for (size_t x = 0; x < table_size; x++) {
+	for (size_t x = 0; x < numEntries; x++) {
 		pAtomicRecord = pBaseAddress + x;
-		PerftRecord retrievedRecord = pAtomicRecord->load();
+		PerftRecordType RetrievedRecord = pAtomicRecord->load();
+		if (std::is_same<PerftRecordType, PerftRecord60>::value) {
 
-		if (x >= nextProgUpdate) {
-			printf(".");
-			nextProgUpdate += incSize;
-		}
-
-		if (retrievedRecord.count) {
-#if defined (HT_PERFT_DEPTH_TALLY)
-			++depthTally[retrievedRecord.depth];
-#else
-			++depthTally[0];
-#endif
+		} else {
+			++depthTally[RetrievedRecord.depth];
 		}
 	}
 
-	printf("\n");
-
-#if defined (HT_PERFT_DEPTH_TALLY)
 	for (unsigned int d = 0; d < 16; d++) {
-		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / table_size);
+		printf("Depth %d: %" PRIu64 " (%2.1f%%)\n", d, depthTally[d], 100.0 * static_cast<float>(depthTally[d]) / static_cast<float>(numEntries));
 	}
-#endif
-	const nodecount_t t = std::accumulate(depthTally.begin(), depthTally.end(), 0ull);
-	printf("Total: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n", t, table_size, 100.0 * static_cast<float>(t) / table_size);
+	printf("Total: %llu\n", std::accumulate(depthTally.begin(), depthTally.end(), 0ull));
 
 	// printf("\n");
 	// {

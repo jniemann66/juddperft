@@ -137,7 +137,11 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 	PerftRecord newRecord;
 	newRecord.Hash = hk;
+
+#if defined(HT_PERFT_DEPTH_TALLY)
 	newRecord.depth = depth;
+#endif
+
 	MoveGenerator::generateMoves(P, moveList);
 	const int movecount = moveList->moveCount;
 
