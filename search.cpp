@@ -48,46 +48,46 @@ namespace juddperft {
 
 nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
-	ChessMove MoveList[MOVELIST_SIZE];
+	ChessMove moveList[MOVELIST_SIZE];
 	ChessPosition Q = P;
 	ChessMove* pM;
 
-	MoveGenerator::generateMoves(P, MoveList);
-	const int movecount = MoveList->moveCount;
+	MoveGenerator::generateMoves(P, moveList);
+	const int movecount = move_count(moveList);
 
 	if (depth == maxdepth)
 	{
-		pM = MoveList;
+		pM = moveList;
 		for (int i = 0; i < movecount; i++, pM++) {
 			pI->nMoves++;
-			if (pM->capture) {
+			if (get_flag(pM, capture)) {
 				pI->nCapture++;
 			}
 
-			if (pM->castle) {
+			if (get_flag(pM, castle)) {
 				pI->nCastle++;
 			}
 
-			if (pM->castleLong) {
+			if (get_flag(pM, castleLong)) {
 				pI->nCastleLong++;
 			}
 
-			if (pM->enPassantCapture) {
+			if (get_flag(pM, enPassantCapture)) {
 				pI->nEPCapture++;
 			}
 
-			if (pM->promoteBishop ||
-				pM->promoteKnight ||
-				pM->promoteQueen ||
-				pM->promoteRook) {
+			if (get_flag(pM, promoteBishop) ||
+				get_flag(pM, promoteKnight) ||
+				get_flag(pM, promoteQueen) ||
+				get_flag(pM, promoteRook)) {
 				pI->nPromotion++;
 			}
 
-			if (pM->check) {
+			if (get_flag(pM, check)) {
 				pI->nCheck++;
 			}
 
-			if (pM->checkmate) {
+			if (get_flag(pM, checkmate)) {
 				pI->nCheckmate++;
 
 				// std::ofstream outfile;
@@ -108,7 +108,7 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	else {
-		pM = MoveList;
+		pM = moveList;
 		for (int i = 0; i<movecount; i++, pM++)
 		{
 			Q.performMoveNoHash(*pM).switchSides();
@@ -184,7 +184,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 		ChessMove moveList[MOVELIST_SIZE];
 		MoveGenerator::generateMoves(P, moveList);
-		const uint64_t movecount = moveList->moveCount & mc_mask;
+		const uint64_t movecount = move_count(moveList) & mc_mask;
 		PerftLeafRecord newRecord = hk_validate | movecount;
 		nNodes += movecount;
 
@@ -213,7 +213,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 		ChessMove moveList[MOVELIST_SIZE];
 		nodecount_t orig_nNodes = nNodes;
 		MoveGenerator::generateMoves(P, moveList);
-		const int movecount = moveList->moveCount;
+		const int movecount = move_count(moveList);
 
 		ChessPosition Q = P;
 		for (int i = 0; i < movecount; i++) {
@@ -262,21 +262,21 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	MoveGenerator::generateMoves(P, MoveList);
 
 	if (depth == maxdepth) {
-		for (ChessMove* pM = MoveList; pM->endOfMoveList == 0; pM++)
+		for (ChessMove* pM = MoveList; !get_flag(pM, endOfMoveList); pM++)
 		{
 			pI->nMoves++;
-			if (pM->capture)
+			if (get_flag(pM, capture))
 				pI->nCapture++;
-			if (pM->castle)
+			if (get_flag(pM, castle))
 				pI->nCastle++;
-			if (pM->castleLong)
+			if (get_flag(pM, castleLong))
 				pI->nCastleLong++;
-			if (pM->enPassantCapture)
+			if (get_flag(pM, enPassantCapture))
 				pI->nEPCapture++;
-			if (pM->promoteBishop ||
-				pM->promoteKnight ||
-				pM->promoteQueen ||
-				pM->promoteRook)
+			if (get_flag(pM, promoteBishop) ||
+				get_flag(pM, promoteKnight) ||
+				get_flag(pM, promoteQueen) ||
+				get_flag(pM, promoteRook))
 				pI->nPromotion++;
 		}
 		return;
@@ -299,7 +299,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	int progressDots = 0;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, move_count(MoveList)); t++) {
 		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -325,7 +325,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	}
 
 	// Put Moves into Queue for Thread pool to process:
-	for (unsigned int i = 0; i < MoveList->moveCount; ++i) {
+	for (unsigned int i = 0; i < move_count(MoveList); ++i) {
 		MoveQueue.push(MoveList[i]);
 	}
 
@@ -382,7 +382,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	MoveGenerator::generateMoves(P, MoveList);
 
 	if (depth == 1) {
-		nNodes = MoveList->moveCount;
+		nNodes = move_count(MoveList);
 		return;
 	}
 
@@ -403,7 +403,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	int progressDots = 0;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, move_count(MoveList)); t++) {
 		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -429,7 +429,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	}
 
 	// Put Moves into Queue for Thread pool to process:
-	for (unsigned int i = 0; i < MoveList->moveCount; ++i) {
+	for (unsigned int i = 0; i < move_count(MoveList); ++i) {
 		MoveQueue.push(MoveList[i]);
 	}
 

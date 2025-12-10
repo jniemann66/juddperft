@@ -187,10 +187,10 @@ public:
 	}
 
 	// performMove() : applies a move to a position, including differential update to hash key
-	ChessPosition& performMove(const ChessMove& M);
+	ChessPosition& performMove(const ChessMove& m);
 
 	// performMove() : applies a move to a position, without updating the kash key
-	ChessPosition& performMoveNoHash(const ChessMove& M);
+	ChessPosition& performMoveNoHash(const ChessMove& m);
 
 	std::vector<ChessMove> getLegalMoves() const;
 	void getLegalMoves(ChessMove *movelist) const;

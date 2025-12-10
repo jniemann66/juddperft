@@ -40,11 +40,7 @@ SOFTWARE.
 #include <x86intrin.h>
 #endif
 
-#include <bitset>
 #include <cassert>
-
-#include <iostream>
-#include <type_traits>
 
 namespace juddperft {
 
@@ -60,7 +56,25 @@ uint64_t movegen_total_cycles = 0;
 // generateMoves()
 ////////////////////////////////////////////
 
-MoveGenerator moveGenerator; // instance, to ensure movetable is initialised
+MoveGenerator moveGenerator; // instance; to ensure movetable is initialised (todo: singleton ? hasn't been necessary so far ...)
+
+// helper functions for writing flags
+
+static inline void set_flag(ChessMove *m, const MoveFlags& f)
+{
+	m->flags |= f;
+}
+
+static inline void clr_flag(ChessMove *m, const MoveFlags& f)
+{
+	m->flags &= ~f;
+}
+
+static inline void set_move_count(ChessMove* m, unsigned int count)
+{
+	m->flags = (m->flags & 0xffffff00) | (count & 0xff);
+}
+
 
 void MoveGenerator::generateMoves(const ChessPosition& P, ChessMove* pM)
 {
@@ -105,11 +119,11 @@ inline bool MoveGenerator::isInCheck(const ChessPosition& P, bool bIsBlack)
 inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.whiteIsCheckmated || P.whiteIsStalemated) {
-		pM->moveCount = 0;
+		pM->flags = 0;
 		pM->origin = 0;
 		pM->destination = 0;
 		pM->piece = 0;
-		pM->endOfMoveList = 1;
+		set_flag(pM, endOfMoveList);
 		return;
 	}
 
@@ -193,9 +207,9 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 			// Test for capture:
 			if (TO & BlackCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
-				pM->capture = 1;
+				set_flag(pM, capture);
 			} else if (piece == WPAWN && (TO & BlackOccupied & EP)) {
-				pM->enPassantCapture = 1;
+				set_flag(pM, enPassantCapture);
 				// remove the actual pawn (dest was EP square)
 				const Bitboard X = TO >> 8;
 				Q.A &= ~X;
@@ -218,7 +232,7 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 
 			// test if doing all this puts white in check. If so, move isn't legal
 			if (isWhiteInCheck(Q)) {
-				pM->illegalMove = 1;
+				set_flag(pM, illegalMove);
 
 				// restore test board
 				Q.A = PA;
@@ -230,7 +244,7 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 
 			if (piece == WPAWN) {
 				if (FROM & RANK2 && TO & RANK4) {
-					pM->doublePawnMove = 1;
+					set_flag(pM, doublePawnMove);
 					// e.p. square
 					const Bitboard x = TO >> 8;
 					Q.A |= x;
@@ -244,22 +258,22 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 					*(pM + 3) = *pM;
 
 					// parsimonious ordering : P=> N, R, Q, B
-					pM->promoteKnight = 1;
+					set_flag(pM, promoteKnight);
 					Q.C |= TO;
 					scanWhiteMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteRook = 1;
+					set_flag(pM, promoteRook);
 					Q.A &= ~TO;
 					scanWhiteMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteQueen = 1;
+					set_flag(pM, promoteQueen);
 					Q.B |= TO;
 					scanWhiteMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteBishop = 1;
+					set_flag(pM, promoteBishop);
 					Q.C &= ~TO;
 				}
 			}
@@ -277,8 +291,8 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
-			pM->endOfMoveList = 1;
-			pFirstMove->moveCount = pM - pFirstMove;
+			set_move_count(pFirstMove, pM - pFirstMove);
+			set_flag(pM, endOfMoveList);
 			return;
 		}
 
@@ -302,7 +316,7 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 			pM->destination = g1;
 			pM->flags = 0;
 			pM->blackToMove = 0;
-			pM->castle = 1;
+			set_flag(pM, castle);
 
 			Q.A ^= 0x000000000000000a;
 			Q.B ^= 0x000000000000000a;
@@ -326,7 +340,7 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 			pM->destination = c1;
 			pM->flags = 0;
 			pM->blackToMove = 0;
-			pM->castleLong = 1;
+			set_flag(pM, castleLong);
 
 			Q.A ^= 0x0000000000000028;
 			Q.B ^= 0x0000000000000028;
@@ -339,8 +353,8 @@ inline void MoveGenerator::generateWhiteMoves(const ChessPosition& P, ChessMove*
 		}
 	} // ends castling
 
-	pM->endOfMoveList = 1;
-	pFirstMove->moveCount = pM - pFirstMove;
+	set_move_count(pFirstMove, pM - pFirstMove);
+	set_flag(pM, endOfMoveList);
 }
 
 inline Bitboard MoveGenerator::isWhiteInCheck(const ChessPosition& Z, Bitboard extend)
@@ -377,19 +391,19 @@ inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* p
 
 	// test if white's move will put black in check or checkmate
 	if (isBlackInCheck(Q))	{
-		pM->check = 1;
+		set_flag(pM, check);
 		if (Q.dontDetectCheckmates == 0) {
 			Q.blackToMove = 1;
 			ChessMove blacksMoves[MOVELIST_SIZE];
 			Q.dontGenerateAllMoves = 1; // only need one or more moves to prove that black has at least one legal move
 			generateBlackMoves(Q, blacksMoves);
-			if (blacksMoves->moveCount == 0) { // black will be in check with no legal moves
-				pM->checkmate = 1; // this move is a checkmating move
+			if (move_count(blacksMoves) == 0) { // black will be in check with no legal moves
+				set_flag(pM, checkmate); // this move is a checkmating move
 			}
 		}
 	} else {
-		pM->check = 0;
-		pM->checkmate = 0;
+		clr_flag(pM, check);
+		clr_flag(pM, checkmate);
 	}
 }
 
@@ -404,11 +418,11 @@ inline void MoveGenerator::scanWhiteMoveForChecks(ChessPosition& Q, ChessMove* p
 inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove* pM)
 {
 	if (P.blackIsCheckmated || P.blackIsStalemated) {
-		pM->moveCount = 0;
+		pM->flags = 0;
 		pM->origin = 0;
 		pM->destination = 0;
 		pM->piece = 0;
-		pM->endOfMoveList = 1;
+		set_flag(pM, endOfMoveList);
 		return;
 	}
 
@@ -492,9 +506,9 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 			// Test for capture:
 			if (TO & WhiteCapturables) {
 				// Only considered a capture if dest is not an enpassant or king.
-				pM->capture = 1;
+				set_flag(pM, capture);
 			} if (piece == BPAWN && (TO & WhiteOccupied & EP)) {
-				pM->enPassantCapture = 1;
+				set_flag(pM, enPassantCapture);
 				// remove the actual pawn (dest was EP square)
 				const Bitboard X = TO << 8;
 				Q.A &= ~X;
@@ -518,7 +532,7 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 
 			// test if doing all this puts black in check. If so, move isn't legal
 			if (isBlackInCheck(Q)) {
-				pM->illegalMove = 1;
+				set_flag(pM, illegalMove);
 
 				// restore test board
 				Q.A = PA;
@@ -530,7 +544,7 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 
 			if (piece == BPAWN) {
 				if (FROM & RANK7 && TO & RANK5) {
-					pM->doublePawnMove = 1;
+					set_flag(pM, doublePawnMove);
 					// e.p. square
 					const Bitboard x = TO << 8;
 					Q.A |= x;
@@ -544,22 +558,22 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 					*(pM + 3) = *pM;
 
 					// parsimonious ordering : P=> N, R, Q, B
-					pM->promoteKnight = 1;
+					set_flag(pM, promoteKnight);
 					Q.C |= TO;
 					scanBlackMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteRook = 1;
+					set_flag(pM, promoteRook);
 					Q.A &= ~TO;
 					scanBlackMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteQueen = 1;
+					set_flag(pM, promoteQueen);
 					Q.B |= TO;
 					scanBlackMoveForChecks(Q, pM);
 					pM++;
 
-					pM->promoteBishop = 1;
+					set_flag(pM, promoteBishop);
 					Q.C &= ~TO;
 				}
 			}
@@ -577,8 +591,8 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 		} // ends loop over mv
 
 		if (P.dontGenerateAllMoves && pM > pFirstMove) { // proved there is at least one legal move
-			pM->endOfMoveList = 1;
-			pFirstMove->moveCount = pM - pFirstMove;
+			set_move_count(pFirstMove, pM - pFirstMove);
+			set_flag(pM, endOfMoveList);
 			return;
 		}
 
@@ -602,7 +616,7 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 			pM->destination = g8;
 			pM->flags = 0;
 			pM->blackToMove = 1;
-			pM->castle = 1;
+			set_flag(pM, castle);
 
 			Q.A ^= 0x0a00000000000000;
 			Q.B ^= 0x0a00000000000000;
@@ -625,7 +639,7 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 			pM->destination = c8;
 			pM->flags = 0;
 			pM->blackToMove = 1;
-			pM->castleLong = 1;
+			set_flag(pM, castleLong);
 
 			Q.A ^= 0x2800000000000000;
 			Q.B ^= 0x2800000000000000;
@@ -639,8 +653,8 @@ inline void MoveGenerator::generateBlackMoves(const ChessPosition& P, ChessMove*
 
 	} // ends castling
 
-	pM->endOfMoveList = 1;
-	pFirstMove->moveCount = pM - pFirstMove;
+	set_move_count(pFirstMove, pM - pFirstMove);
+	set_flag(pM, endOfMoveList);
 }
 
 inline Bitboard MoveGenerator::isBlackInCheck(const ChessPosition& Z, Bitboard extend)
@@ -677,19 +691,19 @@ inline void MoveGenerator::scanBlackMoveForChecks(ChessPosition& Q, ChessMove* p
 
 	// test if black's move will put white in check or checkmate
 	if (isWhiteInCheck(Q))	{
-		pM->check = 1;
+		set_flag(pM, check);
 		if (Q.dontDetectCheckmates == 0) {
 			Q.blackToMove = 0;
 			ChessMove whitesMoves[MOVELIST_SIZE];
 			Q.dontGenerateAllMoves = 1; // only need one or more moves to prove that white has at least one legal move
 			generateWhiteMoves(Q, whitesMoves);
-			if (whitesMoves->moveCount == 0) { // white will be in check with no legal moves
-				pM->checkmate = 1; // this move is a checkmating move
+			if (move_count(whitesMoves) == 0) { // white will be in check with no legal moves
+				set_flag(pM, checkmate); // this move is a checkmating move
 			}
 		}
 	} else {
-		pM->check = 0;
-		pM->checkmate = 0;
+		clr_flag(pM, check);
+		clr_flag(pM, checkmate);
 	}
 }
 
@@ -912,8 +926,7 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 
 	if (style != CoOrdinate)
 	{
-		if (mv.castle == 1)
-		{
+		if (get_flag(mv, castle)) {
 			if (pBuffer == nullptr)
 				printf(" O-O\n");
 			else
@@ -921,8 +934,7 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 			return;
 		}
 
-		if (mv.castleLong == 1)
-		{
+		if (get_flag(mv, castleLong)) {
 			if (pBuffer == nullptr)
 				printf(" O-O-O\n");
 			else
@@ -969,27 +981,27 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 	case Diagnostic:
 	{
 		// Determine if move is a capture
-		if (mv.capture || mv.enPassantCapture) {
+		if (get_flag(mv, capture) || get_flag(mv, enPassantCapture)) {
 			sprintf(s, "%c%c%dx%c%d", p, ch1, 1 + (mv.origin >> 3), ch2, 1 + (mv.destination >> 3));
 		} else {
 			sprintf(s, "%c%c%d-%c%d", p, ch1, 1 + (mv.origin >> 3), ch2, 1 + (mv.destination >> 3));
 		}
 
 		// Promotions:
-		if (mv.promoteQueen) {
+		if (get_flag(mv, promoteQueen)) {
 			strcat(s, "=Q");
-		} else if (mv.promoteBishop) {
+		} else if (get_flag(mv, promoteBishop)) {
 			strcat(s, "=B");
-		} else if (mv.promoteKnight) {
+		} else if (get_flag(mv, promoteKnight)) {
 			strcat(s, "=N");
-		} else if (mv.promoteRook) {
+		} else if (get_flag(mv, promoteRook)) {
 			strcat(s, "=R");
 		}
 
 		// checks
-		if (mv.checkmate) {
+		if (get_flag(mv, checkmate)) {
 			strcat(s, "#");
-		} else if (mv.check) {
+		} else if (get_flag(mv, check)) {
 			strcat(s, "+");
 		}
 
@@ -1014,7 +1026,7 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 
 		if (p7 == WPAWN) {
 			// for pawns, piece type is not shown, and originating file is only shown in captures
-			showOriginFile = (mv.capture || mv.enPassantCapture);
+			showOriginFile = (get_flag(mv, capture) || get_flag(mv, enPassantCapture));
 		} else {
 			// print the piece type
 			sprintf(s, "%c", p);
@@ -1025,7 +1037,7 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 					const ChessMove *mm = movelist;
 					std::set<unsigned char> other_origin_ranks;
 					std::set<unsigned char> other_origin_files;
-					while (!mm->endOfMoveList && (mm - movelist < MOVELIST_SIZE)) {
+					while (!get_flag(mm, endOfMoveList) && (mm - movelist < MOVELIST_SIZE)) {
 						if (mm->piece == mv.piece && mm->destination == mv.destination && mm->origin != mv.origin) {
 							// same type of piece, same destination, different origin
 							other_origin_ranks.insert(mm->origin >> 3);
@@ -1061,27 +1073,27 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 		}
 
 		// Format with 'x' for captures
-		if (mv.capture || mv.enPassantCapture) {
+		if (get_flag(mv,capture) || get_flag(mv, enPassantCapture)) {
 			sprintf(s + strlen(s), "x%c%d", ch2, 1 + (mv.destination >> 3));
 		} else {
 			sprintf(s + strlen(s), "%c%d", ch2, 1 + (mv.destination >> 3));
 		}
 
 		// Promotions:
-		if (mv.promoteQueen) {
+		if (get_flag(mv, promoteQueen)) {
 			strcat(s, "=Q");
-		} else if (mv.promoteBishop) {
+		} else if (get_flag(mv, promoteBishop)) {
 			strcat(s, "=B");
-		} else if (mv.promoteKnight) {
+		} else if (get_flag(mv, promoteKnight)) {
 			strcat(s, "=N");
-		} else if (mv.promoteRook) {
+		} else if (get_flag(mv, promoteRook)) {
 			strcat(s, "=R");
 		}
 
 		// checks
-		if (mv.checkmate) {
+		if (get_flag(mv, checkmate)) {
 			strcat(s, "#");
-		} else if (mv.check) {
+		} else if (get_flag(mv, check)) {
 			strcat(s, "+");
 		}
 
@@ -1099,13 +1111,13 @@ void printMove(const ChessMove& mv, MoveNotationStyle style /* = LongAlgebraic *
 	{
 		sprintf(s, "%c%d%c%d", ch1, 1 + (mv.origin >> 3), ch2, 1 + (mv.destination >> 3));
 		// Promotions:
-		if (mv.promoteBishop) {
+		if (get_flag(mv, promoteBishop)) {
 			strcat(s, "b");
-		} else if (mv.promoteKnight) {
+		} else if (get_flag(mv, promoteKnight)) {
 			strcat(s, "n");
-		} else if (mv.promoteRook) {
+		} else if (get_flag(mv, promoteRook)) {
 			strcat(s, "r");
-		} else if (mv.promoteQueen) {
+		} else if (get_flag(mv, promoteQueen)) {
 			strcat(s, "q");
 		}
 
@@ -1131,7 +1143,7 @@ void printMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebr
 			printMove(*pM, style, pBuffer, pMoveList);
 		}
 
-		if (pM->endOfMoveList != 0) {
+		if (get_flag(pM, endOfMoveList)) {
 			// No more moves
 			break;
 		}

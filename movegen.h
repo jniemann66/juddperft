@@ -106,63 +106,31 @@ extern uint64_t movegen_call_count;
 extern uint64_t movegen_total_cycles;
 #endif
 
-// ChessMove{} - Compact move format packed into 64 bits
-// From and To squares represented by unsigned char square index
 
-struct ChessMove {
-	bool blackToMove{false};
-	unsigned char piece;
-	unsigned char origin;
-	unsigned char destination;
-
-	union {
-		struct {
-			uint32_t moveCount : 8;			// used in the first move of list; indicates how many moves there are
-			uint32_t endOfMoveList : 1;		// if set, this marks the end of the move list (not a move)
-			uint32_t illegalMove : 1;
-			uint32_t unused : 10;
-			uint32_t doublePawnMove : 1;
-			uint32_t enPassantCapture : 1;
-			uint32_t castle : 1;
-			uint32_t castleLong : 1;
-			uint32_t promoteKnight : 1;
-			uint32_t promoteBishop : 1;
-			uint32_t promoteRook : 1;
-			uint32_t promoteQueen : 1;
-			uint32_t capture : 1;
-			uint32_t check : 1;				// if set, performing this move will put opponent in check
-			uint32_t stalemate : 1;			// if set, performing this move will put opponent in checkmate
-			uint32_t checkmate : 1;			// if set, performing this move will result in stalemate
-		};
-		uint32_t flags{0};
-	};
-};
-
-
-// todo: consider doing the bitflags manually (or use std::bitset) instead of bitfields
-// this will make it endian-agnostic and allow sorting-by-flags
-// but will be less pleasant to set / clear (ie need |= , &=~ respectively)
-
-// example ....
+// MoveFlags:
+// these were previously bitfields, but bitfields can't be trusted,
+// especially when we want to sort move orders,
+// and we need a guarantee that the bits will be in the expected positions,
+// regardless of compiler or architecture ...
 
 enum MoveFlags : uint32_t
 {
-//	uint32_t moveCount : 8;			// bits 0-7: used in the first move of list; indicates how many moves there are
-	endOfMoveList = 1ULL << 8,		// if set, this marks the end of the move list (not a move)
+	/* movecount */	// bits 0-7: used in the first move of list; indicates how many moves there are
+	endOfMoveList = 1ULL << 8, // if set, this marks the end of the move list (not a move)
 	illegalMove = 1ULL << 9,
-	// ... unused ... //
+	/* unused (10-19) */
 	doublePawnMove= 1ULL << 20,
 	enPassantCapture= 1ULL << 21,
 	castle = 1ULL << 22,
 	castleLong = 1ULL << 23,
-	promoteKnight = 1ULL << 24,		// todo: ordering of promotions. Probably Knight is second most important after Queen (??)
+	promoteKnight = 1ULL << 24,	// todo: optimal ordering of promotions. Probably Knight is second most important after Queen (??)
 	promoteBishop = 1ULL << 25,
 	promoteRook = 1ULL << 26,
 	promoteQueen = 1ULL << 27,
 	capture = 1ULL << 28,
-	check = 1ULL << 29,				// if set, performing this move will put opponent in check
-	stalemate = 1ULL << 30,		// if set, performing this move will put opponent in checkmate
-	checkmate = 1ULL << 31			// if set, performing this move will result in stalemate
+	check = 1ULL << 29,	// if set, performing this move will put opponent in check
+	stalemate = 1ULL << 30,	// if set, performing this move will put opponent in checkmate
+	checkmate = 1ULL << 31	// if set, performing this move will result in stalemate
 };
 
 // other move-ordering factors (work out priorities) - 10 bits left :-)
@@ -172,16 +140,40 @@ enum MoveFlags : uint32_t
 // killer moves (caused beta cutoff)
 // MVV / LVA
 
-struct ChessMove2 {
+// ChessMove{} - Compact move format packed into 64 bits
+// From and To squares represented by unsigned char square index
+
+struct ChessMove {
 	bool blackToMove{false};
 	unsigned char piece;
 	unsigned char origin;
 	unsigned char destination;
-
 	uint32_t flags{0};
 };
 
-// --- //
+static_assert(sizeof(ChessMove) == 8);
+
+// helper functions for reading flags
+
+static inline bool get_flag(const ChessMove& m, const MoveFlags& f)
+{
+	return (m.flags & f);
+}
+
+static inline bool get_flag(const ChessMove* m, const MoveFlags& f)
+{
+	return (m->flags & f);
+}
+
+static inline unsigned int move_count(const ChessMove& m)
+{
+	return (m.flags & 0xff);
+}
+
+static inline unsigned int move_count(const ChessMove* m)
+{
+	return (m->flags & 0xff);
+}
 
 
 /////////////////////////////////////////////

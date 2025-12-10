@@ -87,17 +87,16 @@ int ChessPosition::calculateMaterial() const
 	return material;
 }
 
-ChessPosition& ChessPosition::performMove(const ChessMove& M)
+ChessPosition& ChessPosition::performMove(const ChessMove& m)
 {
-	Bitboard To = 1ull << M.destination;
-	const Bitboard O = ~((1ull << M.origin) | To);
-	const unsigned long nFromSquare = M.origin;
-	const unsigned long nToSquare = M.destination;
+	Bitboard To = 1ull << m.destination;
+	const Bitboard O = ~((1ull << m.origin) | To);
+	const unsigned long nFromSquare = m.origin;
+	const unsigned long nToSquare = m.destination;
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
-	if (M.checkmate && M.blackToMove == blackToMove) {
-
-		if (M.blackToMove) {
+	if (get_flag(m, checkmate) && m.blackToMove == static_cast<bool>(blackToMove)) {
+		if (m.blackToMove) {
 			whiteIsCheckmated = 1;
 		} else {
 			blackIsCheckmated = 1;
@@ -114,9 +113,9 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	const unsigned long epSquareIdx = getSquareIndex(EnPassant);
 	hk ^= zobristKeys.zkPieceOnSquare[WENPASSANT][epSquareIdx]; // Remove EP from nEPSquare
 
-	switch (M.piece) {
+	switch (m.piece) {
 	case BKING:
-		if (M.castle) {
+		if (get_flag(m, castle)) {
 
 			// APPLY CASTLING MOVES:
 			// we use magic XOR-tricks to do the job ! :
@@ -159,7 +158,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			return *this;
 		}
 
-		else if (M.castleLong) {
+		else if (get_flag(m, castleLong)) {
 			A ^= 0x2800000000000000;
 			B ^= 0x2800000000000000;
 			C ^= 0xb800000000000000;
@@ -193,7 +192,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 		break;
 
 	case WKING:
-		if (M.castle) {
+		if (get_flag(m, castle)) {
 			A ^= 0x000000000000000a;
 			B ^= 0x000000000000000a;
 			C ^= 0x000000000000000f;
@@ -210,7 +209,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 			return *this;
 		}
 
-		else if (M.castleLong) {
+		else if (get_flag(m, castleLong)) {
 			A ^= 0x0000000000000028;
 			B ^= 0x0000000000000028;
 			C ^= 0x00000000000000b8;
@@ -284,7 +283,7 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	} // ends switch (M.Piece)
 
 	// Ordinary Captures
-	if (M.capture) {
+	if (get_flag(m, capture)) {
 		// find out what was captured
 		const unsigned int capturedpiece =
 				((D & To) >> nToSquare) << 3
@@ -328,20 +327,20 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	D &= O;
 
 	// Populate new square (Branchless method):
-	A |= static_cast<int64_t>(M.piece & 1) << M.destination;
-	B |= static_cast<int64_t>((M.piece & 2) >> 1) << M.destination;
-	C |= static_cast<int64_t>((M.piece & 4) >> 2) << M.destination;
-	D |= static_cast<int64_t>((M.piece & 8) >> 3) << M.destination;
+	A |= static_cast<int64_t>(m.piece & 1) << m.destination;
+	B |= static_cast<int64_t>((m.piece & 2) >> 1) << m.destination;
+	C |= static_cast<int64_t>((m.piece & 4) >> 2) << m.destination;
+	D |= static_cast<int64_t>((m.piece & 8) >> 3) << m.destination;
 
 	// Update Hash
-	hk ^= zobristKeys.zkPieceOnSquare[M.piece][nFromSquare]; // Remove piece at From square
-	hk ^= zobristKeys.zkPieceOnSquare[M.piece][nToSquare]; // Place piece at To Square
+	hk ^= zobristKeys.zkPieceOnSquare[m.piece][nFromSquare]; // Remove piece at From square
+	hk ^= zobristKeys.zkPieceOnSquare[m.piece][nToSquare]; // Place piece at To Square
 
-	if ((M.piece & 7) == WPAWN) {
+	if ((m.piece & 7) == WPAWN) {
 		// For double-pawn moves, set EP square:
-		if (M.doublePawnMove) {
+		if (get_flag(m, doublePawnMove)) {
 			// Set EnPassant Square
-			if (M.blackToMove) {
+			if (m.blackToMove) {
 				To <<= 8;
 				A |= To;
 				B |= To;
@@ -360,9 +359,9 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 		}
 
 		// En-Passant Captures
-		if (M.enPassantCapture) {
+		if (get_flag(m, enPassantCapture)) {
 			// remove the actual pawn (it is different to the capture square)
-			if (M.blackToMove) {
+			if (m.blackToMove) {
 				To <<= 8;
 				A &= ~To; // clear the pawn's square
 				B &= ~To;
@@ -381,35 +380,35 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 		}
 
 		// Promotions - Change the piece:
-		if (M.promoteQueen) {
+		if (get_flag(m, promoteQueen)) {
 			A &= ~To;
 			B |= To;
 			C |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BQUEEN : WQUEEN)][nToSquare]; // place Queen at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BQUEEN : WQUEEN)][nToSquare]; // place Queen at To square
 			return *this;
 		}
 
-		if (M.promoteKnight) {
+		if (get_flag(m, promoteKnight)) {
 			C |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BKNIGHT : WKNIGHT)][nToSquare]; // place Knight at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BKNIGHT : WKNIGHT)][nToSquare]; // place Knight at To square
 			return *this;
 		}
 
-		if (M.promoteBishop) {
+		if (get_flag(m, promoteBishop)) {
 			A &= ~To;
 			B |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BBISHOP : WBISHOP)][nToSquare]; // place Bishop at To square
 			return *this;
 		}
 
-		if (M.promoteRook) {
+		if (get_flag(m, promoteRook)) {
 			A &= ~To;
 			C |= To;
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
-			hk ^= zobristKeys.zkPieceOnSquare[(M.blackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BPAWN : WPAWN)][nToSquare]; // Remove pawn at To square
+			hk ^= zobristKeys.zkPieceOnSquare[(m.blackToMove ? BROOK : WROOK)][nToSquare];	// place Rook at To square
 			return *this;
 		}
 	}
@@ -417,15 +416,15 @@ ChessPosition& ChessPosition::performMove(const ChessMove& M)
 	return *this;
 }
 
-ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
+ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& m)
 {
-	Bitboard To = 1ull << M.destination;
-	const Bitboard O = ~((1ull << M.origin) | To);
-	const unsigned long nFromSquare = M.origin;
+	Bitboard To = 1ull << m.destination;
+	const Bitboard O = ~((1ull << m.origin) | To);
+	const unsigned long nFromSquare = m.origin;
 
 	// if move is known to be delivering checkmate, immediately flag checkmate in the position
-	if (M.checkmate && M.blackToMove == blackToMove) {
-		if (M.blackToMove) {
+	if (get_flag(m, checkmate) && m.blackToMove == static_cast<bool>(blackToMove)) {
+		if (m.blackToMove) {
 			whiteIsCheckmated = 1;
 		} else {
 			blackIsCheckmated = 1;
@@ -439,9 +438,9 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	C &= ~EnPassant;
 	D &= ~EnPassant;
 
-	switch (M.piece) {
+	switch (m.piece) {
 	case BKING:
-		if (M.castle) {
+		if (get_flag(m, castle)) {
 
 			A ^= 0x0a00000000000000;
 			B ^= 0x0a00000000000000;
@@ -454,7 +453,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			return *this;
 		}
 
-		else if (M.castleLong) {
+		else if (get_flag(m, castleLong)) {
 			A ^= 0x2800000000000000;
 			B ^= 0x2800000000000000;
 			C ^= 0xb800000000000000;
@@ -473,7 +472,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 		break;
 
 	case WKING:
-		if (M.castle) {
+		if (get_flag(m, castle)) {
 			A ^= 0x000000000000000a;
 			B ^= 0x000000000000000a;
 			C ^= 0x000000000000000f;
@@ -485,7 +484,7 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 			return *this;
 		}
 
-		else if (M.castleLong) {
+		else if (get_flag(m, castleLong)) {
 			A ^= 0x0000000000000028;
 			B ^= 0x0000000000000028;
 			C ^= 0x00000000000000b8;
@@ -540,13 +539,13 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	} // ends switch (M.Piece)
 
 	// Ordinary Captures
-	if (M.capture) {
+	if (get_flag(m, capture)) {
 		// find out what was captured
 		const unsigned int capturedpiece
-				= ((D & To) >> M.destination) << 3
-												 | ((C & To) >> M.destination) << 2
-												 | ((B & To) >> M.destination) << 1
-												 | ((A & To) >> M.destination);
+				= ((D & To) >> m.destination) << 3
+												 | ((C & To) >> m.destination) << 2
+												 | ((B & To) >> m.destination) << 1
+												 | ((A & To) >> m.destination);
 
 		// if a rook was captured, it may take away castling rights
 		if (To & CORNERS) {
@@ -579,16 +578,16 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 	D &= O;
 
 	// Populate new square (Branchless method):
-	A |= static_cast<int64_t>(M.piece & 1) << M.destination;
-	B |= static_cast<int64_t>((M.piece & 2) >> 1) << M.destination;
-	C |= static_cast<int64_t>((M.piece & 4) >> 2) << M.destination;
-	D |= static_cast<int64_t>((M.piece & 8) >> 3) << M.destination;
+	A |= static_cast<int64_t>(m.piece & 1) << m.destination;
+	B |= static_cast<int64_t>((m.piece & 2) >> 1) << m.destination;
+	C |= static_cast<int64_t>((m.piece & 4) >> 2) << m.destination;
+	D |= static_cast<int64_t>((m.piece & 8) >> 3) << m.destination;
 
-	if ((M.piece & 7) == WPAWN) {
+	if ((m.piece & 7) == WPAWN) {
 		// For double-pawn moves, set EP square:
-		if (M.doublePawnMove) {
+		if (get_flag(m, doublePawnMove)) {
 			// Set EnPassant Square
-			if (M.blackToMove) {
+			if (m.blackToMove) {
 				To <<= 8;
 				A |= To;
 				B |= To;
@@ -605,9 +604,9 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 		}
 
 		// En-Passant Captures
-		if (M.enPassantCapture) {
+		if (get_flag(m, enPassantCapture)) {
 			// remove the actual pawn (it is different to the capture square)
-			if (M.blackToMove) {
+			if (m.blackToMove) {
 				To <<= 8;
 				A &= ~To; // clear the pawn's square
 				B &= ~To;
@@ -624,25 +623,25 @@ ChessPosition& ChessPosition::performMoveNoHash(const ChessMove& M)
 		}
 
 		// Promotions - Change the piece:
-		if (M.promoteQueen) {
+		if (get_flag(m, promoteQueen)) {
 			A &= ~To;
 			B |= To;
 			C |= To;
 			return *this;
 		}
 
-		if (M.promoteKnight) {
+		if (get_flag(m, promoteKnight)) {
 			C |= To;
 			return *this;
 		}
 
-		if (M.promoteBishop) {
+		if (get_flag(m, promoteBishop)) {
 			A &= ~To;
 			B |= To;
 			return *this;
 		}
 
-		if (M.promoteRook) {
+		if (get_flag(m, promoteRook)) {
 			A &= ~To;
 			C |= To;
 			return *this;
@@ -656,7 +655,7 @@ std::vector<ChessMove> ChessPosition::getLegalMoves() const
 {
 	std::vector<ChessMove> movelist(MOVELIST_SIZE);
 	MoveGenerator::generateMoves(*this, movelist.data());
-	movelist.resize(movelist.at(0).moveCount);
+	movelist.resize(move_count(movelist.at(0)));
 	return movelist;
 }
 
