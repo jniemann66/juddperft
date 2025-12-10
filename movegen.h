@@ -119,8 +119,8 @@ enum MoveFlags : uint32_t
 	endOfMoveList = 1ULL << 8, // if set, this marks the end of the move list (not a move)
 	illegalMove = 1ULL << 9,
 	/* unused (10-19) */
-	doublePawnMove= 1ULL << 20,
-	enPassantCapture= 1ULL << 21,
+	doublePawnMove = 1ULL << 20,
+	enPassantCapture = 1ULL << 21,
 	castle = 1ULL << 22,
 	castleLong = 1ULL << 23,
 	promoteKnight = 1ULL << 24,	// todo: optimal ordering of promotions. Probably Knight is second most important after Queen (??)
