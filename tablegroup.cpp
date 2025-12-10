@@ -6,28 +6,29 @@ bool TableGroup::setMemory(size_t requestedBytes)
 {
 	static constexpr size_t bits = 8 * sizeof (size_t); // hopefully 64
 
-	do {
-		size_t m = 0;
-		for (size_t i = 0; i < bits; i++) {
-			m = (1ull << (bits - i - 1));
-			if (m & requestedBytes) {
-				break;
-			}
-		}
+	size_t m = 0;
+	for (size_t i = 0; i < bits; i++) {
+		m = (1ull << (bits - i - 1)); // 1 << 63 .. 1 << 0
 
 #if defined(HT_PERFT_LEAF_TABLE)
-		if (perftLeafTable.setSize(m / 2) && perftTable.setSize(m / 8)) { // 4:1 ratio
-			return true;
+		size_t t = m + m / 4; // 4:1 ratio
+		if (t <= requestedBytes) {
+			if (perftLeafTable.setSize(m) && perftTable.setSize(m / 4)) {
+				return true;
+			}
 		}
 #else
-		if (perftTable.setSize(m)) {
-			return true;
+		if (m <= requestedBytes) {
+			if (perftTable.setSize(m)) {
+				return true;
+			}
 		}
 #endif
 
-		requestedBytes >>= 1;
-
-	} while (requestedBytes > 1024);
+		if (m <= 1024) {
+			break;
+		}
+	}
 
 	return false;
 }

@@ -299,6 +299,37 @@ void parse_input_showposition(const char* s, Engine* pE)
 
 void parse_input_showhash(const char* s, Engine* pE)
 {
+#if defined(HT_PERFT_LEAF_TABLE)
+	{
+		printf("Perft Leaf Table (depth=1) Size: %" PRIu64 " bytes\n", TableGroup::perftLeafTable.getSize());
+		size_t leafTableSize = TableGroup::perftLeafTable.getNumRecords();
+		std::atomic<PerftLeafRecord> *pBaseAddress = TableGroup::perftLeafTable.getAddress(0);
+		std::atomic<PerftLeafRecord> *pAtomicRecord;
+
+		size_t incSize = leafTableSize / 10;
+		size_t nextProgUpdate = incSize;
+
+		size_t t = 0;
+		printf("tallying");
+		for (size_t x = 0; x < leafTableSize; x++) {
+			pAtomicRecord = pBaseAddress + x;
+			PerftLeafRecord retrievedRecord = pAtomicRecord->load();
+
+			if (x >= nextProgUpdate) {
+				printf(".");
+				nextProgUpdate += incSize;
+			}
+
+			if (retrievedRecord & 0xffull) {
+				t++;
+			}
+		}
+
+		printf("\nTotal: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n\n", t, leafTableSize, 100.0 * static_cast<float>(t) / leafTableSize);
+	}
+#endif
+
+
 	printf("Perft Table Size: %" PRIu64 " bytes\n", TableGroup::perftTable.getSize());
 	size_t table_size = TableGroup::perftTable.getNumRecords();
 	std::vector<size_t> depthTally(16, 0);
@@ -336,38 +367,6 @@ void parse_input_showhash(const char* s, Engine* pE)
 #endif
 	const nodecount_t t = std::accumulate(depthTally.begin(), depthTally.end(), 0ull);
 	printf("Total: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n", t, table_size, 100.0 * static_cast<float>(t) / table_size);
-
-#if defined(HT_PERFT_LEAF_TABLE)
-	printf("\n");
-	{
-		printf("Perft Leaf Table (depth=1) Size: %" PRIu64 " bytes\n", TableGroup::perftLeafTable.getSize());
-		size_t leafTableSize = TableGroup::perftLeafTable.getNumRecords();
-		std::atomic<PerftLeafRecord> *pBaseAddress = TableGroup::perftLeafTable.getAddress(0);
-		std::atomic<PerftLeafRecord> *pAtomicRecord;
-
-		size_t incSize = leafTableSize / 10;
-		size_t nextProgUpdate = incSize;
-
-		size_t t = 0;
-		printf("tallying");
-		for (size_t x = 0; x < leafTableSize; x++) {
-			pAtomicRecord = pBaseAddress + x;
-			PerftLeafRecord retrievedRecord = pAtomicRecord->load();
-
-			if (x >= nextProgUpdate) {
-				printf(".");
-				nextProgUpdate += incSize;
-			}
-
-			if (retrievedRecord & 0xffull) {
-				t++;
-			}
-		}
-
-		printf("\nTotal: %" PRIu64 " / %"  PRIu64 " (%2.1f%%)\n", t, leafTableSize, 100.0 * static_cast<float>(t) / leafTableSize);
-	}
-#endif
-
 }
 
 void parse_input_perft(const char* s, Engine* pE)
@@ -392,7 +391,6 @@ void parse_input_perft(const char* s, Engine* pE)
 				   t.nCheck,
 				   t.nCheckmate
 				   );
-			printf("\n");
 			timer.setNodes(t.nMoves);
 		}
 	}
@@ -408,10 +406,9 @@ void parse_input_perftfast(const char* s, Engine* pE) {
 		RaiiTimer timer;
 		nodecount_t nNumPositions = 0;
 		perftFastMT(pE->currentPosition, q, nNumPositions);
-		printf("\nPerft %d: %" PRIu64 " \n",
+		printf("Perft %d: %" PRIu64 " \n",
 			   q, nNumPositions
 			   );
-		printf("\n");
 		timer.setNodes(nNumPositions);
 	}
 }
@@ -440,8 +437,7 @@ void parse_input_divide(const char* s, Engine* pE)
 		printMove(*pM, LongAlgebraicNoNewline);
 		PerftInfo t;
 		perftMT(Q, depth-1, 1, &t);
-		printf("Perft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
-			depth-1,
+		printf("%" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
 			t.nMoves,
 			t.nCapture + t.nEPCapture,
 			t.nCastle,
@@ -513,19 +509,22 @@ void parse_input_dividefast(const char* s, Engine* pE)
 	printf("\nPerft %d: %" PRIu64 "\n", depth, grandtotal);
 }
 
-void parse_input_writehash(const char* s, Engine* pE){}
+void parse_input_writehash(const char* s, Engine* pE)
+{
+
+}
 
 void parse_input_lookuphash(const char* s, Engine* pE)
 {
-#ifdef _USE_HASH
-#endif
+
 }
 
 void parse_input_memory(const char* s, Engine* pE) {
-	size_t BytesRequested = _atoi64(s);
 	if (s == nullptr) {
 		return;
 	}
+
+	size_t BytesRequested = Utils::bytes(s);
 
 	setMemory(BytesRequested);
 }

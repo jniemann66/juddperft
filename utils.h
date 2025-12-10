@@ -9,8 +9,9 @@ namespace juddperft {
 class Utils
 {
 public:
-    // convert a large number of bytes into "B", "KiB", "MiB", "GiB" ... etc
-    static std::string memorySizeWithBinaryPrefix(size_t bytes);
+	// convert a large number of bytes into "B", "KiB", "MiB", "GiB" ... etc
+	static std::string memorySizeWithBinaryPrefix(size_t bytes);
+	static size_t bytes(const std::string& memorySizeWithBinaryPrefix, bool* ok = nullptr);
 };
 
 } // namespace juddperft

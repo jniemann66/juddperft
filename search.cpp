@@ -296,6 +296,8 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	std::condition_variable cv;
 	bool ready = false;
 
+	int progressDots = 0;
+
 	// Set up a simple Thread Pool:
 	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
 		threads.emplace_back([&, depth, P] {
@@ -315,6 +317,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				Q.performMoveNoHash(M).switchSides();					// make move
 				perft(Q, maxdepth, depth + 1, &T);				// Invoke perft()
 				std::cout << ".";								// show progress
+				progressDots++;
 				lock.lock();									// lock the queue again	for next iteration
 				PerftPartial.push_back(T);						// record subtotals
 			}
@@ -333,6 +336,11 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	//Join Threads:
 	for (auto & th : threads) {
 		th.join();
+	}
+
+	// rub-out the progress dots
+	for (int c = 0; c < progressDots; c++) {
+		std::cout << "\b \b";
 	}
 
 	// add up total:
@@ -392,6 +400,8 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	std::condition_variable cv;
 	bool ready = false;
 
+	int progressDots = 0;
+
 	// Set up a simple Thread Pool:
 	for (unsigned int t = 0; t < std::min(nThreads, MoveList->moveCount); t++) {
 		threads.emplace_back([&, depth, P] {
@@ -411,6 +421,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 				Q.performMove(M).switchSides();					// make move
 				perftFast(Q, depth - 1, s);						// Invoke perftFast()
 				std::cout << ".";								// show progress
+				progressDots++;
 				lock.lock();									// lock the queue again	for next iteration
 				subTotal.push_back(s);							// record subtotal
 			}
@@ -429,6 +440,11 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	//Join Threads:
 	for (auto & th : threads) {
 		th.join();
+	}
+
+	// rub-out the progress dots
+	for (int c = 0; c < progressDots; c++) {
+		std::cout << "\b \b";
 	}
 
 	// add up total:

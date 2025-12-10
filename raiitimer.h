@@ -32,7 +32,7 @@ public:
 		std::cout << "Duration = ";
 		std::cout << duration << " ms (" << format_duration(std::chrono::milliseconds(duration)) << ")";
 		if (nodes) {
-			std::cout << " " << std::setw(5) << 1000.0 * nodes / std::max<long long>(1ll, duration) << " nodes/sec";
+			std::cout << " " << std::setw(5) << 1000.0 * nodes / std::max<long long>(1ll, duration) << " nodes/sec\n";
 		}
 		std::cout << std::endl;
 	}
