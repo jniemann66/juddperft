@@ -123,13 +123,13 @@ enum MoveFlags : uint32_t
 	enPassantCapture = 1ULL << 21,
 	castle = 1ULL << 22,
 	castleLong = 1ULL << 23,
-	promoteKnight = 1ULL << 24,	// todo: optimal ordering of promotions. Probably Knight is second most important after Queen (??)
+	promoteKnight = 1ULL << 24, // todo: optimal ordering of promotions. Probably Knight is second most important after Queen (??)
 	promoteBishop = 1ULL << 25,
 	promoteRook = 1ULL << 26,
 	promoteQueen = 1ULL << 27,
 	capture = 1ULL << 28,
-	check = 1ULL << 29,	// if set, performing this move will put opponent in check
-	stalemate = 1ULL << 30,	// if set, performing this move will put opponent in checkmate
+	check = 1ULL << 29, // if set, performing this move will put opponent in check
+	stalemate = 1ULL << 30, // if set, performing this move will put opponent in checkmate
 	checkmate = 1ULL << 31	// if set, performing this move will result in stalemate
 };
 
@@ -175,6 +175,7 @@ static inline unsigned int move_count(const ChessMove* m)
 	return (m->flags & 0xff);
 }
 
+static void sort_movelist(ChessMove* ml);
 
 /////////////////////////////////////////////
 // Move notation styles:
