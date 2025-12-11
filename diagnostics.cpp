@@ -137,14 +137,11 @@ void findPerftBug(const std::string& validatorPath, const ChessPosition* pP, int
 
 		std::cout << "\nValidating depth: " << depth - 1 << " perft: " << T.nMoves << std::endl;
 		int nResult = perftValidateWithExternal(validatorPath, fenString, depth - 1, T.nMoves);
-		if (nResult == PERFTVALIDATE_FALSE)
-		{
+		if (nResult == PERFTVALIDATE_FALSE) {
 			// Investigate further ...
 			std::cout << "WRONG !! Taking a closer look ..." << std::endl;
 			findPerftBug(validatorPath, &Q, depth - 1);
-		}
-		else
-		{
+		} else {
 			std::cout << "ok";
 		}
 		std::cout << "\n" << std::endl;
@@ -177,8 +174,6 @@ void runTestSuite()
 
 	// https://www.talkchess.com/forum/viewtopic.php?t=59781
 	printPerftScoreFfromFEN("rnb1kbnr/pp1pp1pp/1qp2p2/8/Q1P5/N7/PP1PPPPP/1RB1KBNR b Kkq - 2 4 18", 7, 14'794'751'816);
-
-
 
 }
 

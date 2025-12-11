@@ -98,9 +98,6 @@ void MoveGenerator::generateMoves(const ChessPosition& P, ChessMove* pM)
 	movegen_total_cycles += cycles;
 #endif
 
-	// size_t x = move_count(pM);
-	// sort_movelist(pM);
-	// assert(move_count(pM) == x);
 }
 
 // isInCheck() - Given a position, determines if player is in check -
@@ -1163,16 +1160,16 @@ void sort_movelist(ChessMove* ml)
 	ml->flags = 0;
 	clr_flag(ml + n, endOfMoveList);
 
-	// classic insertion sort
-	for (int i = 1; i < n; i++) {
+	// classic insertion sort (in descending order)
+	for (size_t i = 1; i < n; i++) {
 
 		// load a copy of the current element so that it can be put in the proper place
 		ChessMove mv = *(ml + i);
 
-		// Move elements of arr[0 .. i - 1], whose flags are greater than mv's flags,
+		// Move elements of arr[0 .. i - 1], whose flags are less than mv's flags,
 		// to one position ahead of their current position
 		int j = i - 1;
-		while (j >= 0 && (ml + j)->flags > mv.flags) {
+		while (j >= 0 && (ml + j)->flags < mv.flags) {
 			*(ml + j + 1) = *(ml + j);
 			j = j - 1;
 		}
