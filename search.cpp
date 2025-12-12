@@ -55,8 +55,7 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	MoveGenerator::generateMoves(P, moveList);
 	const int movecount = move_count(moveList);
 
-	if (depth == maxdepth)
-	{
+	if (depth == maxdepth) {
 		pM = moveList;
 		for (int i = 0; i < movecount; i++, pM++) {
 			pI->nMoves++;
@@ -105,12 +104,9 @@ nodecount_t perft(const ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 				// }
 			}
 		}
-	}
-
-	else {
+	} else {
 		pM = moveList;
-		for (int i = 0; i<movecount; i++, pM++)
-		{
+		for (int i = 0; i<movecount; i++, pM++) {
 			Q.performMoveNoHash(*pM).switchSides();
 			perft(Q, maxdepth, depth + 1, pI);
 			Q = P; // unmake move
@@ -184,7 +180,7 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 
 		ChessMove moveList[MOVELIST_SIZE];
 		MoveGenerator::generateMoves(P, moveList);
-		const uint64_t movecount = move_count(moveList) & mc_mask;
+		const uint64_t movecount = move_count(moveList);
 		PerftLeafRecord newRecord = hk_validate | movecount;
 		nNodes += movecount;
 
@@ -291,7 +287,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 	unsigned int nThreads = std::min(std::thread::hardware_concurrency(), std::min(theEngine.nNumCores, static_cast<unsigned int>(MAX_THREADS)));
 	std::vector<std::thread> threads;
 	std::vector<PerftInfo> PerftPartial(nThreads);
-	std::queue<ChessMove> MoveQueue;
+	std::queue<ChessMove> moveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
 	bool ready = false;
@@ -308,13 +304,13 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 			cv.wait_for(lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up (lock acquired):
-			while (!MoveQueue.empty()) {
+			while (!moveQueue.empty()) {
 				PerftInfo T;
 				ChessPosition Q = P;							// Set up position
-				ChessMove M = MoveQueue.front();				// Grab Move
-				MoveQueue.pop();								// remove Move from queue:
+				ChessMove mv = moveQueue.front();				// Grab Move
+				moveQueue.pop();								// remove Move from queue:
 				lock.unlock();									// yield usage of queue to other threads while busy processing perft
-				Q.performMoveNoHash(M).switchSides();					// make move
+				Q.performMoveNoHash(mv).switchSides();					// make move
 				perft(Q, maxdepth, depth + 1, &T);				// Invoke perft()
 				std::cout << ".";								// show progress
 				progressDots++;
@@ -326,7 +322,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 	// Put Moves into Queue for Thread pool to process:
 	for (unsigned int i = 0; i < move_count(MoveList); ++i) {
-		MoveQueue.push(MoveList[i]);
+		moveQueue.push(MoveList[i]);
 	}
 
 	// start the ball rolling:
@@ -378,11 +374,11 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 
 	P.dontDetectChecks = 1;
 
-	ChessMove MoveList[MOVELIST_SIZE];
-	MoveGenerator::generateMoves(P, MoveList);
+	ChessMove movelist[MOVELIST_SIZE];
+	MoveGenerator::generateMoves(P, movelist);
 
 	if (depth == 1) {
-		nNodes = move_count(MoveList);
+		nNodes = move_count(movelist);
 		return;
 	}
 
@@ -395,7 +391,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	unsigned int nThreads = std::min(std::thread::hardware_concurrency(), std::min(theEngine.nNumCores, static_cast<unsigned int>(MAX_THREADS)));
 	std::vector<std::thread> threads;
 	std::vector<int64_t> subTotal(nThreads, 0);
-	std::queue<ChessMove> MoveQueue;
+	std::queue<ChessMove> moveQueue;
 	std::mutex q_mutex;
 	std::condition_variable cv;
 	bool ready = false;
@@ -403,7 +399,7 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	int progressDots = 0;
 
 	// Set up a simple Thread Pool:
-	for (unsigned int t = 0; t < std::min(nThreads, move_count(MoveList)); t++) {
+	for (unsigned int t = 0; t < std::min(nThreads, move_count(movelist)); t++) {
 		threads.emplace_back([&, depth, P] {
 
 			// Thread is to sleep until there is something to do ... and then wake up and do it.
@@ -412,13 +408,13 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 			cv.wait_for (lock, startDelay, [ready] { return ready; }); // sleep until something to do (note: lock will be auto-acquired on wake-up)
 
 			// upon wake-up (lock acquired):
-			while (!MoveQueue.empty()) {
+			while (!moveQueue.empty()) {
 				nodecount_t s = 0; 							// local accumulator for thread
 				ChessPosition Q = P;							// Set up position
-				ChessMove M = MoveQueue.front();				// Grab Move
-				MoveQueue.pop();								// remove Move from queue:
+				ChessMove mv = moveQueue.front();				// Grab Move
+				moveQueue.pop();								// remove Move from queue:
 				lock.unlock();									// yield usage of queue to other threads while busy processing perft
-				Q.performMove(M).switchSides();					// make move
+				Q.performMove(mv).switchSides();					// make move
 				perftFast(Q, depth - 1, s);						// Invoke perftFast()
 				std::cout << ".";								// show progress
 				progressDots++;
@@ -429,8 +425,8 @@ void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 	}
 
 	// Put Moves into Queue for Thread pool to process:
-	for (unsigned int i = 0; i < move_count(MoveList); ++i) {
-		MoveQueue.push(MoveList[i]);
+	for (unsigned int i = 0; i < move_count(movelist); ++i) {
+		moveQueue.push(movelist[i]);
 	}
 
 	// start the ball rolling:

@@ -98,6 +98,8 @@ void MoveGenerator::generateMoves(const ChessPosition& P, ChessMove* pM)
 	movegen_total_cycles += cycles;
 #endif
 
+	// sort_movelist(pM);
+
 }
 
 // isInCheck() - Given a position, determines if player is in check -
@@ -1152,13 +1154,11 @@ void printMoveList(ChessMove* pMoveList, MoveNotationStyle style /* = LongAlgebr
 	} while (++i < MOVELIST_SIZE);
 }
 
-// todo: NQR yet ..
 
 void sort_movelist(ChessMove* ml)
 {
 	size_t n = move_count(ml);
-	ml->flags = 0;
-	clr_flag(ml + n, endOfMoveList);
+	ml->flags &= 0xffffff00;
 
 	// classic insertion sort (in descending order)
 	for (size_t i = 1; i < n; i++) {
@@ -1179,7 +1179,6 @@ void sort_movelist(ChessMove* ml)
 	}
 
 	set_move_count(ml, n);
-	set_flag(ml + n, endOfMoveList);
 }
 
 // misc
