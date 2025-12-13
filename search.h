@@ -30,10 +30,14 @@ SOFTWARE.
 #include "chessposition.h"
 #include "movegen.h"
 
+
+
 namespace juddperft {
 
 constexpr int PV_SIZE = 64;
 constexpr int MAX_THREADS = 96; // Hard limit for number of threads to use
+using SCORE = int;
+
 
 #define SEARCH_STOPPED 0x80000000
 
