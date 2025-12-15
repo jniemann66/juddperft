@@ -41,7 +41,10 @@ SOFTWARE.
 #include <intrin.h>
 #include <Windows.h>
 #else
+#if defined(__x86_64__)
 #include <x86intrin.h>
+#elif defined(__aarch64__)
+#endif
 #endif
 
 #include <iostream>

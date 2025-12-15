@@ -38,7 +38,12 @@ SOFTWARE.
 #ifdef _MSC_VER
 #include <intrin.h>
 #else
+
+#if defined(__x86_64__)
 #include <x86intrin.h>
+#elif defined(__aarch64__)
+#endif
+
 #endif
 
 #include <cstdint>
