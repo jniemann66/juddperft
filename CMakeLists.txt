@@ -15,9 +15,9 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mcx16 -mavx2 -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mcx16 -mavx2 -DNDEBUG")
 elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mcpu=apple-m1")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -mcpu=apple-m1")
 endif()
 
 # Find the threads package
