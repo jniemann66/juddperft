@@ -62,7 +62,9 @@ set_property(TARGET juddperft PROPERTY
 
 target_link_libraries(juddperft PRIVATE Threads::Threads)
 
-if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+message(CMAKE_SYSTEM_NAME)
+
+if(NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" OR  ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten"))
 	target_link_libraries(juddperft PRIVATE atomic)
 endif()
 
