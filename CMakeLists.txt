@@ -62,10 +62,18 @@ set_property(TARGET juddperft PROPERTY
 
 target_link_libraries(juddperft PRIVATE Threads::Threads)
 
-message(CMAKE_SYSTEM_NAME)
+message("target_system= " ${CMAKE_SYSTEM_NAME})
 
 if(NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" OR  ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten"))
 	target_link_libraries(juddperft PRIVATE atomic)
+endif()
+
+
+if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+	# Set the executable suffix to .html for web builds
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+	# You can also add specific linker options here
+	# target_link_options(your_target PRIVATE "-sUSE_WEBGL2=1")
 endif()
 
 include(GNUInstallDirs)

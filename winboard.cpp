@@ -379,7 +379,13 @@ void parse_input_perft(const char* s, Engine* pE)
 		{
 			RaiiTimer timer;
 			PerftInfo t;
+
+#if !defined(__EMSCRIPTEN__)
 			perftMT(pE->currentPosition, q, 1, &t);
+#else
+			perft(pE->currentPosition, q, 1, &t);
+#endif
+
 			printf("Perft %d: %" PRIu64 " \nTotal Captures= %" PRIu64 " Castles= %" PRIu64 " CastleLongs= %" PRIu64 " EPCaptures= %" PRIu64 " Promotions= %" PRIu64 " Checks= %" PRIu64 " Checkmates= %" PRIu64 "\n",
 				   q,
 				   t.nMoves,

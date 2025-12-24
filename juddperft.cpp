@@ -30,7 +30,7 @@ SOFTWARE.
 #include "movegen.h"
 //#include "fen.h"
 //#include "hash_table.h"
-//#include "search.h"
+#include "search.h"
 
 #include "tablegroup.h"
 
@@ -57,6 +57,8 @@ int main(int argc, char *argv[], char *envp[])
 
 	// size_t nBytesToAllocate = 1ull << 32; // 4GiB
 
+
+#if !defined(__EMSCRIPTEN__ )
 	size_t nBytesToAllocate = 8589934592; // <-- Set how much RAM to use here (more RAM -> faster ... until you start hitting the page file then it gets significantly worse !!!)
 
 	// size_t nBytesToAllocate = 1ull << 34; // 16GiB
@@ -83,11 +85,24 @@ int main(int argc, char *argv[], char *envp[])
 
 	//runTestSuite();
 
+
 	winBoard(&theEngine);
 
 #ifdef COUNT_MOVEGEN_CPU_CYCLES
 	const double avg_cpu_cycles = static_cast<double>(movegen_total_cycles) / movegen_call_count;
 	std::cout << "Move generator average cpu cycles=" << avg_cpu_cycles << std::endl;
+#endif
+
+#else
+	// experimental ...
+	ChessPosition P;
+	P.setupStartPosition();
+	theEngine.currentPosition = P;
+	bool keepgoing = true;
+//	do {
+		keepgoing = waitForInput(&theEngine);
+		std::cout << "ready" << std::endl;
+//	} while (keepgoing);
 
 #endif
 
