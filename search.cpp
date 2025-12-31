@@ -225,33 +225,6 @@ void perftFast(const ChessPosition& P, int depth, nodecount_t& nNodes)
 #endif
 }
 
-//// ---------------------------------------------------
-//// Do this to trap bugs with incremental Hash updates (after performMove() ...) :
-//
-//ChessPosition Q2;
-//Q2 = Q;
-//Q2.calculateHash();
-////assert (Q2.HK == Q.HK);
-//if (Q2.HK != Q.HK)
-//{
-//	printf("keys Don't match!\n ");
-//	printf("before:\n");
-//	printChessPosition(P);
-//	printf("after:\n");
-//	printMove(*pM);
-//	printChessPosition(Q);
-//	printf("\n\n");
-//	getchar();
-//	Q.calculateHash(); // Repair the bad hash Key
-//}
-//else
-//{
-//	//	printf( "keys Match: " );
-//	//	printMove(*pM);
-//	//	getchar();
-//}
-//// ---------------------------------------------------
-
 void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 {
 	ChessMove MoveList[MOVELIST_SIZE];
