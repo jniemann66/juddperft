@@ -34,7 +34,6 @@ add_executable(juddperft
 	raiitimer.h
 	search.h
 	tablegroup.h
-	targetver.h
 	timemanage.h
 	utils.h
 	winboard.h

@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright(c) 2016-2025 Judd Niemann
+Copyright(c) 2016-2026 Judd Niemann
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -327,7 +327,7 @@ void perftMT(ChessPosition P, int maxdepth, int depth, PerftInfo* pI)
 
 // perftFastMT() - Multi-threaded perftFast() driver, Thread Pool version - ensures cpu cores are always doing work.
 // 01/03/2016: (working ok)
-// 01/12/2025: Working Great :-)
+// 01/12/2026: Working Great :-)
 
 void perftFastMT(ChessPosition P, int depth, nodecount_t& nNodes)
 {

@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/juddn/juddperft/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
