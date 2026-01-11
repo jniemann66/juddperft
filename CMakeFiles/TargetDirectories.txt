@@ -1,7 +1,0 @@
-/home/juddn/juddperft/CMakeFiles/juddperft.dir
-/home/juddn/juddperft/CMakeFiles/edit_cache.dir
-/home/juddn/juddperft/CMakeFiles/rebuild_cache.dir
-/home/juddn/juddperft/CMakeFiles/list_install_components.dir
-/home/juddn/juddperft/CMakeFiles/install.dir
-/home/juddn/juddperft/CMakeFiles/install/local.dir
-/home/juddn/juddperft/CMakeFiles/install/strip.dir
